@@ -116,3 +116,79 @@ body {
 @media (max-width: 1023px) {
   #galleryPanel { width: 260px !important; }
 }
+
+/* ── Dark Mode ─────────────────────────────────────────────────────────────── */
+html.dark {
+  color-scheme: dark;
+  --color-nacc-light:  #1c1c1e;
+  --color-nacc-dark:   #e8e5de;
+  --color-nacc-border: #3a3a3c;
+}
+
+html.dark body { background-color: #1c1c1e; }
+
+/* Structural surfaces */
+html.dark header  { background-color: #2c2c2e !important; border-color: #3a3a3c !important; }
+html.dark aside   { background-color: #2c2c2e !important; border-color: #3a3a3c !important; }
+html.dark #settingsPanel,
+html.dark #galleryPanel { background-color: #2c2c2e !important; }
+
+/* White → dark surface */
+html.dark .bg-white { background-color: #2c2c2e !important; }
+html.dark .bg-nacc-light { background-color: #1c1c1e !important; }
+html.dark .bg-gray-50  { background-color: #242426 !important; }
+html.dark .bg-gray-100 { background-color: #2c2c2e !important; }
+html.dark .hover\:bg-gray-50:hover  { background-color: #323234 !important; }
+html.dark .hover\:bg-gray-100:hover { background-color: #3a3a3c !important; }
+
+/* Text */
+html.dark .text-gray-700 { color: #c7c7cc !important; }
+html.dark .text-gray-600 { color: #aeaeb2 !important; }
+html.dark .text-gray-500 { color: #8e8e93 !important; }
+html.dark .text-gray-400 { color: #636366 !important; }
+html.dark .text-gray-300 { color: #48484a !important; }
+
+/* Borders */
+html.dark .border-\[\#f0f0f0\] { border-color: #3a3a3c !important; }
+html.dark .border-\[\#e8e8e8\] { border-color: #3a3a3c !important; }
+
+/* Inputs & textareas */
+html.dark input:not([type="checkbox"]),
+html.dark textarea {
+  background-color: #3a3a3c !important;
+  color: #e8e5de !important;
+  border-color: #48484a !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #636366 !important; }
+
+/* Notion table */
+html.dark .notion-row:hover .notion-cell { background: #323234; }
+html.dark .notion-cell { border-right-color: #3a3a3c; }
+
+/* Blog list */
+html.dark .blog-list-item { background: #2c2c2e; border-left-color: transparent; }
+html.dark .blog-list-item.active { background: #3a2e1a !important; border-left-color: #b38247 !important; }
+html.dark .blog-list-item:not(.active):hover { background: #323234 !important; }
+
+/* Font size buttons */
+html.dark .fs-btn { background: #2c2c2e !important; border-color: #3a3a3c !important; color: #aeaeb2; }
+html.dark .fs-btn.active { background: #b38247 !important; border-color: #b38247 !important; color: #fff; }
+
+/* Mode pill */
+html.dark .mode-pill { background: #3a3a3c; }
+html.dark .mode-pill button { color: #8e8e93; }
+html.dark .mode-pill button.active { background: #2c2c2e; color: #e8e5de; }
+
+/* Shadows deeper in dark */
+html.dark .shadow-xl,
+html.dark .shadow-2xl { box-shadow: 0 8px 32px rgba(0,0,0,.6) !important; }
+
+/* Specific hover states used in pages */
+html.dark .hover\:bg-\[#f9f8f6\]:hover { background-color: #323234 !important; }
+html.dark .bg-\[#f5f0e8\],
+html.dark .hover\:bg-\[#f5f0e8\]:hover { background-color: #3a2e1a !important; }
+html.dark .bg-\[#e8dfd0\] { background-color: #3a3028 !important; }
+
+/* Code/content area in Blog viewer */
+html.dark .whitespace-pre-wrap { color: #c7c7cc; }

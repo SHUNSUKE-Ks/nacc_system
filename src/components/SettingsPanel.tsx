@@ -1,5 +1,5 @@
 import { type Component, For, Show } from 'solid-js'
-import { state, setState, setFontSize, toggleDb01Column, toggleDb02Column } from '../store'
+import { state, setState, setFontSize, toggleDarkMode, toggleDb01Column, toggleDb02Column } from '../store'
 import type { FontSize } from '../types'
 
 const FONT_OPTIONS: { key: FontSize; label: string; desc: string }[] = [
@@ -130,9 +130,25 @@ const SettingsPanel: Component = () => {
             </div>
           </div>
 
+          {/* Dark mode */}
+          <div class="p-4 border-b border-nacc-border">
+            <div class="text-xs font-semibold text-gray-500 mb-3">🌙 ダークモード</div>
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm text-nacc-dark">
+                  {state.darkMode ? '🌙 ダーク' : '☀️ ライト'}
+                </span>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  {state.darkMode ? '暗いテーマで表示中' : '明るいテーマで表示中'}
+                </p>
+              </div>
+              <Toggle checked={state.darkMode} onChange={toggleDarkMode} />
+            </div>
+          </div>
+
           {/* Theme */}
           <div class="p-4">
-            <div class="text-xs font-semibold text-gray-500 mb-3">🎨 テーマ</div>
+            <div class="text-xs font-semibold text-gray-500 mb-3">🎨 テーマカラー</div>
             <div class="flex gap-2">
               <div class="w-8 h-8 rounded-full bg-nacc-gold cursor-pointer ring-2 ring-offset-2 ring-nacc-gold" />
               <div class="w-8 h-8 rounded-full bg-slate-700 cursor-pointer hover:ring-2 ring-offset-2 ring-slate-700" />

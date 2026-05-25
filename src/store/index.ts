@@ -5,6 +5,7 @@ export type AppState = {
   page: Page
   blogMode: BlogMode
   fontSize: FontSize
+  darkMode: boolean
   dbView: DbView
   selectedProductId: string | null
   selectedNutrientId: string | null
@@ -22,6 +23,13 @@ export type AppState = {
 }
 
 const FONT_SIZE_PX: Record<FontSize, number> = { s: 13, m: 16, l: 19, xl: 22 }
+
+function initDarkMode(): boolean {
+  const saved = localStorage.getItem('nacc-dark-mode')
+  const isDark = saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  if (isDark) document.documentElement.classList.add('dark')
+  return isDark
+}
 
 export const DB01_COLUMNS_DEFAULT: ColumnDef[] = [
   { id: 'name',        label: '品目',        visible: true,  locked: true  },
@@ -43,6 +51,7 @@ const [state, setState] = createStore<AppState>({
   page: 'db01',
   blogMode: 'memo',
   fontSize: 'l',
+  darkMode: initDarkMode(),
   dbView: 'table',
   selectedProductId: null,
   selectedNutrientId: null,
@@ -68,6 +77,13 @@ export function navigate(page: Page) {
 export function setFontSize(size: FontSize) {
   document.documentElement.style.fontSize = FONT_SIZE_PX[size] + 'px'
   setState({ fontSize: size })
+}
+
+export function toggleDarkMode() {
+  const next = !state.darkMode
+  document.documentElement.classList.toggle('dark', next)
+  localStorage.setItem('nacc-dark-mode', String(next))
+  setState({ darkMode: next })
 }
 
 export function toggleBlogFilter(tagName: string) {

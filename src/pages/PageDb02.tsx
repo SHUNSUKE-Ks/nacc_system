@@ -1,9 +1,8 @@
-import { type Component, createSignal, For, Show } from 'solid-js'
+import { type Component, createMemo, createSignal, For, Show } from 'solid-js'
 import type { Nutrient } from '../types'
 import { PRODUCTS } from '../db/products'
 import { state, setState } from '../store'
 
-// Sample linked memos
 const SAMPLE_MEMOS = [
   { id: 1, title: 'レシチンとアレルギーの関係', tags: ['レシチン', 'γリノレン酸'], date: '2026-05-25' },
   { id: 2, title: 'NMN研究まとめ（Pubmed）',   tags: ['NMN', 'サーチュイン'],     date: '2026-05-24' },
@@ -12,92 +11,201 @@ const SAMPLE_MEMOS = [
 
 type Props = { nutrients: Nutrient[] }
 
-// ── Notion Table View ──────────────────────────────────────────────────────
-const TableView: Component<{ nutrients: Nutrient[]; onSelect: (n: Nutrient) => void }> = (props) => {
+type EditCell = { rowId: string; col: string; x: number; y: number }
+
+// ── Memo Popover ────────────────────────────────────────────────────────────
+const MemoPopover: Component<{
+  x: number; y: number
+  nutrient: Nutrient
+  onUpdate: (id: string, patch: Partial<Nutrient>) => void
+  onClose: () => void
+}> = (props) => (
+  <div
+    class="fixed z-50 bg-white border border-nacc-border rounded-xl shadow-xl p-3 w-72"
+    style={{ left: `${props.x}px`, top: `${props.y}px` }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <div class="text-xs font-semibold text-gray-500 mb-2">📝 メモ</div>
+    <textarea
+      class="w-full text-xs text-gray-700 border border-nacc-border rounded-lg p-2 resize-none outline-none focus:border-nacc-gold leading-relaxed"
+      rows="4"
+      value={props.nutrient.memo}
+      onInput={(e) => props.onUpdate(props.nutrient.id, { memo: e.currentTarget.value })}
+      ref={(el) => el && setTimeout(() => el.focus(), 0)}
+    />
+    <div class="flex justify-end mt-2">
+      <button
+        class="text-xs px-3 py-1.5 bg-nacc-dark text-white rounded-lg hover:opacity-90"
+        onClick={props.onClose}
+      >
+        完了
+      </button>
+    </div>
+  </div>
+)
+
+// ── Table View with inline editing ─────────────────────────────────────────
+const TableView: Component<{
+  nutrients: Nutrient[]
+  onUpdate: (id: string, patch: Partial<Nutrient>) => void
+}> = (props) => {
   const visibleCols = () => state.db02Columns.filter((c) => c.visible)
+  const [activeEdit, setActiveEdit] = createSignal<EditCell | null>(null)
+
+  const activeNutrient = createMemo(() =>
+    props.nutrients.find((n) => n.id === activeEdit()?.rowId)
+  )
+
+  const memoEdit = createMemo(() => {
+    const ae = activeEdit()
+    const n = activeNutrient()
+    if (!ae || !n || ae.col !== 'memo') return null
+    return { edit: ae, nutrient: n }
+  })
+
+  function openPopover(e: MouseEvent, rowId: string, col: string) {
+    e.stopPropagation()
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = Math.min(rect.left, window.innerWidth - 295)
+    const y = Math.min(rect.bottom + 4, window.innerHeight - 220)
+    setActiveEdit({ rowId, col, x, y })
+  }
+
+  function openInline(rowId: string, col: string) {
+    setActiveEdit({ rowId, col, x: 0, y: 0 })
+  }
+
+  const isPopoverOpen = () => {
+    const ae = activeEdit()
+    return ae && ae.col !== 'name'
+  }
 
   return (
-    <div class="flex-1 overflow-auto px-6 pb-4">
-      <div class="bg-white rounded-xl border border-nacc-border overflow-hidden">
-        {/* Header */}
-        <div class="flex border-b border-nacc-border bg-nacc-light sticky top-0 z-10">
-          <div class="w-8 shrink-0 flex items-center justify-center p-2">
-            <input type="checkbox" class="rounded" />
-          </div>
-          <For each={visibleCols()}>
-            {(col) => (
-              <div class="notion-cell flex-1 px-3 py-2 text-xs font-semibold text-gray-500">
-                {col.label}
-              </div>
-            )}
-          </For>
-        </div>
-
-        {/* Rows */}
-        <For each={props.nutrients}>
-          {(nutrient) => {
-            const related = PRODUCTS.filter((p) => p.nutrientIds.includes(nutrient.id)).slice(0, 2)
-            return (
-              <div
-                class="notion-row flex border-b border-nacc-border last:border-none cursor-pointer"
-                onClick={() => props.onSelect(nutrient)}
-              >
-                <div class="w-8 shrink-0 flex items-center justify-center p-2" onClick={(e) => e.stopPropagation()}>
-                  <input type="checkbox" class="rounded" />
+    <div class="flex-1 overflow-hidden flex flex-col">
+      <div class="flex-1 overflow-auto px-6 pb-4">
+        <div class="bg-white rounded-xl border border-nacc-border overflow-hidden">
+          {/* Header */}
+          <div class="flex border-b border-nacc-border bg-nacc-light sticky top-0 z-10">
+            <div class="w-8 shrink-0 flex items-center justify-center p-2">
+              <input type="checkbox" class="rounded" />
+            </div>
+            <For each={visibleCols()}>
+              {(col) => (
+                <div class="notion-cell flex-1 px-3 py-2 text-xs font-semibold text-gray-500">
+                  {col.label}
                 </div>
-                <For each={visibleCols()}>
-                  {(col) => {
-                    switch (col.id) {
-                      case 'name':
-                        return (
-                          <div class="notion-cell flex-1 px-3 py-2.5 text-xs font-semibold text-nacc-gold">
-                            {nutrient.name.split(' ')[0]}
-                          </div>
-                        )
-                      case 'description':
-                        return (
-                          <div class="notion-cell flex-1 px-3 py-2.5 text-xs text-gray-600 leading-relaxed">
-                            {nutrient.description.slice(0, 80)}{nutrient.description.length > 80 ? '…' : ''}
-                          </div>
-                        )
-                      case 'products':
-                        return (
-                          <div class="notion-cell flex-1 px-3 py-2.5">
-                            {related.length ? (
-                              <div class="flex flex-col gap-0.5">
-                                <For each={related}>
-                                  {(p) => (
-                                    <div class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">
-                                      {p.name}
-                                    </div>
-                                  )}
-                                </For>
-                              </div>
-                            ) : (
-                              <span class="text-xs text-gray-300">—</span>
-                            )}
-                          </div>
-                        )
-                      case 'memo':
-                        return (
-                          <div class="notion-cell flex-1 px-3 py-2.5 text-xs text-gray-500 italic">
-                            {nutrient.memo || '—'}
-                          </div>
-                        )
-                      default:
-                        return <div class="notion-cell flex-1 px-3 py-2.5 text-xs text-gray-400">—</div>
-                    }
-                  }}
-                </For>
-              </div>
-            )
-          }}
-        </For>
+              )}
+            </For>
+          </div>
 
-        <div class="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:bg-gray-50 cursor-pointer transition-colors border-t border-dashed border-nacc-border">
-          <span>+</span> 新しい栄養素を追加
+          {/* Rows */}
+          <For each={props.nutrients}>
+            {(nutrient) => {
+              const related = PRODUCTS.filter((p) => p.nutrientIds.includes(nutrient.id)).slice(0, 2)
+
+              return (
+                <div class="notion-row flex border-b border-nacc-border last:border-none">
+                  <div
+                    class="w-8 shrink-0 flex items-center justify-center p-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input type="checkbox" class="rounded" />
+                  </div>
+                  <For each={visibleCols()}>
+                    {(col) => {
+                      const isInline = () =>
+                        activeEdit()?.rowId === nutrient.id &&
+                        activeEdit()?.col === col.id &&
+                        col.id === 'name'
+
+                      switch (col.id) {
+                        case 'name':
+                          return (
+                            <div
+                              class="notion-cell flex-1 px-3 py-2.5 text-xs font-semibold text-nacc-gold cursor-text hover:bg-[#fffbf5] transition-colors"
+                              onClick={() => openInline(nutrient.id, 'name')}
+                            >
+                              <Show when={isInline()} fallback={<>{nutrient.name.split(' ')[0]}</>}>
+                                <input
+                                  type="text"
+                                  class="w-full text-xs font-semibold text-nacc-gold border-none outline-none bg-transparent"
+                                  value={nutrient.name.split(' ')[0]}
+                                  onBlur={() => setActiveEdit(null)}
+                                  ref={(el) => el && setTimeout(() => el.focus(), 0)}
+                                />
+                              </Show>
+                            </div>
+                          )
+
+                        case 'description':
+                          return (
+                            <div class="notion-cell flex-1 px-3 py-2.5 text-xs text-gray-600 leading-relaxed">
+                              {nutrient.description.slice(0, 80)}{nutrient.description.length > 80 ? '…' : ''}
+                            </div>
+                          )
+
+                        case 'products':
+                          return (
+                            <div class="notion-cell flex-1 px-3 py-2.5">
+                              {related.length ? (
+                                <div class="flex flex-col gap-0.5">
+                                  <For each={related}>
+                                    {(p) => (
+                                      <div class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">
+                                        {p.name}
+                                      </div>
+                                    )}
+                                  </For>
+                                </div>
+                              ) : (
+                                <span class="text-xs text-gray-300">—</span>
+                              )}
+                            </div>
+                          )
+
+                        case 'memo':
+                          return (
+                            <div
+                              class="notion-cell flex-1 px-3 py-2.5 cursor-pointer hover:bg-[#fffbf5] transition-colors"
+                              onClick={(e) => openPopover(e, nutrient.id, 'memo')}
+                            >
+                              <span class="text-xs text-gray-500 italic">{nutrient.memo || '—'}</span>
+                            </div>
+                          )
+
+                        default:
+                          return <div class="notion-cell flex-1 px-3 py-2.5 text-xs text-gray-400">—</div>
+                      }
+                    }}
+                  </For>
+                </div>
+              )
+            }}
+          </For>
+
+          <div class="flex items-center gap-2 px-4 py-2 text-xs text-gray-400 hover:bg-gray-50 cursor-pointer transition-colors border-t border-dashed border-nacc-border">
+            <span>+</span> 新しい栄養素を追加
+          </div>
         </div>
       </div>
+
+      {/* Backdrop */}
+      <Show when={isPopoverOpen()}>
+        <div class="fixed inset-0 z-40" onClick={() => setActiveEdit(null)} />
+      </Show>
+
+      {/* Memo popover */}
+      <Show when={memoEdit()}>
+        {(data) => (
+          <MemoPopover
+            x={data().edit.x}
+            y={data().edit.y}
+            nutrient={data().nutrient}
+            onUpdate={props.onUpdate}
+            onClose={() => setActiveEdit(null)}
+          />
+        )}
+      </Show>
     </div>
   )
 }
@@ -196,7 +304,6 @@ const DetailView: Component<{ nutrients: Nutrient[] }> = (props) => {
                 </div>
               </div>
 
-              {/* Linked memos */}
               <Show when={linkedMemos(nutrient()).length > 0}>
                 <div class="mt-6 pt-5 border-t border-nacc-border">
                   <h2 class="text-xs font-semibold text-[#999] uppercase tracking-wider mb-3">
@@ -233,8 +340,10 @@ const DetailView: Component<{ nutrients: Nutrient[] }> = (props) => {
 
 // ── Page Root ──────────────────────────────────────────────────────────────
 const PageDb02: Component<Props> = (props) => {
-  function selectFromTable(_n: Nutrient) {
-    setState({ dbView: 'detail' })
+  const [nutrients, setNutrients] = createSignal<Nutrient[]>(props.nutrients)
+
+  function updateNutrient(id: string, patch: Partial<Nutrient>) {
+    setNutrients((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
   }
 
   return (
@@ -245,7 +354,7 @@ const PageDb02: Component<Props> = (props) => {
           <h1 class="text-xl font-bold text-nacc-dark">DB02 — 栄養素一覧</h1>
           <div class="text-xs text-gray-500 mt-0.5">
             有効成分・栄養素データベース ·{' '}
-            <span class="font-medium">{props.nutrients.length}件</span>
+            <span class="font-medium">{nutrients().length}件</span>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
@@ -287,10 +396,10 @@ const PageDb02: Component<Props> = (props) => {
 
       {/* Content */}
       <Show when={state.dbView === 'table'}>
-        <TableView nutrients={props.nutrients} onSelect={selectFromTable} />
+        <TableView nutrients={nutrients()} onUpdate={updateNutrient} />
       </Show>
       <Show when={state.dbView === 'detail'}>
-        <DetailView nutrients={props.nutrients} />
+        <DetailView nutrients={nutrients()} />
       </Show>
     </div>
   )

@@ -1,11 +1,10 @@
 import { type Component, createSignal, For, Show } from 'solid-js'
 import { state, setState, toggleBlogFilter } from '../store'
 import type { Blog, Tag } from '../types'
-import { PRODUCTS } from '../db/products'
+import { PRODUCTS, productImageUrl } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
-import { productImageUrl } from '../db/products'
 
-let nextId = 1
+let nextId = 100
 const mkBlog = (): Blog => ({
   id: nextId++,
   title: '新しいブログ',
@@ -18,15 +17,15 @@ const mkBlog = (): Blog => ({
   updatedAt: new Date(),
 })
 
-const SAMPLE_BLOGS: Blog[] = [
+const INITIAL_BLOGS: Blog[] = [
   {
-    id: nextId++,
+    id: 1,
     title: 'NMNサプリの効果と飲み方',
-    body: 'NMNはNAD+の前駆体として注目されています。毎日250mg〜500mgを朝食後に服用するのがおすすめです。',
+    body: 'NMNはNAD+の前駆体として注目されています。毎日250mg〜500mgを朝食後に服用するのがおすすめです。\n\n特殊カプセルにより胃での分解を防ぎ、腸での吸収率を高めています。',
     cover: undefined,
     coverType: 'none',
     categoryTags: [
-      { type: 'product', name: 'R-NMN' },
+      { type: 'product',  name: 'R-NMN' },
       { type: 'nutrient', name: 'NMN (β-ニコチンアミドモノヌクレオチド)' },
     ],
     mode: 'memo',
@@ -34,15 +33,28 @@ const SAMPLE_BLOGS: Blog[] = [
     updatedAt: new Date('2026-05-20'),
   },
   {
-    id: nextId++,
+    id: 2,
+    title: 'NMN研究論文まとめ2026年版',
+    body: 'Pubmedで検索した最新のNMN研究論文をまとめた。\n\n特に睡眠の質と認知機能への効果について複数の臨床試験で有意な結果が報告されている。\n\n【主要論文】\n1. Cell Metabolism 2024 — NMNの経口投与によるNAD+レベルの上昇\n2. Science 2023 — サーチュイン活性化と老化抑制\n\n【NACCのR-NMNについて】\n特殊カプセルにより胃での分解を防ぎ、腸での吸収率を高めている。',
+    cover: undefined,
+    coverType: 'none',
+    categoryTags: [
+      { type: 'nutrient', name: 'NMN (β-ニコチンアミドモノヌクレオチド)' },
+      { type: 'product',  name: 'R-NMN' },
+    ],
+    mode: 'memo',
+    createdAt: new Date('2026-05-20'),
+    updatedAt: new Date('2026-05-20'),
+  },
+  {
+    id: 3,
     title: 'オメガ3の正しい選び方',
     body: 'EPAとDHAの比率に注目して選ぶことが大切です。魚油由来のα-55 premiumは品質が高くおすすめです。',
     cover: undefined,
     coverType: 'none',
     categoryTags: [
-      { type: 'product', name: 'オメガ3 α-55 premium' },
+      { type: 'product',  name: 'オメガ3 α-55 premium' },
       { type: 'nutrient', name: 'EPA (エイコサペンタエン酸)' },
-      { type: 'nutrient', name: 'DHA (ドコサヘキサエン酸)' },
     ],
     mode: 'memo',
     createdAt: new Date('2026-05-18'),
@@ -50,42 +62,185 @@ const SAMPLE_BLOGS: Blog[] = [
   },
 ]
 
+// ── Blog Viewer (View mode) ────────────────────────────────────────────────
+const BlogViewer: Component<{
+  blog: Blog
+  onShowPopover: (e: MouseEvent, tag: Tag) => void
+}> = (props) => (
+  <div class="flex-1 overflow-y-auto bg-nacc-light">
+    <div class="max-w-2xl mx-auto px-6 py-8">
+      <Show when={props.blog.cover}>
+        <img
+          src={props.blog.cover}
+          class="w-full h-52 object-cover rounded-2xl mb-8 shadow-md"
+          alt="cover"
+        />
+      </Show>
+
+      <h1 class="text-3xl font-bold text-nacc-dark mb-4 leading-tight">{props.blog.title}</h1>
+
+      {/* Tags — color-coded, clickable for detail popover */}
+      <div class="flex flex-wrap gap-2 mb-4">
+        <For each={props.blog.categoryTags}>
+          {(tag) => (
+            <button
+              class="flex items-center gap-1 text-xs rounded-full px-3 py-1.5 border font-medium transition-all hover:shadow-md"
+              classList={{
+                'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100':  tag.type === 'product',
+                'bg-green-50 text-green-700 border-green-200 hover:bg-green-100': tag.type === 'nutrient',
+              }}
+              onClick={(e) => props.onShowPopover(e, tag)}
+            >
+              {tag.type === 'product' ? '📦' : '🌿'} {tag.name}
+              <span class="ml-1.5 text-xs opacity-40">▸</span>
+            </button>
+          )}
+        </For>
+      </div>
+
+      <div class="text-xs text-gray-400 mb-8 flex items-center gap-2">
+        <span>{new Date(props.blog.createdAt).toLocaleDateString('ja-JP')}</span>
+        <span>·</span>
+        <span>読み時間</span>
+      </div>
+
+      <div class="text-sm text-gray-700 leading-8 bg-white rounded-2xl p-6 border border-nacc-border shadow-sm whitespace-pre-wrap">
+        {props.blog.body || <span class="text-gray-300">本文なし</span>}
+      </div>
+    </div>
+  </div>
+)
+
+// ── Blog Memo Editor ───────────────────────────────────────────────────────
+const BlogMemoEditor: Component<{
+  blog: Blog
+  onUpdate: (patch: Partial<Blog>) => void
+  onDelete: (id: number) => void
+  onOpenTagPicker: () => void
+  onOpenCoverPicker: () => void
+  onRemoveTag: (name: string) => void
+  isMobile: boolean
+  onBack: () => void
+}> = (props) => {
+  const b = () => props.blog
+  return (
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <Show when={props.isMobile}>
+        <button class="mobile-back" onClick={props.onBack}>← ブログ一覧</button>
+      </Show>
+      <div class="flex-1 overflow-y-auto">
+        {/* Cover */}
+        <div
+          class="w-full h-32 flex items-center justify-center cursor-pointer relative overflow-hidden shrink-0"
+          classList={{ 'cover-placeholder': !b().cover }}
+          onClick={props.onOpenCoverPicker}
+        >
+          <Show when={b().cover}>
+            <img src={b().cover} class="w-full h-full object-cover" alt="cover" />
+          </Show>
+          <span class="absolute text-xs text-white/80 bg-black/30 px-3 py-1 rounded-full">
+            {b().cover ? '📷 カバー変更' : '📷 カバー画像を追加'}
+          </span>
+        </div>
+
+        <div class="p-5 flex flex-col gap-3">
+          {/* Title */}
+          <input
+            type="text"
+            class="text-xl font-bold text-nacc-dark border-none outline-none bg-transparent w-full"
+            placeholder="タイトル"
+            value={b().title}
+            onInput={(e) => props.onUpdate({ title: e.currentTarget.value })}
+          />
+
+          {/* Tags — color-coded, removable */}
+          <div class="flex flex-wrap gap-1.5 items-center">
+            <For each={b().categoryTags}>
+              {(tag) => (
+                <span
+                  class="flex items-center gap-1 text-xs rounded-full px-2.5 py-1 border font-medium"
+                  classList={{
+                    'bg-blue-50 text-blue-700 border-blue-200':   tag.type === 'product',
+                    'bg-green-50 text-green-700 border-green-200': tag.type === 'nutrient',
+                  }}
+                >
+                  {tag.type === 'product' ? '📦' : '🌿'} {tag.name}
+                  <button
+                    class="ml-1 opacity-50 hover:opacity-100 text-xs leading-none"
+                    onClick={() => props.onRemoveTag(tag.name)}
+                  >✕</button>
+                </span>
+              )}
+            </For>
+            <button
+              class="text-xs px-2 py-1 rounded-full border border-dashed border-nacc-gold text-nacc-gold hover:bg-[#f5f0e8]"
+              onClick={props.onOpenTagPicker}
+            >
+              + タグ追加
+            </button>
+          </div>
+
+          {/* Body */}
+          <textarea
+            class="flex-1 min-h-52 text-sm text-nacc-dark border border-nacc-border outline-none bg-white rounded-xl p-4 resize-none leading-relaxed shadow-sm focus:ring-1 focus:ring-nacc-gold/30"
+            placeholder="本文を入力..."
+            value={b().body}
+            onInput={(e) => props.onUpdate({ body: e.currentTarget.value })}
+          />
+
+          <div class="pt-3 border-t border-[#f0f0f0] flex items-center gap-3 flex-wrap">
+            <span class="text-xs text-gray-400 ml-auto">
+              自動保存 — {new Date(b().updatedAt).toLocaleDateString('ja-JP')}
+            </span>
+            <button
+              class="text-xs text-red-400 hover:text-red-600"
+              onClick={() => props.onDelete(b().id!)}
+            >
+              🗑️ ごみ箱へ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Page Root ──────────────────────────────────────────────────────────────
 const PageBlog: Component = () => {
-  const [blogs, setBlogs] = createSignal<Blog[]>(SAMPLE_BLOGS)
-  const [selectedId, setSelectedId] = createSignal<number | null>(SAMPLE_BLOGS[0].id!)
+  const [blogs, setBlogs] = createSignal<Blog[]>(INITIAL_BLOGS)
+  const [selectedId, setSelectedId] = createSignal<number | null>(INITIAL_BLOGS[0].id!)
   const [mobilePanel, setMobilePanel] = createSignal<'list' | 'editor'>('list')
+
+  // Tag picker
   const [tagPickerOpen, setTagPickerOpen] = createSignal(false)
   const [tagPickerTab, setTagPickerTab] = createSignal<'product' | 'nutrient'>('product')
   const [tagPickerSelected, setTagPickerSelected] = createSignal<Tag[]>([])
+
+  // Cover picker
   const [coverPickerOpen, setCoverPickerOpen] = createSignal(false)
+
+  // Detail popover (view mode)
   const [popover, setPopover] = createSignal<{ tag: Tag; x: number; y: number } | null>(null)
 
   const isMobile = () => window.innerWidth < 768
   const selected = () => blogs().find((b) => b.id === selectedId())
 
   const allTags = () => {
-    const tags = new Set<string>()
-    blogs().forEach((b) => b.categoryTags.forEach((t) => tags.add(t.name)))
-    return [...tags]
+    const seen = new Set<string>()
+    const result: Tag[] = []
+    blogs().forEach((b) =>
+      b.categoryTags.forEach((t) => {
+        if (!seen.has(t.name)) { seen.add(t.name); result.push(t) }
+      })
+    )
+    return result
   }
 
   const filteredBlogs = () => {
     if (state.blogFilterTags.length === 0) return blogs()
     return blogs().filter((b) =>
-      state.blogFilterTags.every((ft) => b.categoryTags.some((t) => t.name === ft))
+      state.blogFilterTags.some((ft) => b.categoryTags.some((t) => t.name === ft))
     )
-  }
-
-  function addBlog() {
-    const b = mkBlog()
-    setBlogs((prev) => [b, ...prev])
-    setSelectedId(b.id!)
-    if (isMobile()) setMobilePanel('editor')
-  }
-
-  function selectBlog(id: number) {
-    setSelectedId(id)
-    if (isMobile()) setMobilePanel('editor')
   }
 
   function updateBlog(patch: Partial<Blog>) {
@@ -96,12 +251,30 @@ const PageBlog: Component = () => {
     )
   }
 
+  function addBlog() {
+    const b = mkBlog()
+    setBlogs((prev) => [b, ...prev])
+    setSelectedId(b.id!)
+    setState({ blogMode: 'memo' })
+    if (isMobile()) setMobilePanel('editor')
+  }
+
+  function selectBlog(id: number) {
+    setSelectedId(id)
+    if (isMobile()) setMobilePanel('editor')
+  }
+
   function deleteBlog(id: number) {
     const blog = blogs().find((b) => b.id === id)
     if (!blog) return
     setState('trashBlogs', (prev) => [{ ...blog, deletedAt: new Date() }, ...prev])
     setBlogs((prev) => prev.filter((b) => b.id !== id))
-    if (selectedId() === id) setSelectedId(blogs()[0]?.id ?? null)
+    const remaining = blogs()
+    setSelectedId(remaining[0]?.id ?? null)
+  }
+
+  function removeTag(tagName: string) {
+    updateBlog({ categoryTags: selected()?.categoryTags.filter((t) => t.name !== tagName) ?? [] })
   }
 
   function confirmTagPicker() {
@@ -114,257 +287,192 @@ const PageBlog: Component = () => {
     setTagPickerSelected([])
   }
 
-  function removeTag(tagName: string) {
-    const curr = selected()
-    if (!curr) return
-    updateBlog({ categoryTags: curr.categoryTags.filter((t) => t.name !== tagName) })
-  }
-
   function showPopover(e: MouseEvent, tag: Tag) {
     e.stopPropagation()
-    const rect = (e.target as HTMLElement).getBoundingClientRect()
-    setPopover({ tag, x: rect.left, y: rect.bottom + 4 })
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setPopover({ tag, x: Math.min(rect.left, window.innerWidth - 300), y: rect.bottom + 6 })
   }
 
   function getTagDetail(tag: Tag): string {
     if (tag.type === 'product') {
-      return PRODUCTS.find((p) => p.name === tag.name)?.effects.join('、') ?? ''
+      const p = PRODUCTS.find((x) => x.name === tag.name)
+      return p ? p.effects.join('、') : ''
     }
     return NUTRIENTS.find((n) => n.name === tag.name)?.description ?? ''
   }
 
-  // ── Sub-components ──────────────────────────────────────────────────────
-
+  // ── Filter bar ──
   const FilterBar = () => (
     <Show when={state.blogMode === 'view' && allTags().length > 0}>
-      <div
-        class="flex flex-wrap gap-1.5 px-4 py-2 border-b border-[#e8e8e8] bg-[#f9f8f6]"
-        style={{ 'max-height': '64px', 'overflow': 'hidden' }}
-      >
-        <button
-          class="pill-filter text-xs px-3 py-1 rounded-full border border-[#e8e8e8] bg-white font-medium transition-colors"
-          classList={{ 'pill-active': state.blogFilterTags.length === 0 }}
-          onClick={() => setState({ blogFilterTags: [] })}
-        >
-          すべて
-        </button>
-        <For each={allTags()}>
-          {(tag) => (
-            <button
-              class="pill-filter text-xs px-3 py-1 rounded-full border border-[#e8e8e8] bg-white font-medium transition-colors"
-              classList={{ 'pill-active': state.blogFilterTags.includes(tag) }}
-              onClick={() => toggleBlogFilter(tag)}
-            >
-              {tag.split(' ')[0]}
-            </button>
-          )}
-        </For>
+      <div class="shrink-0 px-4 py-2 bg-white border-b border-nacc-border">
+        <div class="flex flex-wrap gap-1.5" style={{ 'max-height': '64px', overflow: 'hidden' }}>
+          <button
+            class="px-3 py-1 rounded-full text-xs border transition-all font-medium"
+            classList={{
+              'bg-nacc-dark text-white border-nacc-dark': state.blogFilterTags.length === 0,
+              'border-gray-300 bg-white text-gray-600 hover:border-gray-400': state.blogFilterTags.length > 0,
+            }}
+            onClick={() => setState({ blogFilterTags: [] })}
+          >
+            すべて
+          </button>
+          <For each={allTags()}>
+            {(tag) => {
+              const isSelected = () => state.blogFilterTags.includes(tag.name)
+              return (
+                <button
+                  class="flex items-center gap-1 px-3 py-1 rounded-full text-xs border transition-all font-medium"
+                  classList={{
+                    'bg-blue-600 text-white border-blue-600':   tag.type === 'product' && isSelected(),
+                    'bg-green-600 text-white border-green-600': tag.type === 'nutrient' && isSelected(),
+                    'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100':    tag.type === 'product' && !isSelected(),
+                    'bg-green-50 text-green-700 border-green-200 hover:bg-green-100': tag.type === 'nutrient' && !isSelected(),
+                  }}
+                  onClick={() => toggleBlogFilter(tag.name)}
+                >
+                  {tag.type === 'product' ? '📦' : '🌿'} {tag.name}
+                </button>
+              )
+            }}
+          </For>
+        </div>
       </div>
     </Show>
   )
 
-  const BlogList = () => (
-    <div class="w-64 shrink-0 border-r border-[#e8e8e8] flex flex-col overflow-hidden">
-      <div class="flex items-center justify-between px-3 py-2 border-b border-[#e8e8e8]">
-        <span class="text-sm font-semibold text-[#37352f]">ブログ</span>
+  // ── Blog list panel ──
+  const ListPanel = () => (
+    <div class="w-56 shrink-0 border-r border-nacc-border bg-white flex flex-col">
+      <div class="p-3 border-b border-nacc-border">
         <button
-          class="text-xs px-2 py-1 rounded bg-[#b38247] text-white font-semibold hover:opacity-80"
+          class="w-full flex items-center gap-1.5 px-3 py-2.5 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition-colors"
           onClick={addBlog}
         >
-          + 新規
+          <span class="text-lg leading-none">+</span> 新規ブログ
         </button>
       </div>
-      <FilterBar />
-      <div class="flex-1 overflow-y-auto">
+      <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
         <For each={filteredBlogs()}>
           {(blog) => (
-            <button
-              class="blog-list-item w-full text-left px-4 py-3 border-b border-[#f0f0f0]"
+            <div
+              class="blog-list-item relative px-3 py-3 rounded-xl cursor-pointer group"
               classList={{ active: selectedId() === blog.id }}
               onClick={() => selectBlog(blog.id!)}
             >
-              <p class="text-sm font-medium text-[#37352f] truncate">{blog.title || '無題'}</p>
-              <div class="flex items-center gap-1 mt-1 flex-wrap">
+              <Show when={blog.cover}>
+                <img src={blog.cover} class="w-full h-14 object-cover rounded-lg mb-2" alt="" />
+              </Show>
+              <div class="text-sm font-semibold text-nacc-dark leading-snug mb-1.5 pr-5"
+                style={{ display: '-webkit-box', '-webkit-line-clamp': '2', '-webkit-box-orient': 'vertical', overflow: 'hidden' }}>
+                {blog.title}
+              </div>
+              <div class="flex flex-wrap gap-1 mb-1">
                 <For each={blog.categoryTags.slice(0, 2)}>
                   {(t) => (
-                    <span class="text-xs px-1.5 py-0.5 rounded bg-[#f5f0e8] text-[#b38247]">
-                      {t.name.split(' ')[0]}
+                    <span
+                      class="text-xs rounded-full px-1.5 py-0.5"
+                      classList={{
+                        'bg-blue-50 text-blue-600':    t.type === 'product',
+                        'bg-green-50 text-green-700':  t.type === 'nutrient',
+                      }}
+                    >
+                      {t.type === 'product' ? '📦' : '🌿'} {t.name.length > 8 ? t.name.slice(0, 8) + '…' : t.name}
                     </span>
                   )}
                 </For>
               </div>
-              <p class="text-xs text-[#999] mt-1">
-                {blog.updatedAt.toLocaleDateString('ja-JP')}
-              </p>
-            </button>
+              <div class="text-xs text-gray-400">
+                {new Date(blog.updatedAt).toLocaleDateString('ja-JP')}
+              </div>
+              <button
+                class="absolute top-2.5 right-2 opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-all"
+                onClick={(e) => { e.stopPropagation(); deleteBlog(blog.id!) }}
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           )}
         </For>
       </div>
     </div>
   )
 
-  const BlogEditor = () => (
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <Show when={isMobile()}>
-        <button class="mobile-back" onClick={() => setMobilePanel('list')}>
-          ← ブログ一覧
-        </button>
-      </Show>
-      <Show
-        when={selected()}
-        fallback={
-          <div class="flex items-center justify-center h-full text-[#ccc] text-sm">
-            記事を選択してください
-          </div>
-        }
-      >
-        {(blog) => (
-          <div class="flex flex-col h-full overflow-y-auto">
-            {/* Cover */}
-            <div
-              class="w-full h-36 flex items-center justify-center cursor-pointer relative overflow-hidden shrink-0"
-              classList={{ 'cover-placeholder': !blog().cover }}
-              style={{ background: blog().cover ? 'none' : undefined }}
-              onClick={() => setCoverPickerOpen(true)}
-            >
-              <Show when={blog().cover}>
-                <img src={blog().cover} class="w-full h-full object-cover" alt="cover" />
-              </Show>
-              <span class="absolute text-xs text-white/80 bg-black/30 px-3 py-1 rounded-full">
-                {blog().cover ? '📷 カバー変更' : '📷 カバー画像を追加'}
-              </span>
-            </div>
+  return (
+    <div class="flex flex-col h-full overflow-hidden" onClick={() => setPopover(null)}>
+      <FilterBar />
 
-            <div class="p-5 flex flex-col gap-3">
-              {/* Title */}
-              <input
-                type="text"
-                class="text-xl font-bold text-[#37352f] border-none outline-none bg-transparent w-full"
-                placeholder="タイトル"
-                value={blog().title}
-                onInput={(e) => updateBlog({ title: e.currentTarget.value })}
-              />
+      <div class="flex flex-1 overflow-hidden">
+        {/* List (hidden on mobile when editor shown) */}
+        <Show when={!isMobile() || mobilePanel() === 'list'}>
+          <ListPanel />
+        </Show>
 
-              {/* Category tags */}
-              <div class="flex flex-wrap gap-1.5 items-center">
-                <For each={blog().categoryTags}>
-                  {(tag) => (
-                    <span class="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-[#f5f0e8] text-[#b38247] border border-[#e8dfd0]">
-                      {tag.name.split(' ')[0]}
-                      <Show when={state.blogMode === 'memo'}>
-                        <button
-                          class="text-[#b38247]/60 hover:text-[#b38247] ml-0.5"
-                          onClick={() => removeTag(tag.name)}
-                        >
-                          ×
-                        </button>
-                      </Show>
-                    </span>
-                  )}
-                </For>
-                <Show when={state.blogMode === 'memo'}>
-                  <button
-                    class="text-xs px-2 py-1 rounded-full border border-dashed border-[#b38247] text-[#b38247] hover:bg-[#f5f0e8]"
-                    onClick={() => setTagPickerOpen(true)}
-                  >
-                    + タグ追加
-                  </button>
-                </Show>
+        {/* Content area */}
+        <Show when={!isMobile() || mobilePanel() === 'editor'}>
+          <Show
+            when={selected()}
+            fallback={
+              <div class="flex-1 flex items-center justify-center text-gray-400 text-sm">
+                ブログを選択してください
               </div>
-
-              {/* Body */}
-              <Show when={state.blogMode === 'memo'}>
-                <textarea
-                  class="flex-1 min-h-48 text-sm text-[#37352f] border-none outline-none bg-transparent resize-none leading-relaxed"
-                  placeholder="本文を入力..."
-                  value={blog().body}
-                  onInput={(e) => updateBlog({ body: e.currentTarget.value })}
+            }
+          >
+            {(blog) => (
+              <Show
+                when={state.blogMode === 'memo'}
+                fallback={
+                  <BlogViewer blog={blog()} onShowPopover={showPopover} />
+                }
+              >
+                <BlogMemoEditor
+                  blog={blog()}
+                  onUpdate={updateBlog}
+                  onDelete={deleteBlog}
+                  onOpenTagPicker={() => setTagPickerOpen(true)}
+                  onOpenCoverPicker={() => setCoverPickerOpen(true)}
+                  onRemoveTag={removeTag}
+                  isMobile={isMobile()}
+                  onBack={() => setMobilePanel('list')}
                 />
               </Show>
-              <Show when={state.blogMode === 'view'}>
-                <div class="text-sm text-[#37352f] leading-relaxed whitespace-pre-wrap">
-                  {blog().body || <span class="text-[#ccc]">本文なし</span>}
-                </div>
-                {/* Clickable tags in view mode */}
-                <Show when={blog().categoryTags.length > 0}>
-                  <div class="mt-4 pt-4 border-t border-[#e8e8e8]">
-                    <p class="text-xs text-[#999] mb-2">タグをクリックで詳細表示</p>
-                    <div class="flex flex-wrap gap-2">
-                      <For each={blog().categoryTags}>
-                        {(tag) => (
-                          <button
-                            class="text-xs px-3 py-1.5 rounded-full bg-[#f5f0e8] text-[#b38247] border border-[#e8dfd0] hover:bg-[#ede5d8] transition-colors"
-                            onClick={(e) => showPopover(e, tag)}
-                          >
-                            {tag.name.split(' ')[0]}
-                          </button>
-                        )}
-                      </For>
-                    </div>
-                  </div>
-                </Show>
-              </Show>
+            )}
+          </Show>
+        </Show>
+      </div>
 
-              {/* Delete button */}
-              <div class="pt-4 border-t border-[#f0f0f0] mt-auto">
-                <button
-                  class="text-xs text-red-400 hover:text-red-600 transition-colors"
-                  onClick={() => deleteBlog(blog().id!)}
-                >
-                  🗑️ ごみ箱へ移動
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Show>
-    </div>
-  )
-
-  return (
-    <div class="flex h-full overflow-hidden relative" onClick={() => setPopover(null)}>
-      <Show when={!isMobile() || mobilePanel() === 'list'}>
-        <BlogList />
-      </Show>
-      <Show when={!isMobile() || mobilePanel() === 'editor'}>
-        <BlogEditor />
-      </Show>
-
-      {/* Tag picker bottom sheet */}
+      {/* ── Tag picker bottom sheet ── */}
       <Show when={tagPickerOpen()}>
+        <div class="fixed inset-0 z-60 bg-black/30" onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }} />
         <div
-          class="fixed inset-0 z-60 bg-black/30"
-          onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}
-        />
-        <div
-          id="tagPickerPopup"
-          class="fixed bottom-0 left-0 right-0 z-70 bg-white rounded-t-2xl shadow-2xl"
-          style={{ 'max-height': '70vh', display: 'flex', 'flex-direction': 'column' }}
+          class="fixed bottom-0 left-0 right-0 z-70 bg-white rounded-t-2xl shadow-2xl flex flex-col"
+          style={{ 'max-height': '70vh' }}
         >
-          {/* Tabs */}
-          <div class="flex border-b border-[#e8e8e8] shrink-0">
+          <div class="flex items-center justify-between px-5 pt-4 pb-0 shrink-0">
+            <span class="font-semibold text-sm">カテゴリータグを追加</span>
+            <button class="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100" onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}>✕</button>
+          </div>
+          <div class="flex px-5 mt-2 shrink-0 border-b border-nacc-border">
             {(['product', 'nutrient'] as const).map((tab) => (
               <button
-                class="flex-1 py-3 text-sm font-semibold transition-colors"
+                class="px-5 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px"
                 classList={{
-                  'text-[#b38247] border-b-2 border-[#b38247]': tagPickerTab() === tab,
-                  'text-[#999]': tagPickerTab() !== tab,
+                  'border-nacc-gold text-nacc-gold': tagPickerTab() === tab,
+                  'border-transparent text-gray-500 hover:text-gray-700': tagPickerTab() !== tab,
                 }}
                 onClick={() => setTagPickerTab(tab)}
               >
-                {tab === 'product' ? '商品' : '成分'}
+                {tab === 'product' ? '📦 商品' : '🌿 成分'}
               </button>
             ))}
           </div>
-
-          {/* Items */}
-          <div class="flex-1 overflow-y-auto p-3">
+          <div class="overflow-y-auto flex-1 p-3">
             <For each={tagPickerTab() === 'product' ? PRODUCTS : NUTRIENTS}>
               {(item) => {
                 const tag: Tag = { type: tagPickerTab(), name: item.name }
                 const isSelected = () => tagPickerSelected().some((t) => t.name === item.name)
-                const alreadyAdded = () =>
-                  selected()?.categoryTags.some((t) => t.name === item.name) ?? false
+                const alreadyAdded = () => selected()?.categoryTags.some((t) => t.name === item.name) ?? false
                 return (
                   <button
                     class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
@@ -380,46 +488,35 @@ const PageBlog: Component = () => {
                       )
                     }}
                   >
-                    <span class="text-lg">{tagPickerTab() === 'product' ? '💊' : '🧬'}</span>
-                    <span class="text-sm text-[#37352f] leading-tight">{item.name}</span>
+                    <span>{tagPickerTab() === 'product' ? '📦' : '🌿'}</span>
+                    <span class="text-sm text-nacc-dark leading-tight flex-1">{item.name}</span>
                     <Show when={isSelected()}>
-                      <span class="ml-auto text-[#b38247] font-bold">✓</span>
+                      <span class="text-nacc-gold font-bold">✓</span>
                     </Show>
                     <Show when={alreadyAdded()}>
-                      <span class="ml-auto text-xs text-[#999]">追加済み</span>
+                      <span class="text-xs text-[#999]">追加済み</span>
                     </Show>
                   </button>
                 )
               }}
             </For>
           </div>
-
-          {/* Confirm */}
-          <div class="p-4 border-t border-[#e8e8e8] shrink-0">
-            <button
-              class="w-full py-3 rounded-xl bg-[#37352f] text-white font-semibold text-sm hover:opacity-80 transition-opacity"
-              onClick={confirmTagPicker}
-            >
-              {tagPickerSelected().length > 0
-                ? `${tagPickerSelected().length}件を追加`
-                : '閉じる'}
-            </button>
+          <div class="px-5 py-3 border-t border-nacc-border flex items-center justify-between bg-gray-50 shrink-0">
+            <span class="text-xs text-gray-500 font-medium">{tagPickerSelected().length}件選択中</span>
+            <div class="flex gap-2">
+              <button class="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg" onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}>キャンセル</button>
+              <button class="px-4 py-1.5 text-sm bg-nacc-dark text-white rounded-lg hover:opacity-90 font-medium" onClick={confirmTagPicker}>追加する</button>
+            </div>
           </div>
         </div>
       </Show>
 
-      {/* Cover picker modal */}
+      {/* ── Cover picker ── */}
       <Show when={coverPickerOpen()}>
-        <div
-          class="fixed inset-0 z-60 bg-black/50 flex items-end sm:items-center justify-center"
-          onClick={() => setCoverPickerOpen(false)}
-        >
-          <div
-            class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div class="flex items-center justify-between px-5 py-4 border-b border-[#e8e8e8]">
-              <span class="font-semibold text-[#37352f]">カバー画像を選択</span>
+        <div class="fixed inset-0 z-60 bg-black/50 flex items-end sm:items-center justify-center" onClick={() => setCoverPickerOpen(false)}>
+          <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div class="flex items-center justify-between px-5 py-4 border-b border-nacc-border">
+              <span class="font-semibold text-nacc-dark">カバー画像を選択</span>
               <button onClick={() => setCoverPickerOpen(false)} class="text-[#999]">✕</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4">
@@ -428,45 +525,27 @@ const PageBlog: Component = () => {
                 <For each={PRODUCTS.filter((p) => p.image)}>
                   {(product) => (
                     <button
-                      class="aspect-square rounded-lg overflow-hidden bg-[#e8dfd0] hover:ring-2 hover:ring-[#b38247]"
-                      onClick={() => {
-                        updateBlog({ cover: productImageUrl(product.image), coverType: 'product' })
-                        setCoverPickerOpen(false)
-                      }}
+                      class="aspect-square rounded-lg overflow-hidden bg-[#e8dfd0] hover:ring-2 hover:ring-nacc-gold"
+                      onClick={() => { updateBlog({ cover: productImageUrl(product.image), coverType: 'product' }); setCoverPickerOpen(false) }}
                     >
-                      <img
-                        src={productImageUrl(product.image)}
-                        alt={product.name}
-                        class="w-full h-full object-cover"
-                      />
+                      <img src={productImageUrl(product.image)} alt={product.name} class="w-full h-full object-cover" />
                     </button>
                   )}
                 </For>
               </div>
               <p class="text-xs text-[#999] mb-3 font-semibold uppercase tracking-wider">端末から追加</p>
-              <label class="flex items-center justify-center gap-2 border-2 border-dashed border-[#e8e8e8] rounded-xl py-6 cursor-pointer hover:border-[#b38247] transition-colors text-[#999] text-sm">
+              <label class="flex items-center justify-center gap-2 border-2 border-dashed border-[#e8e8e8] rounded-xl py-5 cursor-pointer hover:border-nacc-gold text-[#999] text-sm">
                 📷 写真を選択
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  onChange={(e) => {
-                    const file = e.currentTarget.files?.[0]
-                    if (!file) return
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                      updateBlog({ cover: reader.result as string, coverType: 'upload' })
-                      setCoverPickerOpen(false)
-                    }
-                    reader.readAsDataURL(file)
-                  }}
-                />
+                <input type="file" accept="image/*" class="hidden" onChange={(e) => {
+                  const file = e.currentTarget.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = () => { updateBlog({ cover: reader.result as string, coverType: 'upload' }); setCoverPickerOpen(false) }
+                  reader.readAsDataURL(file)
+                }} />
               </label>
               <Show when={selected()?.cover}>
-                <button
-                  class="w-full mt-3 py-2 text-sm text-red-400 hover:text-red-600"
-                  onClick={() => { updateBlog({ cover: undefined, coverType: 'none' }); setCoverPickerOpen(false) }}
-                >
+                <button class="w-full mt-3 py-2 text-sm text-red-400 hover:text-red-600" onClick={() => { updateBlog({ cover: undefined, coverType: 'none' }); setCoverPickerOpen(false) }}>
                   カバー画像を削除
                 </button>
               </Show>
@@ -475,16 +554,24 @@ const PageBlog: Component = () => {
         </div>
       </Show>
 
-      {/* Detail popover */}
+      {/* ── Detail popover (view mode) ── */}
       <Show when={popover()}>
         {(p) => (
           <div
-            class="fixed z-80 bg-white border border-[#e8e8e8] rounded-xl shadow-lg p-4 max-w-xs"
-            style={{ left: `${Math.min(p().x, window.innerWidth - 320)}px`, top: `${p().y}px` }}
+            class="fixed z-80 bg-white border border-nacc-border rounded-xl shadow-xl p-4 w-72 max-h-72 overflow-y-auto"
+            style={{ left: `${p().x}px`, top: `${p().y}px` }}
             onClick={(e) => e.stopPropagation()}
           >
-            <p class="text-xs font-semibold text-[#b38247] mb-1">{p().tag.name.split(' ')[0]}</p>
-            <p class="text-xs text-[#555] leading-relaxed">{getTagDetail(p().tag)}</p>
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-semibold text-sm text-nacc-dark">{p().tag.name}</span>
+              <button class="text-gray-400 hover:text-gray-600 text-xs w-5 h-5 flex items-center justify-center" onClick={() => setPopover(null)}>✕</button>
+            </div>
+            <p class="text-xs text-gray-600 leading-relaxed">{getTagDetail(p().tag)}</p>
+            <div class="mt-3 pt-2 border-t border-nacc-border">
+              <button class="text-xs text-nacc-gold hover:underline" onClick={() => { setState({ page: p().tag.type === 'product' ? 'db01' : 'db02' }); setPopover(null) }}>
+                詳細をDBで見る →
+              </button>
+            </div>
           </div>
         )}
       </Show>

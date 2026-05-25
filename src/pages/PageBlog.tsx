@@ -1,66 +1,15 @@
 import { type Component, createSignal, For, Show } from 'solid-js'
-import { state, setState, toggleBlogFilter } from '../store'
+import { state, setState, toggleBlogFilter, addBlog, updateBlog, trashBlog } from '../store'
 import type { Blog, Tag } from '../types'
 import { PRODUCTS, productImageUrl } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
 
-let nextId = 100
-const mkBlog = (): Blog => ({
-  id: nextId++,
-  title: '新しいブログ',
-  body: '',
-  cover: undefined,
-  coverType: 'none',
-  categoryTags: [],
-  mode: 'memo',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-})
+let saveTimer: ReturnType<typeof setTimeout>
 
-const INITIAL_BLOGS: Blog[] = [
-  {
-    id: 1,
-    title: 'NMNサプリの効果と飲み方',
-    body: 'NMNはNAD+の前駆体として注目されています。毎日250mg〜500mgを朝食後に服用するのがおすすめです。\n\n特殊カプセルにより胃での分解を防ぎ、腸での吸収率を高めています。',
-    cover: undefined,
-    coverType: 'none',
-    categoryTags: [
-      { type: 'product',  name: 'R-NMN' },
-      { type: 'nutrient', name: 'NMN (β-ニコチンアミドモノヌクレオチド)' },
-    ],
-    mode: 'memo',
-    createdAt: new Date('2026-05-20'),
-    updatedAt: new Date('2026-05-20'),
-  },
-  {
-    id: 2,
-    title: 'NMN研究論文まとめ2026年版',
-    body: 'Pubmedで検索した最新のNMN研究論文をまとめた。\n\n特に睡眠の質と認知機能への効果について複数の臨床試験で有意な結果が報告されている。\n\n【主要論文】\n1. Cell Metabolism 2024 — NMNの経口投与によるNAD+レベルの上昇\n2. Science 2023 — サーチュイン活性化と老化抑制\n\n【NACCのR-NMNについて】\n特殊カプセルにより胃での分解を防ぎ、腸での吸収率を高めている。',
-    cover: undefined,
-    coverType: 'none',
-    categoryTags: [
-      { type: 'nutrient', name: 'NMN (β-ニコチンアミドモノヌクレオチド)' },
-      { type: 'product',  name: 'R-NMN' },
-    ],
-    mode: 'memo',
-    createdAt: new Date('2026-05-20'),
-    updatedAt: new Date('2026-05-20'),
-  },
-  {
-    id: 3,
-    title: 'オメガ3の正しい選び方',
-    body: 'EPAとDHAの比率に注目して選ぶことが大切です。魚油由来のα-55 premiumは品質が高くおすすめです。',
-    cover: undefined,
-    coverType: 'none',
-    categoryTags: [
-      { type: 'product',  name: 'オメガ3 α-55 premium' },
-      { type: 'nutrient', name: 'EPA (エイコサペンタエン酸)' },
-    ],
-    mode: 'memo',
-    createdAt: new Date('2026-05-18'),
-    updatedAt: new Date('2026-05-18'),
-  },
-]
+function scheduleBlogSave(id: string, patch: Parameters<typeof updateBlog>[1]) {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => updateBlog(id, patch), 800)
+}
 
 // ── Blog Viewer (View mode) ────────────────────────────────────────────────
 const BlogViewer: Component<{
@@ -79,14 +28,13 @@ const BlogViewer: Component<{
 
       <h1 class="text-3xl font-bold text-nacc-dark mb-4 leading-tight">{props.blog.title}</h1>
 
-      {/* Tags — color-coded, clickable for detail popover */}
       <div class="flex flex-wrap gap-2 mb-4">
         <For each={props.blog.categoryTags}>
           {(tag) => (
             <button
               class="flex items-center gap-1 text-xs rounded-full px-3 py-1.5 border font-medium transition-all hover:shadow-md"
               classList={{
-                'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100':  tag.type === 'product',
+                'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100':     tag.type === 'product',
                 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100': tag.type === 'nutrient',
               }}
               onClick={(e) => props.onShowPopover(e, tag)}
@@ -115,7 +63,7 @@ const BlogViewer: Component<{
 const BlogMemoEditor: Component<{
   blog: Blog
   onUpdate: (patch: Partial<Blog>) => void
-  onDelete: (id: number) => void
+  onDelete: (id: string) => void
   onOpenTagPicker: () => void
   onOpenCoverPicker: () => void
   onRemoveTag: (name: string) => void
@@ -129,7 +77,6 @@ const BlogMemoEditor: Component<{
         <button class="mobile-back" onClick={props.onBack}>← ブログ一覧</button>
       </Show>
       <div class="flex-1 overflow-y-auto">
-        {/* Cover */}
         <div
           class="w-full h-32 flex items-center justify-center cursor-pointer relative overflow-hidden shrink-0"
           classList={{ 'cover-placeholder': !b().cover }}
@@ -144,7 +91,6 @@ const BlogMemoEditor: Component<{
         </div>
 
         <div class="p-5 flex flex-col gap-3">
-          {/* Title */}
           <input
             type="text"
             class="text-xl font-bold text-nacc-dark border-none outline-none bg-transparent w-full"
@@ -153,7 +99,6 @@ const BlogMemoEditor: Component<{
             onInput={(e) => props.onUpdate({ title: e.currentTarget.value })}
           />
 
-          {/* Tags — color-coded, removable */}
           <div class="flex flex-wrap gap-1.5 items-center">
             <For each={b().categoryTags}>
               {(tag) => (
@@ -180,7 +125,6 @@ const BlogMemoEditor: Component<{
             </button>
           </div>
 
-          {/* Body */}
           <textarea
             class="flex-1 min-h-52 text-sm text-nacc-dark border border-nacc-border outline-none bg-white rounded-xl p-4 resize-none leading-relaxed shadow-sm focus:ring-1 focus:ring-nacc-gold/30"
             placeholder="本文を入力..."
@@ -207,28 +151,30 @@ const BlogMemoEditor: Component<{
 
 // ── Page Root ──────────────────────────────────────────────────────────────
 const PageBlog: Component = () => {
-  const [blogs, setBlogs] = createSignal<Blog[]>(INITIAL_BLOGS)
-  const [selectedId, setSelectedId] = createSignal<number | null>(INITIAL_BLOGS[0].id!)
+  const [selectedId, setSelectedId] = createSignal<string | null>(null)
   const [mobilePanel, setMobilePanel] = createSignal<'list' | 'editor'>('list')
 
-  // Tag picker
   const [tagPickerOpen, setTagPickerOpen] = createSignal(false)
   const [tagPickerTab, setTagPickerTab] = createSignal<'product' | 'nutrient'>('product')
   const [tagPickerSelected, setTagPickerSelected] = createSignal<Tag[]>([])
 
-  // Cover picker
   const [coverPickerOpen, setCoverPickerOpen] = createSignal(false)
-
-  // Detail popover (view mode)
   const [popover, setPopover] = createSignal<{ tag: Tag; x: number; y: number } | null>(null)
 
   const isMobile = () => window.innerWidth < 768
-  const selected = () => blogs().find((b) => b.id === selectedId())
+  const selected = () => {
+    const id = selectedId()
+    if (id) {
+      const found = state.blogs.find((b) => b.id === id)
+      if (found) return found
+    }
+    return state.blogs[0]
+  }
 
   const allTags = () => {
     const seen = new Set<string>()
     const result: Tag[] = []
-    blogs().forEach((b) =>
+    state.blogs.forEach((b) =>
       b.categoryTags.forEach((t) => {
         if (!seen.has(t.name)) { seen.add(t.name); result.push(t) }
       })
@@ -237,52 +183,64 @@ const PageBlog: Component = () => {
   }
 
   const filteredBlogs = () => {
-    if (state.blogFilterTags.length === 0) return blogs()
-    return blogs().filter((b) =>
+    if (state.blogFilterTags.length === 0) return state.blogs
+    return state.blogs.filter((b) =>
       state.blogFilterTags.some((ft) => b.categoryTags.some((t) => t.name === ft))
     )
   }
 
-  function updateBlog(patch: Partial<Blog>) {
-    setBlogs((prev) =>
-      prev.map((b) =>
-        b.id === selectedId() ? { ...b, ...patch, updatedAt: new Date() } : b
-      )
-    )
+  function patchLocal(id: string, patch: Partial<Blog>) {
+    setState('blogs', (prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)))
   }
 
-  function addBlog() {
-    const b = mkBlog()
-    setBlogs((prev) => [b, ...prev])
-    setSelectedId(b.id!)
+  function handleUpdate(patch: Partial<Blog>) {
+    const id = selectedId()
+    if (!id) return
+    const now = new Date()
+    const full = { ...patch, updatedAt: now }
+    patchLocal(id, full)
+    scheduleBlogSave(id, full)
+  }
+
+  async function handleAddBlog() {
+    const now = new Date()
+    const data: Omit<Blog, 'id'> = {
+      title: '新しいブログ', body: '', coverType: 'none',
+      categoryTags: [], mode: 'memo', createdAt: now, updatedAt: now,
+    }
+    const id = await addBlog(data)
+    setSelectedId(id)
     setState({ blogMode: 'memo' })
     if (isMobile()) setMobilePanel('editor')
   }
 
-  function selectBlog(id: number) {
+  function selectBlog(id: string) {
     setSelectedId(id)
     if (isMobile()) setMobilePanel('editor')
   }
 
-  function deleteBlog(id: number) {
-    const blog = blogs().find((b) => b.id === id)
-    if (!blog) return
-    setState('trashBlogs', (prev) => [{ ...blog, deletedAt: new Date() }, ...prev])
-    setBlogs((prev) => prev.filter((b) => b.id !== id))
-    const remaining = blogs()
-    setSelectedId(remaining[0]?.id ?? null)
+  function handleDeleteBlog(id: string) {
+    trashBlog(id) // synchronous: state is updated immediately
+    setSelectedId(state.blogs[0]?.id ?? null)
   }
 
   function removeTag(tagName: string) {
-    updateBlog({ categoryTags: selected()?.categoryTags.filter((t) => t.name !== tagName) ?? [] })
+    const id = selectedId()
+    if (!id) return
+    const categoryTags = selected()?.categoryTags.filter((t) => t.name !== tagName) ?? []
+    patchLocal(id, { categoryTags })
+    updateBlog(id, { categoryTags })
   }
 
   function confirmTagPicker() {
+    const id = selectedId()
     const curr = selected()
-    if (!curr) return
+    if (!id || !curr) return
     const existing = curr.categoryTags.map((t) => t.name)
     const toAdd = tagPickerSelected().filter((t) => !existing.includes(t.name))
-    updateBlog({ categoryTags: [...curr.categoryTags, ...toAdd] })
+    const categoryTags = [...curr.categoryTags, ...toAdd]
+    patchLocal(id, { categoryTags })
+    updateBlog(id, { categoryTags })
     setTagPickerOpen(false)
     setTagPickerSelected([])
   }
@@ -301,7 +259,6 @@ const PageBlog: Component = () => {
     return NUTRIENTS.find((n) => n.name === tag.name)?.description ?? ''
   }
 
-  // ── Filter bar ──
   const FilterBar = () => (
     <Show when={state.blogMode === 'view' && allTags().length > 0}>
       <div class="shrink-0 px-4 py-2 bg-white border-b border-nacc-border">
@@ -340,13 +297,12 @@ const PageBlog: Component = () => {
     </Show>
   )
 
-  // ── Blog list panel ──
   const ListPanel = () => (
     <div class="w-56 shrink-0 border-r border-nacc-border bg-white flex flex-col">
       <div class="p-3 border-b border-nacc-border">
         <button
           class="w-full flex items-center gap-1.5 px-3 py-2.5 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition-colors"
-          onClick={addBlog}
+          onClick={handleAddBlog}
         >
           <span class="text-lg leading-none">+</span> 新規ブログ
         </button>
@@ -372,8 +328,8 @@ const PageBlog: Component = () => {
                     <span
                       class="text-xs rounded-full px-1.5 py-0.5"
                       classList={{
-                        'bg-blue-50 text-blue-600':    t.type === 'product',
-                        'bg-green-50 text-green-700':  t.type === 'nutrient',
+                        'bg-blue-50 text-blue-600':   t.type === 'product',
+                        'bg-green-50 text-green-700': t.type === 'nutrient',
                       }}
                     >
                       {t.type === 'product' ? '📦' : '🌿'} {t.name.length > 8 ? t.name.slice(0, 8) + '…' : t.name}
@@ -386,7 +342,7 @@ const PageBlog: Component = () => {
               </div>
               <button
                 class="absolute top-2.5 right-2 opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-all"
-                onClick={(e) => { e.stopPropagation(); deleteBlog(blog.id!) }}
+                onClick={(e) => { e.stopPropagation(); handleDeleteBlog(blog.id!) }}
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -404,12 +360,10 @@ const PageBlog: Component = () => {
       <FilterBar />
 
       <div class="flex flex-1 overflow-hidden">
-        {/* List (hidden on mobile when editor shown) */}
         <Show when={!isMobile() || mobilePanel() === 'list'}>
           <ListPanel />
         </Show>
 
-        {/* Content area */}
         <Show when={!isMobile() || mobilePanel() === 'editor'}>
           <Show
             when={selected()}
@@ -422,14 +376,12 @@ const PageBlog: Component = () => {
             {(blog) => (
               <Show
                 when={state.blogMode === 'memo'}
-                fallback={
-                  <BlogViewer blog={blog()} onShowPopover={showPopover} />
-                }
+                fallback={<BlogViewer blog={blog()} onShowPopover={showPopover} />}
               >
                 <BlogMemoEditor
                   blog={blog()}
-                  onUpdate={updateBlog}
-                  onDelete={deleteBlog}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDeleteBlog}
                   onOpenTagPicker={() => setTagPickerOpen(true)}
                   onOpenCoverPicker={() => setCoverPickerOpen(true)}
                   onRemoveTag={removeTag}
@@ -445,10 +397,7 @@ const PageBlog: Component = () => {
       {/* ── Tag picker bottom sheet ── */}
       <Show when={tagPickerOpen()}>
         <div class="fixed inset-0 z-60 bg-black/30" onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }} />
-        <div
-          class="fixed bottom-0 left-0 right-0 z-70 bg-white rounded-t-2xl shadow-2xl flex flex-col"
-          style={{ 'max-height': '70vh' }}
-        >
+        <div class="fixed bottom-0 left-0 right-0 z-70 bg-white rounded-t-2xl shadow-2xl flex flex-col" style={{ 'max-height': '70vh' }}>
           <div class="flex items-center justify-between px-5 pt-4 pb-0 shrink-0">
             <span class="font-semibold text-sm">カテゴリータグを追加</span>
             <button class="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100" onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}>✕</button>
@@ -490,12 +439,8 @@ const PageBlog: Component = () => {
                   >
                     <span>{tagPickerTab() === 'product' ? '📦' : '🌿'}</span>
                     <span class="text-sm text-nacc-dark leading-tight flex-1">{item.name}</span>
-                    <Show when={isSelected()}>
-                      <span class="text-nacc-gold font-bold">✓</span>
-                    </Show>
-                    <Show when={alreadyAdded()}>
-                      <span class="text-xs text-[#999]">追加済み</span>
-                    </Show>
+                    <Show when={isSelected()}><span class="text-nacc-gold font-bold">✓</span></Show>
+                    <Show when={alreadyAdded()}><span class="text-xs text-[#999]">追加済み</span></Show>
                   </button>
                 )
               }}
@@ -526,7 +471,7 @@ const PageBlog: Component = () => {
                   {(product) => (
                     <button
                       class="aspect-square rounded-lg overflow-hidden bg-[#e8dfd0] hover:ring-2 hover:ring-nacc-gold"
-                      onClick={() => { updateBlog({ cover: productImageUrl(product.image), coverType: 'product' }); setCoverPickerOpen(false) }}
+                      onClick={() => { handleUpdate({ cover: productImageUrl(product.image), coverType: 'product' }); setCoverPickerOpen(false) }}
                     >
                       <img src={productImageUrl(product.image)} alt={product.name} class="w-full h-full object-cover" />
                     </button>
@@ -540,12 +485,12 @@ const PageBlog: Component = () => {
                   const file = e.currentTarget.files?.[0]
                   if (!file) return
                   const reader = new FileReader()
-                  reader.onload = () => { updateBlog({ cover: reader.result as string, coverType: 'upload' }); setCoverPickerOpen(false) }
+                  reader.onload = () => { handleUpdate({ cover: reader.result as string, coverType: 'upload' }); setCoverPickerOpen(false) }
                   reader.readAsDataURL(file)
                 }} />
               </label>
               <Show when={selected()?.cover}>
-                <button class="w-full mt-3 py-2 text-sm text-red-400 hover:text-red-600" onClick={() => { updateBlog({ cover: undefined, coverType: 'none' }); setCoverPickerOpen(false) }}>
+                <button class="w-full mt-3 py-2 text-sm text-red-400 hover:text-red-600" onClick={() => { handleUpdate({ cover: undefined, coverType: 'none' }); setCoverPickerOpen(false) }}>
                   カバー画像を削除
                 </button>
               </Show>

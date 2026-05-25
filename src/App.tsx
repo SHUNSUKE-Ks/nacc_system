@@ -1,5 +1,5 @@
-import { type Component, Show } from 'solid-js'
-import { state, setState, setFontSize } from './store'
+import { type Component, Show, onMount } from 'solid-js'
+import { state, setState, setFontSize, initFirestore } from './store'
 import { PRODUCTS } from './db/products'
 import { NUTRIENTS } from './db/nutrients'
 import Header from './components/Header'
@@ -12,24 +12,29 @@ import PageTrash from './pages/PageTrash'
 import PageNotebook from './pages/PageNotebook'
 import SettingsPanel from './components/SettingsPanel'
 import GalleryPanel from './components/GalleryPanel'
+import GalleryPage from './pages/gallery'
 
-// Apply saved font size on boot
 setFontSize(state.fontSize)
 
-const App: Component = () => (
+const App: Component = () => {
+  onMount(() => { initFirestore() })
+  return (
+    <Show when={state.page === 'gallery'} fallback={<MainApp />}>
+      <GalleryPage />
+    </Show>
+  )
+}
+
+const MainApp: Component = () => (
   <div class="flex flex-col h-dvh overflow-hidden">
     <Header />
-
     <div class="flex flex-1 overflow-hidden relative">
-      {/* Sidebar backdrop (mobile) */}
       <div
         id="sidebarBackdrop"
         classList={{ show: state.sidebarOpen }}
         onClick={() => setState({ sidebarOpen: false })}
       />
-
       <Sidebar />
-
       <main class="flex-1 overflow-hidden relative">
         <Show when={state.page === 'db01'}>
           <PageDb01 products={PRODUCTS} />
@@ -50,7 +55,6 @@ const App: Component = () => (
           <PageNotebook />
         </Show>
       </main>
-
       <SettingsPanel />
       <GalleryPanel />
     </div>

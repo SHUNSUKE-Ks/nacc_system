@@ -1,85 +1,70 @@
 import { type Component, createSignal, For, Show } from 'solid-js'
-import type { Memo, Tag } from '../types'
+import type { Tag } from '../types'
 import { PRODUCTS } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
+import { state, setState, addMemo, updateMemo, deleteMemo } from '../store'
 
-let nextId = 1
-const mkMemo = (): Memo => ({
-  id: nextId++,
-  title: '新しいメモ',
-  body: '',
-  tags: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-})
+let saveTimer: ReturnType<typeof setTimeout>
 
-const INITIAL_MEMOS: Memo[] = [
-  {
-    id: nextId++,
-    title: 'レシチンとアレルギーの関係',
-    body: 'レシチンはホスファチジルコリンを主成分とするリン脂質。アレルギー反応の抑制に関与するという研究が増えている。\n\n大豆由来のレシチンはγリノレン酸を豊富に含み、炎症性サイトカインのバランスを整える可能性がある。',
-    tags: [
-      { type: 'nutrient', name: 'レシチン (ホスファチジルコリン)' },
-      { type: 'nutrient', name: 'γリノレン酸 (GLA)' },
-    ],
-    createdAt: new Date('2026-05-25'),
-    updatedAt: new Date('2026-05-25'),
-  },
-  {
-    id: nextId++,
-    title: 'プロポリスの免疫効果まとめ',
-    body: 'プロポリスはミツバチが作る天然の抗菌物質。フラボノイドが豊富で免疫機能を高める効果が期待されている。',
-    tags: [
-      { type: 'product', name: 'プロポリス' },
-    ],
-    createdAt: new Date('2026-05-22'),
-    updatedAt: new Date('2026-05-22'),
-  },
-]
+function scheduleFirestoreSave(id: string, patch: Parameters<typeof updateMemo>[1]) {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => updateMemo(id, patch), 800)
+}
 
 const PageMemo: Component = () => {
-  const [memos, setMemos] = createSignal<Memo[]>(INITIAL_MEMOS)
-  const [selectedId, setSelectedId] = createSignal<number | null>(INITIAL_MEMOS[0].id!)
+  const [selectedId, setSelectedId] = createSignal<string | null>(null)
   const isMobile = () => window.innerWidth < 768
   const [mobilePanel, setMobilePanel] = createSignal<'list' | 'editor'>('list')
 
-  // Tag picker
   const [tagPickerOpen, setTagPickerOpen] = createSignal(false)
   const [tagPickerTab, setTagPickerTab] = createSignal<'product' | 'nutrient'>('product')
   const [tagPickerSelected, setTagPickerSelected] = createSignal<Tag[]>([])
 
-  const selected = () => memos().find((m) => m.id === selectedId())
+  const selected = () => state.memos.find((m) => m.id === selectedId())
 
-  function updateMemo(patch: Partial<Memo>) {
-    setMemos((prev) =>
-      prev.map((m) =>
-        m.id === selectedId() ? { ...m, ...patch, updatedAt: new Date() } : m
-      )
-    )
+  function patchLocal(id: string, patch: Parameters<typeof updateMemo>[1]) {
+    setState('memos', (prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)))
   }
 
-  function addMemo() {
-    const m = mkMemo()
-    setMemos((prev) => [m, ...prev])
-    setSelectedId(m.id!)
+  function handleTextInput(field: 'title' | 'body', value: string) {
+    const id = selectedId()
+    if (!id) return
+    const now = new Date()
+    const patch = { [field]: value, updatedAt: now }
+    patchLocal(id, patch)
+    scheduleFirestoreSave(id, patch)
+  }
+
+  async function addNewMemo() {
+    const now = new Date()
+    const data = { title: '新しいメモ', body: '', tags: [], createdAt: now, updatedAt: now }
+    const id = await addMemo(data)
+    setSelectedId(id)
     if (isMobile()) setMobilePanel('editor')
   }
 
-  function selectMemo(id: number) {
+  function selectMemo(id: string) {
     setSelectedId(id)
     if (isMobile()) setMobilePanel('editor')
   }
 
   function removeTag(tagName: string) {
-    updateMemo({ tags: selected()?.tags.filter((t) => t.name !== tagName) ?? [] })
+    const id = selectedId()
+    if (!id) return
+    const tags = selected()?.tags.filter((t) => t.name !== tagName) ?? []
+    patchLocal(id, { tags })
+    updateMemo(id, { tags })
   }
 
   function confirmTagPicker() {
+    const id = selectedId()
     const curr = selected()
-    if (!curr) return
+    if (!id || !curr) return
     const existing = curr.tags.map((t) => t.name)
     const toAdd = tagPickerSelected().filter((t) => !existing.includes(t.name))
-    updateMemo({ tags: [...curr.tags, ...toAdd] })
+    const tags = [...curr.tags, ...toAdd]
+    patchLocal(id, { tags })
+    updateMemo(id, { tags })
     setTagPickerOpen(false)
     setTagPickerSelected([])
   }
@@ -90,44 +75,54 @@ const PageMemo: Component = () => {
         <span class="text-sm font-semibold text-nacc-dark">メモ</span>
         <button
           class="text-xs px-2 py-1 rounded bg-nacc-gold text-white font-semibold hover:opacity-80"
-          onClick={addMemo}
+          onClick={addNewMemo}
         >
           + 新規
         </button>
       </div>
-      <div class="flex-1 overflow-y-auto">
-        <For each={memos()}>
-          {(memo) => (
-            <button
-              class="blog-list-item w-full text-left px-4 py-3 border-b border-[#f0f0f0]"
-              classList={{ active: selectedId() === memo.id }}
-              onClick={() => selectMemo(memo.id!)}
-            >
-              <p class="text-sm font-medium text-nacc-dark truncate">{memo.title || '無題'}</p>
-              <Show when={memo.tags.length > 0}>
-                <div class="flex flex-wrap gap-1 mt-1">
-                  <For each={memo.tags.slice(0, 2)}>
-                    {(t) => (
-                      <span
-                        class="text-xs rounded-full px-1.5 py-0.5"
-                        classList={{
-                          'bg-blue-50 text-blue-600':   t.type === 'product',
-                          'bg-green-50 text-green-700': t.type === 'nutrient',
-                        }}
-                      >
-                        {t.type === 'product' ? '📦' : '🌿'} {t.name.length > 8 ? t.name.slice(0, 8) + '…' : t.name}
-                      </span>
-                    )}
-                  </For>
-                </div>
-              </Show>
-              <p class="text-xs text-[#999] mt-0.5">
-                {memo.updatedAt.toLocaleDateString('ja-JP')}
-              </p>
-            </button>
-          )}
-        </For>
-      </div>
+      <Show
+        when={state.memos.length > 0}
+        fallback={
+          <div class="flex-1 flex flex-col items-center justify-center text-[#ccc] gap-2 text-xs">
+            <span class="text-3xl">📝</span>
+            <span>メモがありません</span>
+          </div>
+        }
+      >
+        <div class="flex-1 overflow-y-auto">
+          <For each={state.memos}>
+            {(memo) => (
+              <button
+                class="blog-list-item w-full text-left px-4 py-3 border-b border-[#f0f0f0]"
+                classList={{ active: selectedId() === memo.id }}
+                onClick={() => selectMemo(memo.id!)}
+              >
+                <p class="text-sm font-medium text-nacc-dark truncate">{memo.title || '無題'}</p>
+                <Show when={memo.tags.length > 0}>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    <For each={memo.tags.slice(0, 2)}>
+                      {(t) => (
+                        <span
+                          class="text-xs rounded-full px-1.5 py-0.5"
+                          classList={{
+                            'bg-blue-50 text-blue-600':   t.type === 'product',
+                            'bg-green-50 text-green-700': t.type === 'nutrient',
+                          }}
+                        >
+                          {t.type === 'product' ? '📦' : '🌿'} {t.name.length > 8 ? t.name.slice(0, 8) + '…' : t.name}
+                        </span>
+                      )}
+                    </For>
+                  </div>
+                </Show>
+                <p class="text-xs text-[#999] mt-0.5">
+                  {new Date(memo.updatedAt).toLocaleDateString('ja-JP')}
+                </p>
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
     </div>
   )
 
@@ -149,16 +144,14 @@ const PageMemo: Component = () => {
         {(memo) => (
           <div class="flex flex-col h-full overflow-hidden">
             <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
-              {/* Title */}
               <input
                 type="text"
                 class="text-xl font-bold text-nacc-dark border-none outline-none bg-transparent w-full"
                 placeholder="タイトル"
                 value={memo().title}
-                onInput={(e) => updateMemo({ title: e.currentTarget.value })}
+                onInput={(e) => handleTextInput('title', e.currentTarget.value)}
               />
 
-              {/* Tags */}
               <div class="flex flex-wrap gap-1.5 items-center">
                 <For each={memo().tags}>
                   {(tag) => (
@@ -187,16 +180,21 @@ const PageMemo: Component = () => {
                 </button>
               </div>
 
-              {/* Body */}
               <textarea
                 class="flex-1 min-h-64 text-sm text-nacc-dark border border-nacc-border outline-none bg-white rounded-xl p-4 resize-none leading-relaxed shadow-sm focus:ring-1 focus:ring-nacc-gold/30"
                 placeholder="メモを入力..."
                 value={memo().body}
-                onInput={(e) => updateMemo({ body: e.currentTarget.value })}
+                onInput={(e) => handleTextInput('body', e.currentTarget.value)}
               />
 
-              <div class="text-xs text-gray-400 text-right">
-                自動保存 — {new Date(memo().updatedAt).toLocaleDateString('ja-JP')}
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <button
+                  class="text-red-400 hover:text-red-600"
+                  onClick={() => { deleteMemo(memo().id!); setSelectedId(null) }}
+                >
+                  🗑️ 削除
+                </button>
+                <span>自動保存 — {new Date(memo().updatedAt).toLocaleDateString('ja-JP')}</span>
               </div>
             </div>
           </div>

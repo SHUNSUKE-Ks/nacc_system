@@ -4,11 +4,6 @@ import { productImageUrl } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
 import { state, setState } from '../store'
 
-const SAMPLE_MEMOS = [
-  { id: 1, title: 'レシチンとアレルギーの関係', tags: ['レシチン', 'γリノレン酸', 'アレルギー'], date: '2026-05-25' },
-  { id: 2, title: 'NMN研究まとめ（Pubmed）', tags: ['NMN', '老化防止', 'サーチュイン'], date: '2026-05-24' },
-  { id: 3, title: 'プロポリスの免疫効果', tags: ['プロポリス', '免疫'], date: '2026-05-22' },
-]
 
 type Props = { products: Product[] }
 
@@ -416,8 +411,8 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
   }
 
   const linkedMemos = (product: Product) =>
-    SAMPLE_MEMOS.filter((m) =>
-      m.tags.some((t) => product.name.includes(t) || t.includes(product.name.split('・')[0]))
+    state.memos.filter((m) =>
+      m.tags.some((t) => product.name.includes(t.name) || t.name.includes(product.name.split('・')[0]))
     )
 
   return (
@@ -528,11 +523,13 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
                             <For each={memo.tags}>
                               {(tag) => (
                                 <span class="text-xs bg-nacc-gold/10 text-nacc-gold rounded px-1.5 py-0.5">
-                                  #{tag}
+                                  #{tag.name}
                                 </span>
                               )}
                             </For>
-                            <span class="text-xs text-[#bbb] ml-auto">{memo.date}</span>
+                            <span class="text-xs text-[#bbb] ml-auto">
+                              {new Date(memo.updatedAt).toLocaleDateString('ja-JP')}
+                            </span>
                           </div>
                         </div>
                       )}

@@ -1,6 +1,14 @@
 import { type Component, For, Show } from 'solid-js'
 import { state, setState, setFontSize, toggleDarkMode, toggleDb01Column, toggleDb02Column } from '../store'
+import type { DbStatus } from '../store'
 import type { FontSize } from '../types'
+
+const DB_STATUS_MAP: Record<DbStatus, { label: string; color: string; dot: string }> = {
+  idle:       { label: '未接続',   color: 'text-gray-400',  dot: 'bg-gray-300' },
+  connecting: { label: '接続中…', color: 'text-blue-500',  dot: 'bg-blue-400 animate-pulse' },
+  connected:  { label: '接続済み', color: 'text-green-600', dot: 'bg-green-500' },
+  error:      { label: 'エラー',   color: 'text-red-500',   dot: 'bg-red-500' },
+}
 
 const FONT_OPTIONS: { key: FontSize; label: string; desc: string }[] = [
   { key: 's',  label: '小',   desc: '13px' },
@@ -109,24 +117,37 @@ const SettingsPanel: Component = () => {
           {/* Database info */}
           <div class="p-4 border-b border-nacc-border">
             <div class="text-xs font-semibold text-gray-500 mb-3">🗄️ データベース</div>
-            <div class="flex flex-col gap-2 text-sm">
+            <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between">
                 <span class="text-gray-600 text-xs">ストレージ</span>
-                <span class="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                  IndexedDB (Dexie.js)
+                <span class="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full font-medium border border-orange-200">
+                  Cloud Firestore
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600 text-xs">プロジェクト</span>
+                <span class="text-xs text-gray-500 font-mono">naccdb2026</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600 text-xs">接続状態</span>
+                <span class={`flex items-center gap-1.5 text-xs font-medium ${DB_STATUS_MAP[state.dbStatus].color}`}>
+                  <span class={`w-1.5 h-1.5 rounded-full ${DB_STATUS_MAP[state.dbStatus].dot}`} />
+                  {DB_STATUS_MAP[state.dbStatus].label}
                 </span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-gray-600 text-xs">オフライン</span>
-                <span class="text-xs text-green-600">✓ 対応</span>
+                <span class="text-xs text-green-600">✓ キャッシュ対応</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-gray-600 text-xs">クラウド同期</span>
-                <span class="text-xs text-gray-400">— 未設定</span>
+                <span class="text-xs text-green-600">✓ リアルタイム</span>
               </div>
-              <button class="mt-1 w-full text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-lg py-1.5 hover:bg-blue-100 transition-colors">
-                Supabase で同期を設定
-              </button>
+              <Show when={state.dbStatus === 'error'}>
+                <div class="mt-1 text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  接続に失敗しました。ネットワークを確認してください。
+                </div>
+              </Show>
             </div>
           </div>
 

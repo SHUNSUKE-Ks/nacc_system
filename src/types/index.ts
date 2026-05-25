@@ -20,7 +20,7 @@ export type Nutrient = {
 }
 
 export type Memo = {
-  id?: number
+  id?: string
   title: string
   body: string
   tags: Tag[]
@@ -29,7 +29,7 @@ export type Memo = {
 }
 
 export type Blog = {
-  id?: number
+  id?: string
   title: string
   body: string
   cover?: string
@@ -42,14 +42,14 @@ export type Blog = {
 }
 
 export type GalleryPhoto = {
-  id?: number
+  id?: string
   dataUrl: string
   name: string
   createdAt: Date
 }
 
 export type Notebook = {
-  id?: number
+  id?: string
   title: string
   pages: NotebookPage[]
   createdAt: Date
@@ -63,7 +63,7 @@ export type NotebookPage = {
   order: number
 }
 
-export type Page = 'memo' | 'db01' | 'db02' | 'blog' | 'notebook' | 'trash'
+export type Page = 'memo' | 'db01' | 'db02' | 'blog' | 'notebook' | 'trash' | 'gallery'
 export type BlogMode = 'memo' | 'view'
 export type FontSize = 's' | 'm' | 'l' | 'xl'
 export type FontSizePx = { s: 13; m: 16; l: 19; xl: 22 }

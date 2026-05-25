@@ -3,11 +3,6 @@ import type { Nutrient } from '../types'
 import { PRODUCTS } from '../db/products'
 import { state, setState } from '../store'
 
-const SAMPLE_MEMOS = [
-  { id: 1, title: 'レシチンとアレルギーの関係', tags: ['レシチン', 'γリノレン酸'], date: '2026-05-25' },
-  { id: 2, title: 'NMN研究まとめ（Pubmed）',   tags: ['NMN', 'サーチュイン'],     date: '2026-05-24' },
-  { id: 3, title: 'プロポリスの免疫効果',       tags: ['プロポリス'],               date: '2026-05-22' },
-]
 
 type Props = { nutrients: Nutrient[] }
 
@@ -222,8 +217,8 @@ const DetailView: Component<{ nutrients: Nutrient[] }> = (props) => {
   }
 
   const linkedMemos = (nutrient: Nutrient) =>
-    SAMPLE_MEMOS.filter((m) =>
-      m.tags.some((t) => nutrient.name.includes(t) || t.includes(nutrient.name.split(' ')[0].slice(0, 4)))
+    state.memos.filter((m) =>
+      m.tags.some((t) => nutrient.name.includes(t.name) || t.name.includes(nutrient.name.split(' ')[0].slice(0, 4)))
     )
 
   return (
@@ -318,11 +313,13 @@ const DetailView: Component<{ nutrients: Nutrient[] }> = (props) => {
                             <For each={memo.tags}>
                               {(tag) => (
                                 <span class="text-xs bg-nacc-gold/10 text-nacc-gold rounded px-1.5 py-0.5">
-                                  #{tag}
+                                  #{tag.name}
                                 </span>
                               )}
                             </For>
-                            <span class="text-xs text-[#bbb] ml-auto">{memo.date}</span>
+                            <span class="text-xs text-[#bbb] ml-auto">
+                              {new Date(memo.updatedAt).toLocaleDateString('ja-JP')}
+                            </span>
                           </div>
                         </div>
                       )}

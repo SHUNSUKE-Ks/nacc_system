@@ -1,5 +1,5 @@
 import { type Component, Show, createSignal } from 'solid-js'
-import { state, setState } from '../store'
+import { state, setState, navigate } from '../store'
 import type { Page } from '../types'
 
 const PAGE_LABELS: Record<Page, string> = {
@@ -9,6 +9,7 @@ const PAGE_LABELS: Record<Page, string> = {
   blog:     '📓 ブログ',
   notebook: '📚 ノートブック',
   trash:    '🗑️ ごみ箱',
+  gallery:  '🖼 ギャラリー',
 }
 
 const Header: Component = () => {
@@ -31,7 +32,7 @@ const Header: Component = () => {
         </svg>
       </button>
 
-      {/* Logo + DB View dropdown */}
+      {/* Logo + DB View dropdown (DB pages only) */}
       <div class="relative">
         <button
           class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
@@ -51,7 +52,6 @@ const Header: Component = () => {
           </Show>
         </button>
 
-        {/* View menu dropdown */}
         <Show when={viewMenuOpen() && isDbPage()}>
           <div
             class="absolute left-0 top-10 bg-white border border-nacc-border rounded-xl shadow-lg w-52 overflow-hidden z-50"
@@ -89,10 +89,28 @@ const Header: Component = () => {
               </button>
             </div>
           </div>
-          {/* Backdrop to close menu */}
           <div class="fixed inset-0 z-40" onClick={closeViewMenu} />
         </Show>
       </div>
+
+      {/* Gallery button — ロゴ直後、ブレッドクラム前 */}
+      <button
+        class="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all shrink-0"
+        classList={{
+          'bg-violet-50 text-violet-600': state.page === 'gallery',
+          'text-gray-400 hover:bg-gray-100 hover:text-gray-600': state.page !== 'gallery',
+        }}
+        onClick={() => navigate('gallery')}
+        title="Gallery"
+      >
+        <div class="w-5 h-5 rounded-md bg-linear-to-br from-violet-500 to-pink-500 flex items-center justify-center shrink-0">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <span class="text-xs font-semibold hidden sm:inline">Gallery</span>
+      </button>
 
       {/* Breadcrumb */}
       <div class="flex items-center gap-1 text-xs text-gray-400 ml-1">

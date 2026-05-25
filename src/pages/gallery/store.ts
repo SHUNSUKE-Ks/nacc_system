@@ -4,6 +4,7 @@ import { GALLERY_SAMPLE } from './data'
 
 type GalleryLocalState = {
   items: GalleryItem[]
+  masterTags: string[]          // 全体タグ（削除しても残る）
   view: GalleryView
   sortBy: GallerySortBy
   search: string
@@ -13,10 +14,19 @@ type GalleryLocalState = {
   selectedId: string | null
   detailOpen: boolean
   showTrash: boolean
+  lightboxId: string | null
+  tagSheetId: string | null
+}
+
+function extractTags(items: GalleryItem[]): string[] {
+  const set = new Set<string>()
+  items.forEach((i) => i.tags.forEach((t) => set.add(t)))
+  return Array.from(set).sort()
 }
 
 export const [galleryState, setGalleryState] = createStore<GalleryLocalState>({
   items: GALLERY_SAMPLE,
+  masterTags: extractTags(GALLERY_SAMPLE),
   view: 'grid',
   sortBy: 'createdAt',
   search: '',
@@ -26,10 +36,37 @@ export const [galleryState, setGalleryState] = createStore<GalleryLocalState>({
   selectedId: null,
   detailOpen: false,
   showTrash: false,
+  lightboxId: null,
+  tagSheetId: null,
 })
+
+// マスタータグに追加（重複・自動ソート）
+export function addMasterTag(tag: string) {
+  const t = tag.trim()
+  if (!t) return
+  setGalleryState('masterTags', (prev) =>
+    prev.includes(t) ? prev : [...prev, t].sort()
+  )
+}
 
 export function selectGalleryItem(id: string | null) {
   setGalleryState({ selectedId: id, detailOpen: id !== null })
+}
+
+export function openLightbox(id: string) {
+  setGalleryState({ lightboxId: id })
+}
+
+export function closeLightbox() {
+  setGalleryState({ lightboxId: null })
+}
+
+export function openTagSheet(id: string) {
+  setGalleryState({ tagSheetId: id })
+}
+
+export function closeTagSheet() {
+  setGalleryState({ tagSheetId: null })
 }
 
 export function toggleGalleryFavorite(id: string) {
@@ -74,21 +111,14 @@ export function getAllTags(items: GalleryItem[]): string[] {
 export function getFilteredItems(s: typeof galleryState): GalleryItem[] {
   let items = [...s.items]
 
-  if (s.showTrash) {
-    return items.filter((i) => i.isDeleted)
-  }
+  if (s.showTrash) return items.filter((i) => i.isDeleted)
 
   items = items.filter((i) => !i.isDeleted)
 
-  if (s.favoritesOnly) {
-    items = items.filter((i) => i.isFavorite)
-  }
-  if (s.selectedCategory !== 'all') {
-    items = items.filter((i) => i.category === s.selectedCategory)
-  }
-  if (s.selectedTags.length > 0) {
+  if (s.favoritesOnly) items = items.filter((i) => i.isFavorite)
+  if (s.selectedCategory !== 'all') items = items.filter((i) => i.category === s.selectedCategory)
+  if (s.selectedTags.length > 0)
     items = items.filter((i) => s.selectedTags.every((t) => i.tags.includes(t)))
-  }
   if (s.search.trim()) {
     const q = s.search.toLowerCase()
     items = items.filter((i) =>

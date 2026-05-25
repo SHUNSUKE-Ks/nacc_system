@@ -23,6 +23,7 @@ const GalleryDetail: Component = () => {
   const [editTags, setEditTags] = createSignal<string[]>([])
   const [newTagInput, setNewTagInput] = createSignal('')
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false)
+  let tagInputRef!: HTMLInputElement
 
   // アイテムが変わったら編集モードを抜ける
   createEffect(() => {
@@ -61,14 +62,19 @@ const GalleryDetail: Component = () => {
       setEditTags((prev) => [...prev, tag])
     }
     setNewTagInput('')
+    tagInputRef?.focus()
   }
 
   function removeTag(tag: string) {
     setEditTags((prev) => prev.filter((t) => t !== tag))
+    tagInputRef?.focus()
   }
 
   function handleTagKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter') { e.preventDefault(); addTag() }
+    if (e.key === 'Backspace' && !newTagInput() && editTags().length > 0) {
+      removeTag(editTags()[editTags().length - 1])
+    }
   }
 
   return (
@@ -310,9 +316,10 @@ const GalleryDetail: Component = () => {
                   </div>
                   <div class="flex gap-1.5">
                     <input
+                      ref={tagInputRef}
                       type="text"
                       class="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-700 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all"
-                      placeholder="タグを入力して Enter"
+                      placeholder="タグを入力 → Enter / Backspaceで削除"
                       value={newTagInput()}
                       onInput={(e) => setNewTagInput(e.currentTarget.value)}
                       onKeyDown={handleTagKeyDown}

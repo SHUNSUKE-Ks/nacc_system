@@ -23,7 +23,7 @@ const Header: Component = () => {
 
       {/* Hamburger */}
       <button
-        class="p-1.5 rounded hover:bg-gray-100 text-gray-500 shrink-0"
+        class="p-1.5 rounded hover:bg-gray-100 active:bg-gray-200 active:scale-95 text-gray-500 shrink-0 transition-all"
         onClick={() => setState({ sidebarOpen: !state.sidebarOpen })}
         aria-label="メニュー"
       >
@@ -147,7 +147,7 @@ const Header: Component = () => {
         </div>
 
         <button
-          class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+          class="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 active:scale-95 text-gray-500 transition-all"
           onClick={() => setState({ galleryPanelOpen: !state.galleryPanelOpen, settingsPanelOpen: false })}
           title="フォトギャラリー"
         >
@@ -157,7 +157,7 @@ const Header: Component = () => {
         </button>
 
         <button
-          class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+          class="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 active:scale-95 text-gray-500 transition-all"
           onClick={() => setState({ settingsPanelOpen: !state.settingsPanelOpen, galleryPanelOpen: false })}
           title="設定"
         >

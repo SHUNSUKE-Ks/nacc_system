@@ -19,6 +19,7 @@ const PageMemo: Component = () => {
   const [tagPickerOpen, setTagPickerOpen] = createSignal(false)
   const [tagPickerTab, setTagPickerTab] = createSignal<'product' | 'nutrient'>('product')
   const [tagPickerSelected, setTagPickerSelected] = createSignal<Tag[]>([])
+  const [tagPickerSearch, setTagPickerSearch] = createSignal('')
 
   const selected = () => state.memos.find((m) => m.id === selectedId())
 
@@ -67,6 +68,13 @@ const PageMemo: Component = () => {
     updateMemo(id, { tags })
     setTagPickerOpen(false)
     setTagPickerSelected([])
+    setTagPickerSearch('')
+  }
+
+  function closeTagPicker() {
+    setTagPickerOpen(false)
+    setTagPickerSelected([])
+    setTagPickerSearch('')
   }
 
   const List = () => (
@@ -214,10 +222,7 @@ const PageMemo: Component = () => {
 
       {/* ── Tag picker bottom sheet ── */}
       <Show when={tagPickerOpen()}>
-        <div
-          class="fixed inset-0 z-60 bg-black/30"
-          onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}
-        />
+        <div class="fixed inset-0 z-60 bg-black/30" onClick={closeTagPicker} />
         <div
           class="fixed bottom-0 left-0 right-0 z-70 bg-white rounded-t-2xl shadow-2xl flex flex-col"
           style={{ 'max-height': '70vh' }}
@@ -226,11 +231,34 @@ const PageMemo: Component = () => {
             <span class="font-semibold text-sm">カテゴリータグを追加</span>
             <button
               class="text-gray-400 hover:text-gray-600 w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100"
-              onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}
+              onClick={closeTagPicker}
             >
               ✕
             </button>
           </div>
+
+          {/* Search */}
+          <div class="px-5 pt-3 pb-0 shrink-0">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-nacc-border">
+              <span class="text-gray-400 text-sm">🔍</span>
+              <input
+                type="text"
+                class="flex-1 text-sm bg-transparent outline-none placeholder-gray-400"
+                placeholder="検索..."
+                value={tagPickerSearch()}
+                onInput={(e) => setTagPickerSearch(e.currentTarget.value)}
+              />
+              <Show when={tagPickerSearch()}>
+                <button
+                  class="text-gray-300 hover:text-gray-500 leading-none"
+                  onClick={() => setTagPickerSearch('')}
+                >
+                  ✕
+                </button>
+              </Show>
+            </div>
+          </div>
+
           <div class="flex px-5 mt-2 shrink-0 border-b border-nacc-border">
             {(['product', 'nutrient'] as const).map((tab) => (
               <button
@@ -245,8 +273,11 @@ const PageMemo: Component = () => {
               </button>
             ))}
           </div>
+
           <div class="overflow-y-auto flex-1 p-3">
-            <For each={tagPickerTab() === 'product' ? PRODUCTS : NUTRIENTS}>
+            <For each={(tagPickerTab() === 'product' ? PRODUCTS : NUTRIENTS).filter((item) =>
+              tagPickerSearch() === '' || item.name.includes(tagPickerSearch())
+            )}>
               {(item) => {
                 const tag: Tag = { type: tagPickerTab(), name: item.name }
                 const isSelected = () => tagPickerSelected().some((t) => t.name === item.name)
@@ -278,13 +309,21 @@ const PageMemo: Component = () => {
                 )
               }}
             </For>
+            <Show when={(tagPickerTab() === 'product' ? PRODUCTS : NUTRIENTS).filter((item) =>
+              tagPickerSearch() !== '' && item.name.includes(tagPickerSearch())
+            ).length === 0 && tagPickerSearch() !== ''}>
+              <div class="flex flex-col items-center justify-center py-8 text-gray-300 text-sm gap-1">
+                <span>「{tagPickerSearch()}」は見つかりません</span>
+              </div>
+            </Show>
           </div>
+
           <div class="px-5 py-3 border-t border-nacc-border flex items-center justify-between bg-gray-50 shrink-0">
             <span class="text-xs text-gray-500 font-medium">{tagPickerSelected().length}件選択中</span>
             <div class="flex gap-2">
               <button
                 class="px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-                onClick={() => { setTagPickerOpen(false); setTagPickerSelected([]) }}
+                onClick={closeTagPicker}
               >
                 キャンセル
               </button>

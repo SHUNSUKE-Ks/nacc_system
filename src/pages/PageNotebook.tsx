@@ -1,6 +1,6 @@
 import { type Component, createSignal, For, Show } from 'solid-js'
 import type { NotebookPage } from '../types'
-import { state, addNotebook, updateNotebook, deleteNotebook } from '../store'
+import { state, setState, addNotebook, updateNotebook, deleteNotebook } from '../store'
 
 let saveTimer: ReturnType<typeof setTimeout>
 
@@ -18,6 +18,10 @@ const PageNotebook: Component = () => {
   function schedulePageSave(notebookId: string, pages: NotebookPage[]) {
     clearTimeout(saveTimer)
     saveTimer = setTimeout(() => updateNotebook(notebookId, { pages, updatedAt: new Date() }), 800)
+  }
+
+  function patchPagesLocal(notebookId: string, pages: NotebookPage[]) {
+    setState('notebooks', (prev) => prev.map((n) => (n.id === notebookId ? { ...n, pages } : n)))
   }
 
   async function handleAddNotebook() {
@@ -63,7 +67,7 @@ const PageNotebook: Component = () => {
     const pages = nb.pages.map((p) =>
       p.id === selectedPageId() ? { ...p, [field]: value } : p
     )
-    updateNotebook(nb.id!, { pages })
+    patchPagesLocal(nb.id!, pages)
     schedulePageSave(nb.id!, pages)
   }
 

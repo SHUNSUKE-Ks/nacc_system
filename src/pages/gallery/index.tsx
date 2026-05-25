@@ -4,6 +4,8 @@ import GalleryHeader from './GalleryHeader'
 import GallerySidebar from './GallerySidebar'
 import GalleryGrid from './GalleryGrid'
 import GalleryDetail from './GalleryDetail'
+import GalleryLightbox from './GalleryLightbox'
+import GalleryTagSheet from './GalleryTagSheet'
 import { galleryState } from './store'
 
 const GalleryPage: Component = () => {
@@ -26,6 +28,10 @@ const GalleryPage: Component = () => {
           </Show>
         </div>
       </div>
+
+      {/* Overlays (portal-style, rendered at page root) */}
+      <GalleryLightbox />
+      <GalleryTagSheet />
     </div>
   )
 }

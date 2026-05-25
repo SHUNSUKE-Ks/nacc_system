@@ -36,7 +36,7 @@ const FONT_SIZE_PX: Record<FontSize, number> = { s: 13, m: 16, l: 19, xl: 22 }
 
 function initDarkMode(): boolean {
   const saved = localStorage.getItem('nacc-dark-mode')
-  const isDark = saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const isDark = saved === 'true'
   if (isDark) document.documentElement.classList.add('dark')
   return isDark
 }
@@ -84,7 +84,7 @@ const [state, setState] = createStore<AppState>({
   page: 'db01',
   galleryReturnPage: 'db01',
   blogMode: 'memo',
-  fontSize: 'l',
+  fontSize: 'xl',
   darkMode: initDarkMode(),
   dbView: 'table',
   selectedProductId: null,
@@ -167,19 +167,25 @@ export async function initFirestore(): Promise<void> {
 // ── Memo CRUD ─────────────────────────────────────────────────────────────────
 
 export async function addMemo(data: Omit<Memo, 'id'>): Promise<string> {
-  const id = await addMemoFs(data)
-  setState('memos', (prev) => [{ ...data, id }, ...prev])
-  return id
+  const tempId = 'local-' + Date.now()
+  setState('memos', (prev) => [{ ...data, id: tempId }, ...prev])
+  try {
+    const id = await addMemoFs(data)
+    setState('memos', (prev) => prev.map((m) => (m.id === tempId ? { ...m, id } : m)))
+    return id
+  } catch {
+    return tempId
+  }
 }
 
-export async function updateMemo(id: string, patch: Partial<Omit<Memo, 'id'>>): Promise<void> {
-  await updateMemoFs(id, patch)
+export function updateMemo(id: string, patch: Partial<Omit<Memo, 'id'>>): void {
   setState('memos', (prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)))
+  updateMemoFs(id, patch).catch(console.warn)
 }
 
-export async function deleteMemo(id: string): Promise<void> {
-  await deleteMemoFs(id)
+export function deleteMemo(id: string): void {
   setState('memos', (prev) => prev.filter((m) => m.id !== id))
+  deleteMemoFs(id).catch(console.warn)
 }
 
 // ── Blog CRUD ─────────────────────────────────────────────────────────────────
@@ -233,14 +239,20 @@ export function emptyTrash(): void {
 // ── Notebook CRUD ─────────────────────────────────────────────────────────────
 
 export async function addNotebook(data: Omit<Notebook, 'id'>): Promise<string> {
-  const id = await addNotebookFs(data)
-  setState('notebooks', (prev) => [{ ...data, id }, ...prev])
-  return id
+  const tempId = 'local-' + Date.now()
+  setState('notebooks', (prev) => [{ ...data, id: tempId }, ...prev])
+  try {
+    const id = await addNotebookFs(data)
+    setState('notebooks', (prev) => prev.map((n) => (n.id === tempId ? { ...n, id } : n)))
+    return id
+  } catch {
+    return tempId
+  }
 }
 
-export async function updateNotebook(id: string, patch: Partial<Omit<Notebook, 'id'>>): Promise<void> {
-  await updateNotebookFs(id, patch)
+export function updateNotebook(id: string, patch: Partial<Omit<Notebook, 'id'>>): void {
   setState('notebooks', (prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
+  updateNotebookFs(id, patch).catch(console.warn)
 }
 
 export async function deleteNotebook(id: string): Promise<void> {

@@ -325,8 +325,10 @@ const PageNotebook: Component = () => {
   const [addItemOpen, setAddItemOpen] = createSignal(false)
   const [addItemTab, setAddItemTab] = createSignal<'memo' | 'blog'>('memo')
 
-  // Drag state (module-level var, not reactive)
+  // Drag state
   let dragFromIdx = -1
+  const [dragFromIdxSig, setDragFromIdxSig] = createSignal(-1)
+  const [dragOverIdx, setDragOverIdx] = createSignal(-1)
 
   const nb = () => openNb()
   const sortedItems = () => (nb()?.items ?? []).slice().sort((a, b) => a.order - b.order)
@@ -406,19 +408,25 @@ const PageNotebook: Component = () => {
   // Drag & drop reorder
   function handleDragStart(e: DragEvent, idx: number) {
     dragFromIdx = idx
+    setDragFromIdxSig(idx)
     if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
     ;(e.currentTarget as HTMLElement).style.opacity = '0.45'
   }
   function handleDragEnd(e: DragEvent) {
     ;(e.currentTarget as HTMLElement).style.opacity = '1'
     dragFromIdx = -1
+    setDragFromIdxSig(-1)
+    setDragOverIdx(-1)
   }
-  function handleDragOver(e: DragEvent) {
+  function handleDragOver(e: DragEvent, idx: number) {
     e.preventDefault()
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+    setDragOverIdx(idx)
   }
   function handleDrop(e: DragEvent, toIdx: number) {
     e.preventDefault()
+    setDragOverIdx(-1)
+    setDragFromIdxSig(-1)
     if (dragFromIdx < 0 || dragFromIdx === toIdx) { dragFromIdx = -1; return }
     const items = sortedItems().slice()
     const [moved] = items.splice(dragFromIdx, 1)
@@ -530,7 +538,15 @@ const PageNotebook: Component = () => {
                 ≡ ドラッグで並べ替え
               </div>
             </Show>
-            <div class="flex-1 overflow-y-auto">
+            <div
+              class="flex-1 overflow-y-auto"
+              onDragOver={(e) => {
+                if (sortMode() && dragFromIdx >= 0) {
+                  e.preventDefault()
+                  setDragOverIdx(sortedItems().length)
+                }
+              }}
+            >
               <Show
                 when={sortedItems().length > 0}
                 fallback={
@@ -542,22 +558,30 @@ const PageNotebook: Component = () => {
               >
                 <For each={sortedItems()}>
                   {(item, idx) => (
+                    <>
+                      {/* Drop indicator line above this item */}
+                      <Show when={sortMode() && dragOverIdx() === idx() && dragFromIdxSig() !== idx()}>
+                        <div class="h-0.5 bg-blue-500 mx-3 rounded-full pointer-events-none" />
+                      </Show>
+
                     <div
                       class="flex items-start gap-2 px-3 py-3 border-b border-[#f0f0f0] cursor-pointer transition-colors group"
                       classList={{
                         'bg-[#f5f0e8] border-l-2 border-l-nacc-gold': selectedItemId() === item.id && !sortMode(),
                         'hover:bg-[#f9f8f6]': selectedItemId() !== item.id,
+                        'opacity-40': sortMode() && dragFromIdxSig() === idx(),
                       }}
                       draggable={sortMode()}
                       onDragStart={(e) => sortMode() && handleDragStart(e, idx())}
                       onDragEnd={handleDragEnd}
-                      onDragOver={(e) => sortMode() && handleDragOver(e)}
+                      onDragOver={(e) => { if (sortMode()) handleDragOver(e, idx()) }}
+                      onDragLeave={() => { if (dragOverIdx() === idx()) setDragOverIdx(-1) }}
                       onDrop={(e) => sortMode() && handleDrop(e, idx())}
                       onClick={() => !sortMode() && setSelectedItemId(item.id)}
                     >
                       {/* Drag handle */}
                       <Show when={sortMode()}>
-                        <span class="text-gray-400 text-sm mt-0.5 cursor-grab">≡</span>
+                        <span class="text-gray-400 text-sm mt-0.5 cursor-grab select-none">≡</span>
                       </Show>
 
                       <div class="min-w-0 flex-1">
@@ -576,8 +600,14 @@ const PageNotebook: Component = () => {
                         <div class="text-xs text-gray-400">{item.date.toLocaleDateString('ja-JP')}</div>
                       </div>
                     </div>
+                    </>
                   )}
                 </For>
+
+                {/* Drop indicator at end of list */}
+                <Show when={sortMode() && dragOverIdx() === sortedItems().length}>
+                  <div class="h-0.5 bg-blue-500 mx-3 rounded-full pointer-events-none" />
+                </Show>
               </Show>
             </div>
           </div>

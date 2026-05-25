@@ -483,16 +483,6 @@ const PageNotebook: Component = () => {
       <div class="flex flex-col h-full overflow-hidden">
         {/* Header */}
         <div class="h-12 bg-white border-b border-nacc-border flex items-center gap-2 px-3 shrink-0">
-          <button
-            class="flex items-center gap-1 text-xs text-gray-500 hover:text-nacc-dark px-2 py-1.5 rounded hover:bg-gray-100"
-            onClick={goBack}
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            一覧
-          </button>
-
           {/* Cover thumbnail */}
           <button
             class="w-7 h-7 rounded-lg flex items-center justify-center text-lg overflow-hidden shrink-0 hover:opacity-80"
@@ -504,13 +494,13 @@ const PageNotebook: Component = () => {
             </Show>
           </button>
 
-          <span class="text-sm font-semibold text-nacc-dark truncate flex-1 min-w-0">{cur.title}</span>
+          <span class="text-sm font-semibold text-nacc-dark truncate min-w-0">{cur.title}</span>
 
-          {/* Sort toggle */}
+          {/* Sort toggle — directly next to title */}
           <button
-            class="p-1.5 rounded-lg transition-colors"
+            class="p-1.5 rounded-lg transition-colors shrink-0"
             classList={{
-              'bg-nacc-gold text-white':    sortMode(),
+              'bg-nacc-gold text-white':         sortMode(),
               'hover:bg-gray-100 text-gray-500': !sortMode(),
             }}
             onClick={() => setSortMode((v) => !v)}
@@ -520,6 +510,8 @@ const PageNotebook: Component = () => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
             </svg>
           </button>
+
+          <div class="flex-1" />
 
           {/* Add item */}
           <button

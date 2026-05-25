@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --color-nacc-gold: #b38247;
+  --color-nacc-dark: #37352f;
+  --color-nacc-light: #f7f6f3;
+  --color-nacc-border: #e8e8e8;
+  --font-family-jp: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+}
+
+/* ── Base ── */
+html {
+  font-size: 19px; /* default: 大 — 目の悪い方向け */
+}
+body {
+  margin: 0;
+  font-family: var(--font-family-jp);
+  background: var(--color-nacc-light);
+  color: var(--color-nacc-dark);
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+#root {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 3px; }
+
+/* ── Notion table ── */
+.notion-row:hover .notion-cell { background: #f9f8f6; }
+.notion-cell { border-right: 1px solid #e8e8e8; min-height: 36px; }
+.notion-cell:last-child { border-right: none; }
+
+/* ── Animations ── */
+.slide-in { animation: slideIn .2s ease; }
+@keyframes slideIn {
+  from { transform: translateX(10px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* ── Pill filter ── */
+.pill-active { background: #37352f !important; color: #fff !important; }
+
+/* ── Blog list item ── */
+.blog-list-item { border-left: 3px solid transparent; transition: all .15s; }
+.blog-list-item.active { background: #f5f0e8; border-left-color: #b38247; }
+.blog-list-item:not(.active):hover { background: #f9f8f6; }
+
+/* ── Mode switch pill ── */
+.mode-pill { display: inline-flex; background: #f0f0f0; border-radius: 20px; padding: 2px; gap: 1px; }
+.mode-pill button { padding: 3px 10px; border-radius: 16px; font-size: 0.6rem; transition: all .18s; color: #888; white-space: nowrap; }
+.mode-pill button.active { background: #fff; color: #37352f; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+
+/* ── Sidebar ── */
+#sidebar { transition: width .2s ease, opacity .2s ease; }
+#sidebarBackdrop {
+  display: none;
+  position: fixed; inset: 0; top: 48px;
+  background: rgba(0,0,0,.35);
+  z-index: 54;
+}
+#sidebarBackdrop.show { display: block; }
+
+/* ── Panels ── */
+#settingsPanel, #galleryPanel { transition: transform .25s ease; }
+
+/* ── Tag picker bottom sheet ── */
+#tagPickerPopup { transition: transform .3s cubic-bezier(.32,.72,0,1); }
+
+/* ── Cover placeholder ── */
+.cover-placeholder { background: linear-gradient(135deg, #f5f0e8, #e8dfd0); }
+
+/* ── Font size buttons ── */
+.fs-btn {
+  flex: 1; padding: 6px 4px; border-radius: 8px;
+  border: 1.5px solid #e8e8e8; text-align: center;
+  cursor: pointer; transition: all .15s;
+  background: #fff; color: #666; font-weight: 500;
+}
+.fs-btn.active { border-color: #b38247; background: #b38247; color: #fff; }
+
+/* ── Mobile back button ── */
+.mobile-back {
+  display: none;
+  align-items: center; gap: 6px;
+  font-size: 0.75rem; color: #b38247;
+  padding: 12px 24px 0; cursor: pointer; font-weight: 600;
+}
+.mobile-back:hover { opacity: .75; }
+
+/* ── Mobile overrides ── */
+@media (max-width: 767px) {
+  #sidebar {
+    position: fixed !important;
+    left: 0; top: 48px; bottom: 0;
+    z-index: 55;
+    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+  }
+  #settingsPanel, #galleryPanel {
+    position: fixed !important;
+    right: 0; top: 48px; bottom: 0;
+    width: 100% !important;
+    max-width: 340px;
+  }
+  .desktop-right-panel { display: none !important; }
+  .mobile-back { display: flex !important; }
+  button { min-height: 36px; }
+}
+
+@media (max-width: 1023px) {
+  #galleryPanel { width: 260px !important; }
+}

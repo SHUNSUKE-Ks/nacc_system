@@ -9,6 +9,11 @@ export type Product = {
   ingredients: string[]
   nutrientIds: string[]
   memo: string
+  category?: 'supplement' | 'cosmetic'
+  description?: string
+  price?: number
+  volume?: string
+  createdAt?: Date
 }
 
 export type Nutrient = {
@@ -17,6 +22,7 @@ export type Nutrient = {
   description: string
   productIds: string[]
   memo: string
+  createdAt?: Date
 }
 
 export type Memo = {

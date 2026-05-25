@@ -420,19 +420,26 @@ const PageNotebook: Component = () => {
   }
   function handleDragOver(e: DragEvent, idx: number) {
     e.preventDefault()
+    e.stopPropagation()
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
-    setDragOverIdx(idx)
+    // Top half → line before idx, bottom half → line before idx+1
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setDragOverIdx(e.clientY < rect.top + rect.height / 2 ? idx : idx + 1)
   }
-  function handleDrop(e: DragEvent, toIdx: number) {
+  function handleDrop(e: DragEvent) {
     e.preventDefault()
+    e.stopPropagation()
+    const toIdx = dragOverIdx()
     setDragOverIdx(-1)
     setDragFromIdxSig(-1)
-    if (dragFromIdx < 0 || dragFromIdx === toIdx) { dragFromIdx = -1; return }
-    const items = sortedItems().slice()
-    const [moved] = items.splice(dragFromIdx, 1)
-    items.splice(toIdx, 0, moved)
-    updateNb({ items: items.map((it, i) => ({ ...it, order: i })) })
+    if (dragFromIdx < 0 || toIdx < 0) { dragFromIdx = -1; return }
+    const from = dragFromIdx
     dragFromIdx = -1
+    if (from === toIdx || from === toIdx - 1) return
+    const items = sortedItems().slice()
+    const [moved] = items.splice(from, 1)
+    items.splice(from < toIdx ? toIdx - 1 : toIdx, 0, moved)
+    updateNb({ items: items.map((it, i) => ({ ...it, order: i })) })
   }
 
   const availableItems = () => {
@@ -538,15 +545,7 @@ const PageNotebook: Component = () => {
                 ≡ ドラッグで並べ替え
               </div>
             </Show>
-            <div
-              class="flex-1 overflow-y-auto"
-              onDragOver={(e) => {
-                if (sortMode() && dragFromIdx >= 0) {
-                  e.preventDefault()
-                  setDragOverIdx(sortedItems().length)
-                }
-              }}
-            >
+            <div class="flex-1 overflow-y-auto">
               <Show
                 when={sortedItems().length > 0}
                 fallback={
@@ -575,8 +574,8 @@ const PageNotebook: Component = () => {
                       onDragStart={(e) => sortMode() && handleDragStart(e, idx())}
                       onDragEnd={handleDragEnd}
                       onDragOver={(e) => { if (sortMode()) handleDragOver(e, idx()) }}
-                      onDragLeave={() => { if (dragOverIdx() === idx()) setDragOverIdx(-1) }}
-                      onDrop={(e) => sortMode() && handleDrop(e, idx())}
+                      onDragLeave={(e) => { e.stopPropagation() }}
+                      onDrop={(e) => { if (sortMode()) handleDrop(e) }}
                       onClick={() => !sortMode() && setSelectedItemId(item.id)}
                     >
                       {/* Drag handle */}

@@ -61,11 +61,11 @@ body {
 #sidebar { transition: transform .22s ease; }
 #sidebarBackdrop {
   display: none;
-  position: fixed; inset: 0; top: 48px;
+  position: fixed; inset: 0; top: 3rem;   /* 3rem = h-12, scales with font */
   background: rgba(0,0,0,.35);
   z-index: 54;
 }
-#sidebarBackdrop.show { display: block; }
+/* .show is activated only inside the mobile media query below */
 
 /* ── Panels ── */
 #settingsPanel, #galleryPanel { transition: transform .25s ease; }
@@ -94,12 +94,13 @@ body {
 }
 .mobile-back:hover { opacity: .75; }
 
-/* ── Mobile overrides ── */
-@media (max-width: 767px) {
+/* ── Mobile overrides (portrait phones + landscape phones) ── */
+@media screen and (max-width: 767px),
+       screen and (max-height: 500px) and (orientation: landscape) {
   /* Sidebar: fixed overlay, transform-based show/hide */
   #sidebar {
     position: fixed !important;
-    left: 0; top: 48px; bottom: 0;
+    left: 0; top: 3rem; bottom: 0;
     z-index: 55;
     width: 272px !important;
     transform: translateX(-100%);
@@ -108,11 +109,12 @@ body {
   #sidebar.sidebar-open {
     transform: translateX(0);
   }
+  #sidebarBackdrop.show { display: block; }
 
   /* Settings & gallery panels: fixed, full-width up to 340px */
   #settingsPanel, #galleryPanel {
     position: fixed !important;
-    right: 0; top: 48px; bottom: 0;
+    right: 0; top: 3rem; bottom: 0;
     width: 100% !important;
     max-width: 340px;
   }

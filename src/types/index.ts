@@ -4,19 +4,28 @@ export type Product = {
   id: string
   name: string
   image: string
+  category: 'supplement' | 'cosmetic'
+  description: string
+  price: number
+  volume: string
   symptoms: string[]
   effects: string[]
   ingredients: string[]
   nutrientIds: string[]
   memo: string
-  category?: 'supplement' | 'cosmetic'
-  description?: string
-  price?: number
-  volume?: string
   createdAt?: Date
 }
 
 export type Nutrient = {
+  id: string
+  name: string
+  description: string
+  productIds: string[]
+  memo: string
+  createdAt?: Date
+}
+
+export type Symptom = {
   id: string
   name: string
   description: string
@@ -69,11 +78,11 @@ export type NotebookPage = {
   order: number
 }
 
-export type Page = 'memo' | 'db01' | 'db02' | 'blog' | 'notebook' | 'trash' | 'gallery'
+export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery'
 export type BlogMode = 'memo' | 'view'
 export type FontSize = 's' | 'm' | 'l' | 'xl'
 export type FontSizePx = { s: 13; m: 16; l: 19; xl: 22 }
-export type DbView = 'table' | 'detail'
+export type DbView = 'table' | 'detail' | 'index'
 
 export type ColumnDef = {
   id: string

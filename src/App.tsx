@@ -4,6 +4,8 @@ import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import PageDb01 from './pages/PageDb01'
 import PageDb02 from './pages/PageDb02'
+import PageDb03 from './pages/PageDb03'
+import PageDb10 from './pages/PageDb10'
 import PageBlog from './pages/PageBlog'
 import PageMemo from './pages/PageMemo'
 import PageTrash from './pages/PageTrash'
@@ -39,6 +41,12 @@ const MainApp: Component = () => (
         </Show>
         <Show when={state.page === 'db02'}>
           <PageDb02 nutrients={state.nutrients} />
+        </Show>
+        <Show when={state.page === 'db03'}>
+          <PageDb03 />
+        </Show>
+        <Show when={state.page === 'db10'}>
+          <PageDb10 />
         </Show>
         <Show when={state.page === 'blog'}>
           <PageBlog />

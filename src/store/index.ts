@@ -1,7 +1,8 @@
 import { createStore } from 'solid-js/store'
-import type { Page, BlogMode, FontSize, Blog, Memo, Notebook, Product, Nutrient, DbView, ColumnDef } from '../types'
+import type { Page, BlogMode, FontSize, Blog, Memo, Notebook, Product, Nutrient, Symptom, DbView, ColumnDef } from '../types'
 import { PRODUCTS } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
+import { SYMPTOMS } from '../db/symptoms'
 import {
   fetchMemos, addMemoFs, updateMemoFs, deleteMemoFs,
   fetchBlogs, addBlogFs, updateBlogFs, restoreBlogFs, deleteBlogFs,
@@ -29,12 +30,15 @@ export type AppState = {
   blogFilterTags: string[]
   products: Product[]
   nutrients: Nutrient[]
+  symptoms: Symptom[]
   memos: Memo[]
   blogs: Blog[]
   trashBlogs: Blog[]
   notebooks: Notebook[]
   db01Columns: ColumnDef[]
   db02Columns: ColumnDef[]
+  db03Columns: ColumnDef[]
+  db10Columns: ColumnDef[]
   dbStatus: DbStatus
 }
 
@@ -49,18 +53,33 @@ function initDarkMode(): boolean {
 
 export const DB01_COLUMNS_DEFAULT: ColumnDef[] = [
   { id: 'name',        label: '品目',        visible: true,  locked: true  },
-  { id: 'symptoms',    label: '病名/症状',    visible: true,  locked: false },
-  { id: 'effects',     label: '効果',         visible: true,  locked: false },
-  { id: 'ingredients', label: '成分',         visible: true,  locked: false },
+  { id: 'category',    label: 'カテゴリ',    visible: true,  locked: false },
+  { id: 'description', label: '商品説明',    visible: true,  locked: false },
+  { id: 'symptoms',    label: '病名/症状',   visible: true,  locked: false },
+  { id: 'effects',     label: '効果',        visible: true,  locked: false },
+  { id: 'ingredients', label: '成分DB',      visible: true,  locked: false },
   { id: 'image',       label: '商品イメージ', visible: false, locked: false },
-  { id: 'memo',        label: 'メモ欄',       visible: true,  locked: false },
+  { id: 'memo',        label: 'メモ欄',      visible: true,  locked: false },
 ]
 
 export const DB02_COLUMNS_DEFAULT: ColumnDef[] = [
-  { id: 'name',        label: '栄養素',       visible: true,  locked: true  },
-  { id: 'description', label: '説明',          visible: true,  locked: false },
-  { id: 'products',    label: '関連商品',      visible: true,  locked: false },
-  { id: 'memo',        label: 'MEMO',          visible: true,  locked: false },
+  { id: 'name',        label: '栄養素',   visible: true,  locked: true  },
+  { id: 'description', label: '説明',     visible: true,  locked: false },
+  { id: 'products',    label: '関連商品', visible: true,  locked: false },
+  { id: 'memo',        label: 'MEMO',     visible: true,  locked: false },
+]
+
+export const DB03_COLUMNS_DEFAULT: ColumnDef[] = [
+  { id: 'name',     label: '原材料名',   visible: true, locked: true  },
+  { id: 'products', label: '含有商品数', visible: true, locked: false },
+  { id: 'category', label: 'カテゴリ',  visible: true, locked: false },
+]
+
+export const DB10_COLUMNS_DEFAULT: ColumnDef[] = [
+  { id: 'name',        label: '症状/病名', visible: true, locked: true  },
+  { id: 'description', label: '説明',      visible: true, locked: false },
+  { id: 'products',    label: '関連商品',  visible: true, locked: false },
+  { id: 'memo',        label: 'メモ',      visible: true, locked: false },
 ]
 
 const INITIAL_BLOGS: Blog[] = [
@@ -103,12 +122,15 @@ const [state, setState] = createStore<AppState>({
   blogFilterTags: [],
   products: PRODUCTS,
   nutrients: NUTRIENTS,
+  symptoms: SYMPTOMS,
   memos: [],
   blogs: INITIAL_BLOGS,
   trashBlogs: [],
   notebooks: [],
   db01Columns: DB01_COLUMNS_DEFAULT,
   db02Columns: DB02_COLUMNS_DEFAULT,
+  db03Columns: DB03_COLUMNS_DEFAULT,
+  db10Columns: DB10_COLUMNS_DEFAULT,
   dbStatus: 'idle',
 })
 
@@ -153,6 +175,18 @@ export function toggleDb02Column(id: string) {
   )
 }
 
+export function toggleDb03Column(id: string) {
+  setState('db03Columns', (prev) =>
+    prev.map((c) => (c.id === id && !c.locked ? { ...c, visible: !c.visible } : c))
+  )
+}
+
+export function toggleDb10Column(id: string) {
+  setState('db10Columns', (prev) =>
+    prev.map((c) => (c.id === id && !c.locked ? { ...c, visible: !c.visible } : c))
+  )
+}
+
 // ── Firestore init ────────────────────────────────────────────────────────────
 
 export async function initFirestore(): Promise<void> {
@@ -168,7 +202,6 @@ export async function initFirestore(): Promise<void> {
     const blogs      = allBlogs.filter((b) => !b.deletedAt)
     const trashBlogs = allBlogs.filter((b) => !!b.deletedAt)
 
-    // 初回: コレクションが空ならローカルデータをシード
     if (fsProducts.length === 0) {
       await seedProductsFs(PRODUCTS)
       setState({ products: PRODUCTS })
@@ -199,6 +232,22 @@ export function updateProduct(id: string, patch: Partial<Product>): void {
 export function updateNutrient(id: string, patch: Partial<Nutrient>): void {
   setState('nutrients', (prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
   updateNutrientFs(id, patch).catch(console.warn)
+}
+
+// ── Symptom CRUD ──────────────────────────────────────────────────────────────
+
+export function addSymptom(data: Omit<Symptom, 'id'>): string {
+  const id = 'SP' + String(state.symptoms.length + 1).padStart(2, '0')
+  setState('symptoms', (prev) => [...prev, { ...data, id }])
+  return id
+}
+
+export function updateSymptom(id: string, patch: Partial<Omit<Symptom, 'id'>>): void {
+  setState('symptoms', (prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
+}
+
+export function deleteSymptom(id: string): void {
+  setState('symptoms', (prev) => prev.filter((s) => s.id !== id))
 }
 
 // ── Memo CRUD ─────────────────────────────────────────────────────────────────

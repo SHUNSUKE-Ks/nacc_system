@@ -1,5 +1,5 @@
 import { type Component, For, Show } from 'solid-js'
-import { state, setState, setFontSize, toggleDarkMode, toggleDb01Column, toggleDb02Column } from '../store'
+import { state, setState, setFontSize, toggleDarkMode, toggleDb01Column, toggleDb02Column, toggleDb03Column, toggleDb10Column } from '../store'
 import type { DbStatus } from '../store'
 import type { FontSize } from '../types'
 
@@ -36,12 +36,18 @@ const Toggle: Component<{ checked: boolean; disabled?: boolean; onChange: () => 
 )
 
 const SettingsPanel: Component = () => {
-  const isDb01 = () => state.page === 'db01'
-  const isDb02 = () => state.page === 'db02'
-  const showColumnSettings = () => isDb01() || isDb02()
-  const dbLabel = () => isDb01() ? 'DB01 商品' : 'DB02 栄養素'
-  const columns = () => isDb01() ? state.db01Columns : state.db02Columns
-  const toggleCol = (id: string) => isDb01() ? toggleDb01Column(id) : toggleDb02Column(id)
+  const dbPageMap = {
+    db01: { label: 'DB01 商品',   cols: () => state.db01Columns, toggle: toggleDb01Column },
+    db02: { label: 'DB02 栄養素', cols: () => state.db02Columns, toggle: toggleDb02Column },
+    db03: { label: 'DB03 原材料', cols: () => state.db03Columns, toggle: toggleDb03Column },
+    db10: { label: 'DB10 症状',   cols: () => state.db10Columns, toggle: toggleDb10Column },
+  } as const
+  type DbPageKey = keyof typeof dbPageMap
+  const currentDb = () => dbPageMap[state.page as DbPageKey] ?? null
+  const showColumnSettings = () => currentDb() !== null
+  const dbLabel = () => currentDb()?.label ?? ''
+  const columns = () => currentDb()?.cols() ?? []
+  const toggleCol = (id: string) => currentDb()?.toggle(id)
 
   return (
     <>

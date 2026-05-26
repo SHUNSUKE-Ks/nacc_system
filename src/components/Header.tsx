@@ -6,6 +6,8 @@ const PAGE_LABELS: Record<Page, string> = {
   memo:     '📝 メモ',
   db01:     '📦 DB01 商品一覧',
   db02:     '🌿 DB02 栄養素一覧',
+  db03:     '🧪 DB03 原材料',
+  db10:     '🏥 DB10 症状/病名',
   blog:     '📓 ブログ',
   notebook: '📚 ノートブック',
   trash:    '🗑️ ごみ箱',
@@ -14,7 +16,7 @@ const PAGE_LABELS: Record<Page, string> = {
 
 const Header: Component = () => {
   const [viewMenuOpen, setViewMenuOpen] = createSignal(false)
-  const isDbPage = () => state.page === 'db01' || state.page === 'db02'
+  const isDbPage = () => state.page === 'db01' || state.page === 'db02' || state.page === 'db03' || state.page === 'db10'
 
   function closeViewMenu() { setViewMenuOpen(false) }
 

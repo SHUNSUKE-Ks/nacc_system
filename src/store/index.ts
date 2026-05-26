@@ -1,9 +1,13 @@
 import { createStore } from 'solid-js/store'
-import type { Page, BlogMode, FontSize, Blog, Memo, Notebook, DbView, ColumnDef } from '../types'
+import type { Page, BlogMode, FontSize, Blog, Memo, Notebook, Product, Nutrient, DbView, ColumnDef } from '../types'
+import { PRODUCTS } from '../db/products'
+import { NUTRIENTS } from '../db/nutrients'
 import {
   fetchMemos, addMemoFs, updateMemoFs, deleteMemoFs,
   fetchBlogs, addBlogFs, updateBlogFs, restoreBlogFs, deleteBlogFs,
   fetchNotebooks, addNotebookFs, updateNotebookFs, deleteNotebookFs,
+  fetchProducts, updateProductFs, seedProductsFs,
+  fetchNutrients, updateNutrientFs, seedNutrientsFs,
 } from '../db/firebase'
 
 export type DbStatus = 'idle' | 'connecting' | 'connected' | 'error'
@@ -23,6 +27,8 @@ export type AppState = {
   settingsPanelOpen: boolean
   galleryPanelOpen: boolean
   blogFilterTags: string[]
+  products: Product[]
+  nutrients: Nutrient[]
   memos: Memo[]
   blogs: Blog[]
   trashBlogs: Blog[]
@@ -95,6 +101,8 @@ const [state, setState] = createStore<AppState>({
   settingsPanelOpen: false,
   galleryPanelOpen: false,
   blogFilterTags: [],
+  products: PRODUCTS,
+  nutrients: NUTRIENTS,
   memos: [],
   blogs: INITIAL_BLOGS,
   trashBlogs: [],
@@ -150,18 +158,47 @@ export function toggleDb02Column(id: string) {
 export async function initFirestore(): Promise<void> {
   setState({ dbStatus: 'connecting' })
   try {
-    const [memos, allBlogs, notebooks] = await Promise.all([
+    const [memos, allBlogs, notebooks, fsProducts, fsNutrients] = await Promise.all([
       fetchMemos(),
       fetchBlogs(),
       fetchNotebooks(),
+      fetchProducts(),
+      fetchNutrients(),
     ])
     const blogs      = allBlogs.filter((b) => !b.deletedAt)
     const trashBlogs = allBlogs.filter((b) => !!b.deletedAt)
+
+    // 初回: コレクションが空ならローカルデータをシード
+    if (fsProducts.length === 0) {
+      await seedProductsFs(PRODUCTS)
+      setState({ products: PRODUCTS })
+    } else {
+      setState({ products: fsProducts })
+    }
+    if (fsNutrients.length === 0) {
+      await seedNutrientsFs(NUTRIENTS)
+      setState({ nutrients: NUTRIENTS })
+    } else {
+      setState({ nutrients: fsNutrients })
+    }
+
     setState({ memos, blogs, trashBlogs, notebooks, dbStatus: 'connected' })
   } catch (e) {
     console.error('[Firestore] init failed:', e)
     setState({ dbStatus: 'error' })
   }
+}
+
+// ── Product / Nutrient CRUD ───────────────────────────────────────────────────
+
+export function updateProduct(id: string, patch: Partial<Product>): void {
+  setState('products', (prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+  updateProductFs(id, patch).catch(console.warn)
+}
+
+export function updateNutrient(id: string, patch: Partial<Nutrient>): void {
+  setState('nutrients', (prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
+  updateNutrientFs(id, patch).catch(console.warn)
 }
 
 // ── Memo CRUD ─────────────────────────────────────────────────────────────────

@@ -1,7 +1,6 @@
 import { type Component, createMemo, createSignal, For, Show } from 'solid-js'
 import type { Nutrient } from '../types'
-import { PRODUCTS } from '../db/products'
-import { state, setState } from '../store'
+import { state, setState, updateNutrient } from '../store'
 
 
 type Props = { nutrients: Nutrient[] }
@@ -96,7 +95,7 @@ const TableView: Component<{
           {/* Rows */}
           <For each={props.nutrients}>
             {(nutrient) => {
-              const related = PRODUCTS.filter((p) => p.nutrientIds.includes(nutrient.id)).slice(0, 2)
+              const related = state.products.filter((p) => p.nutrientIds.includes(nutrient.id)).slice(0, 2)
 
               return (
                 <div class="notion-row flex border-b border-nacc-border last:border-none">
@@ -289,7 +288,7 @@ const DetailView: Component<{ nutrients: Nutrient[] }> = (props) => {
               <div class="mb-5">
                 <h2 class="text-xs font-semibold text-[#999] uppercase tracking-wider mb-2">含まれる商品</h2>
                 <div class="flex flex-wrap gap-2">
-                  <For each={PRODUCTS.filter((p) => p.nutrientIds.includes(nutrient().id))}>
+                  <For each={state.products.filter((p) => p.nutrientIds.includes(nutrient().id))}>
                     {(p) => (
                       <span class="text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-medium">
                         {p.name}
@@ -337,12 +336,6 @@ const DetailView: Component<{ nutrients: Nutrient[] }> = (props) => {
 
 // ── Page Root ──────────────────────────────────────────────────────────────
 const PageDb02: Component<Props> = (props) => {
-  const [nutrients, setNutrients] = createSignal<Nutrient[]>(props.nutrients)
-
-  function updateNutrient(id: string, patch: Partial<Nutrient>) {
-    setNutrients((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
-  }
-
   return (
     <div class="flex flex-col h-full overflow-hidden">
       {/* Page header */}
@@ -351,7 +344,7 @@ const PageDb02: Component<Props> = (props) => {
           <h1 class="text-xl font-bold text-nacc-dark">DB02 — 栄養素一覧</h1>
           <div class="text-xs text-gray-500 mt-0.5">
             有効成分・栄養素データベース ·{' '}
-            <span class="font-medium">{nutrients().length}件</span>
+            <span class="font-medium">{props.nutrients.length}件</span>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
@@ -393,10 +386,10 @@ const PageDb02: Component<Props> = (props) => {
 
       {/* Content */}
       <Show when={state.dbView === 'table'}>
-        <TableView nutrients={nutrients()} onUpdate={updateNutrient} />
+        <TableView nutrients={props.nutrients} onUpdate={updateNutrient} />
       </Show>
       <Show when={state.dbView === 'detail'}>
-        <DetailView nutrients={nutrients()} />
+        <DetailView nutrients={props.nutrients} />
       </Show>
     </div>
   )

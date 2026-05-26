@@ -1,7 +1,5 @@
 import { type Component, Show, onMount } from 'solid-js'
 import { state, setState, setFontSize, initFirestore } from './store'
-import { PRODUCTS } from './db/products'
-import { NUTRIENTS } from './db/nutrients'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import PageDb01 from './pages/PageDb01'
@@ -37,10 +35,10 @@ const MainApp: Component = () => (
       <Sidebar />
       <main class="flex-1 overflow-hidden relative">
         <Show when={state.page === 'db01'}>
-          <PageDb01 products={PRODUCTS} />
+          <PageDb01 products={state.products} />
         </Show>
         <Show when={state.page === 'db02'}>
-          <PageDb02 nutrients={NUTRIENTS} />
+          <PageDb02 nutrients={state.nutrients} />
         </Show>
         <Show when={state.page === 'blog'}>
           <PageBlog />

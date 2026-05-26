@@ -4,6 +4,7 @@ import {
   collection,
   getDocs,
   addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   deleteField,
@@ -12,7 +13,7 @@ import {
   orderBy,
   Timestamp,
 } from 'firebase/firestore'
-import type { Memo, Blog, Notebook } from '../types'
+import type { Memo, Blog, Notebook, Product, Nutrient } from '../types'
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -82,6 +83,44 @@ export async function restoreBlogFs(id: string): Promise<void> {
 
 export async function deleteBlogFs(id: string): Promise<void> {
   await deleteDoc(doc(firestore, 'blogs', id))
+}
+
+// ── Products ─────────────────────────────────────────────────────────────────
+
+export async function fetchProducts(): Promise<Product[]> {
+  const snap = await getDocs(collection(firestore, 'products'))
+  return snap.docs.map((d) => ({ id: d.id, ...fromFs(d.data() as Record<string, unknown>) } as unknown as Product))
+}
+
+export async function updateProductFs(id: string, patch: Partial<Product>): Promise<void> {
+  await updateDoc(doc(firestore, 'products', id), stripUndefined(patch as Record<string, unknown>))
+}
+
+export async function seedProductsFs(products: Product[]): Promise<void> {
+  await Promise.all(
+    products.map(({ id, ...data }) =>
+      setDoc(doc(firestore, 'products', id), stripUndefined(data as Record<string, unknown>))
+    )
+  )
+}
+
+// ── Nutrients ─────────────────────────────────────────────────────────────────
+
+export async function fetchNutrients(): Promise<Nutrient[]> {
+  const snap = await getDocs(collection(firestore, 'nutrients'))
+  return snap.docs.map((d) => ({ id: d.id, ...fromFs(d.data() as Record<string, unknown>) } as unknown as Nutrient))
+}
+
+export async function updateNutrientFs(id: string, patch: Partial<Nutrient>): Promise<void> {
+  await updateDoc(doc(firestore, 'nutrients', id), stripUndefined(patch as Record<string, unknown>))
+}
+
+export async function seedNutrientsFs(nutrients: Nutrient[]): Promise<void> {
+  await Promise.all(
+    nutrients.map(({ id, ...data }) =>
+      setDoc(doc(firestore, 'nutrients', id), stripUndefined(data as Record<string, unknown>))
+    )
+  )
 }
 
 // ── Notebooks ────────────────────────────────────────────────────────────────

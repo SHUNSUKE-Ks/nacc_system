@@ -1,8 +1,7 @@
 import { type Component, createMemo, createSignal, For, Show } from 'solid-js'
 import type { Product } from '../types'
 import { productImageUrl } from '../db/products'
-import { NUTRIENTS } from '../db/nutrients'
-import { state, setState } from '../store'
+import { state, setState, updateProduct } from '../store'
 
 
 type Props = { products: Product[] }
@@ -110,7 +109,7 @@ const RelationPopover: Component<{
         🌿 成分DB リンク — {selected().length}件選択中
       </div>
       <div class="overflow-y-auto flex-1 p-2">
-        <For each={NUTRIENTS}>
+        <For each={state.nutrients}>
           {(n) => {
             const isSelected = () => selected().includes(n.id)
             return (
@@ -294,7 +293,7 @@ const TableView: Component<{
                             <div class="flex flex-wrap gap-1">
                               <For each={product.nutrientIds.slice(0, 2)}>
                                 {(nid) => {
-                                  const n = NUTRIENTS.find((x) => x.id === nid)
+                                  const n = state.nutrients.find((x) => x.id === nid)
                                   return n ? (
                                     <span class="text-xs bg-blue-50 text-blue-700 rounded px-1.5 py-0.5">
                                       {n.name.split(' ')[0]}
@@ -498,7 +497,7 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
                 <div class="flex flex-wrap gap-2">
                   <For each={product().nutrientIds}>
                     {(nid) => {
-                      const n = NUTRIENTS.find((x) => x.id === nid)
+                      const n = state.nutrients.find((x) => x.id === nid)
                       return n ? (
                         <span class="text-xs px-2 py-1 rounded-full bg-[#f5f0e8] text-nacc-gold border border-[#e8dfd0] font-medium">
                           {n.name.split(' ')[0]}
@@ -573,12 +572,6 @@ const TagList: Component<{ items: string[]; color: keyof typeof COLOR_MAP }> = (
 
 // ── Page Root ──────────────────────────────────────────────────────────────
 const PageDb01: Component<Props> = (props) => {
-  const [products, setProducts] = createSignal<Product[]>(props.products)
-
-  function updateProduct(id: string, patch: Partial<Product>) {
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
-  }
-
   return (
     <div class="flex flex-col h-full overflow-hidden">
       {/* Page header */}
@@ -587,7 +580,7 @@ const PageDb01: Component<Props> = (props) => {
           <h1 class="text-xl font-bold text-nacc-dark">DB01 — 商品一覧</h1>
           <div class="text-xs text-gray-500 mt-0.5">
             NACCサプリメント全商品データベース ·{' '}
-            <span class="font-medium">{products().length}件</span>
+            <span class="font-medium">{props.products.length}件</span>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
@@ -629,10 +622,10 @@ const PageDb01: Component<Props> = (props) => {
 
       {/* Content */}
       <Show when={state.dbView === 'table'}>
-        <TableView products={products()} onUpdate={updateProduct} />
+        <TableView products={props.products} onUpdate={updateProduct} />
       </Show>
       <Show when={state.dbView === 'detail'}>
-        <DetailView products={products()} />
+        <DetailView products={props.products} />
       </Show>
     </div>
   )

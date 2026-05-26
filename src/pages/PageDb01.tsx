@@ -702,14 +702,14 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
 
 // ── Index View (2-column: 品目 | 商品説明) ────────────────────────────────
 const IndexView: Component<{ products: Product[] }> = (props) => (
-  <div class="flex-1 overflow-auto px-6 pb-6">
+  <div class="flex-1 overflow-auto px-1 md:px-6 pb-6">
     <div class="bg-white rounded-xl border border-nacc-border overflow-hidden">
-      {/* Header */}
+      {/* Header — 品目 col: 40% on mobile, fixed 288px on md+ */}
       <div class="flex border-b-2 border-nacc-border bg-nacc-light sticky top-0 z-10">
-        <div class="w-72 shrink-0 px-5 py-3 text-xs font-bold text-gray-500 tracking-wider uppercase border-r border-nacc-border">
+        <div class="w-[40%] md:w-72 shrink-0 px-3 md:px-5 py-2 md:py-3 text-[11px] md:text-xs font-bold text-gray-500 tracking-wider uppercase border-r border-nacc-border">
           品目
         </div>
-        <div class="flex-1 px-5 py-3 text-xs font-bold text-gray-500 tracking-wider uppercase">
+        <div class="flex-1 px-3 md:px-5 py-2 md:py-3 text-[11px] md:text-xs font-bold text-gray-500 tracking-wider uppercase">
           商品説明
         </div>
       </div>
@@ -721,29 +721,28 @@ const IndexView: Component<{ products: Product[] }> = (props) => (
             class="flex border-b border-nacc-border last:border-none hover:bg-[#fffbf5] transition-colors"
             classList={{ 'bg-[#fafaf8]': i() % 2 === 1 }}
           >
-            {/* 品目 */}
-            <div class="w-72 shrink-0 px-5 py-5 border-r border-nacc-border flex flex-col gap-2 justify-start">
-              <p class="font-bold text-nacc-gold text-sm leading-snug">{product.name}</p>
-              <p class="text-xs text-gray-400 font-mono">{product.id}</p>
+            {/* 品目 — ID (S01 etc.) は非表示 */}
+            <div class="w-[40%] md:w-72 shrink-0 px-2 py-3 md:px-5 md:py-5 border-r border-nacc-border flex flex-col gap-1.5 md:gap-2 justify-start">
+              <p class="font-bold text-nacc-gold text-[12px] md:text-sm leading-snug">{product.name}</p>
               <Show
                 when={product.category === 'supplement'}
                 fallback={
-                  <span class="text-xs font-medium bg-pink-50 text-pink-600 border border-pink-100 rounded-full px-2.5 py-0.5 self-start">
+                  <span class="text-[10px] md:text-xs font-medium bg-pink-50 text-pink-600 border border-pink-100 rounded-full px-1.5 md:px-2.5 py-0.5 self-start leading-tight">
                     🌸 コスメ
                   </span>
                 }
               >
-                <span class="text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2.5 py-0.5 self-start">
+                <span class="text-[10px] md:text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-1.5 md:px-2.5 py-0.5 self-start leading-tight">
                   💊 サプリ
                 </span>
               </Show>
             </div>
 
             {/* 商品説明 */}
-            <div class="flex-1 px-6 py-5 flex items-start">
-              <p class="text-sm text-nacc-dark leading-relaxed">
+            <div class="flex-1 px-2 py-3 md:px-6 md:py-5 flex items-start min-w-0">
+              <p class="text-[12px] md:text-sm text-nacc-dark leading-relaxed">
                 {product.description || (
-                  <span class="text-gray-300 italic text-xs">説明なし</span>
+                  <span class="text-gray-300 italic text-[10px] md:text-xs">説明なし</span>
                 )}
               </p>
             </div>

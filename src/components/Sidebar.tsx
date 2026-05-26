@@ -1,4 +1,4 @@
-import { type Component, createSignal, onMount, onCleanup, For } from 'solid-js'
+import { type Component, For } from 'solid-js'
 import { state, navigate } from '../store'
 import type { Page } from '../types'
 
@@ -35,19 +35,12 @@ const SectionLabel: Component<{ label: string }> = (props) => (
   <div class="text-xs font-semibold text-[#aaa] px-2 py-1 mt-3">{props.label}</div>
 )
 
-const Sidebar: Component = () => {
-  const [isDesktop, setIsDesktop] = createSignal(window.innerWidth >= 768)
-  const onResize = () => setIsDesktop(window.innerWidth >= 768)
-  onMount(() => window.addEventListener('resize', onResize))
-  onCleanup(() => window.removeEventListener('resize', onResize))
-  const visible = () => state.sidebarOpen || isDesktop()
-
-  return (
-    <aside
-      id="sidebar"
-      class="w-52 bg-white border-r border-nacc-border flex flex-col shrink-0 overflow-hidden"
-      style={{ width: visible() ? undefined : '0px', opacity: visible() ? '1' : '0' }}
-    >
+const Sidebar: Component = () => (
+  <aside
+    id="sidebar"
+    class="w-52 bg-white border-r border-nacc-border flex flex-col shrink-0 overflow-hidden"
+    classList={{ 'sidebar-open': state.sidebarOpen }}
+  >
       {/* Quick Memo */}
       <div class="p-3 border-b border-nacc-border">
         <button
@@ -103,7 +96,6 @@ const Sidebar: Component = () => {
         </div>
       </div>
     </aside>
-  )
-}
+)
 
 export default Sidebar

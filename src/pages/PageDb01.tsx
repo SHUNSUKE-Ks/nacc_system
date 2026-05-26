@@ -150,7 +150,7 @@ const MemoPanelOverlay: Component<{
   })
 
   return (
-    <div class="fixed top-0 right-0 h-full w-80 bg-white border-l border-nacc-border shadow-2xl z-50 flex flex-col">
+    <div class="fixed top-0 right-0 h-full w-full md:w-80 max-w-sm bg-white border-l border-nacc-border shadow-2xl z-50 flex flex-col">
       <div class="flex items-center justify-between px-4 py-3 border-b border-nacc-border shrink-0 bg-nacc-light">
         <div class="min-w-0 flex-1 mr-2">
           <span class="text-xs font-semibold text-gray-600">📝 リンクメモ</span>
@@ -813,41 +813,43 @@ const PageDb01: Component<Props> = (props) => {
       </Show>
 
       {/* Page header */}
-      <div class="px-6 pt-4 pb-3 bg-nacc-light flex items-start justify-between shrink-0">
-        <div>
-          <h1 class="text-xl font-bold text-nacc-dark">DB01 — 商品一覧</h1>
-          <div class="text-xs text-gray-500 mt-0.5">
+      <div class="db-page-header px-6 pt-4 pb-3 bg-nacc-light flex items-start justify-between shrink-0">
+        <div class="min-w-0">
+          <h1 class="db-page-title text-xl font-bold text-nacc-dark leading-tight">
+            <span class="db-page-title-full">DB01 — </span>商品一覧
+          </h1>
+          <div class="db-page-subtitle text-xs text-gray-500 mt-0.5">
             NACCサプリメント全商品データベース ·{' '}
             <span class="font-medium">{props.products.length}件</span>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <button
-            class="flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg transition-colors"
+            class="db-hdr-btn flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg transition-colors"
             classList={{
               'bg-nacc-dark text-white border-nacc-dark': memoPanelOpen(),
               'bg-white text-gray-600 border-nacc-border hover:bg-gray-50': !memoPanelOpen(),
             }}
             onClick={() => setMemoPanelOpen((v) => !v)}
           >
-            📝 メモパネル
+            📝<span class="db-hdr-btn-label ml-1">メモパネル</span>
           </button>
           <button
-            class="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-nacc-border rounded-lg bg-white hover:bg-gray-50 transition-colors"
+            class="db-hdr-btn flex items-center gap-1.5 px-3 py-1.5 text-xs border border-nacc-border rounded-lg bg-white hover:bg-gray-50 transition-colors"
             onClick={() => setState({ settingsPanelOpen: true, galleryPanelOpen: false })}
           >
-            ⚙ カラム設定
+            ⚙<span class="db-hdr-btn-label ml-1">カラム設定</span>
           </button>
-          <button class="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-nacc-dark text-white rounded-lg hover:opacity-90 transition-opacity">
-            + 新規追加
+          <button class="db-hdr-btn flex items-center gap-1.5 px-3 py-1.5 text-xs bg-nacc-dark text-white rounded-lg hover:opacity-90 transition-opacity">
+            +<span class="db-hdr-btn-label ml-1">新規追加</span>
           </button>
         </div>
       </div>
 
       {/* Category filter tabs */}
-      <div class="flex items-center gap-2 px-6 py-2 border-b border-nacc-border bg-white shrink-0">
+      <div class="db-filter-row flex items-center gap-2 px-6 py-2 border-b border-nacc-border bg-white shrink-0 overflow-x-auto">
         <button
-          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors"
+          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors whitespace-nowrap"
           classList={{
             'bg-nacc-dark text-white border-nacc-dark': categoryFilter() === 'all',
             'bg-white text-gray-500 border-nacc-border hover:border-gray-400': categoryFilter() !== 'all',
@@ -857,7 +859,7 @@ const PageDb01: Component<Props> = (props) => {
           全て <span class="opacity-70">({props.products.length})</span>
         </button>
         <button
-          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors"
+          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors whitespace-nowrap"
           classList={{
             'bg-amber-500 text-white border-amber-500': categoryFilter() === 'supplement',
             'bg-white text-amber-700 border-amber-200 hover:border-amber-400': categoryFilter() !== 'supplement',
@@ -867,7 +869,7 @@ const PageDb01: Component<Props> = (props) => {
           💊 サプリ <span class="opacity-70">({supplementCount()})</span>
         </button>
         <button
-          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors"
+          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors whitespace-nowrap"
           classList={{
             'bg-pink-500 text-white border-pink-500': categoryFilter() === 'cosmetic',
             'bg-white text-pink-600 border-pink-200 hover:border-pink-400': categoryFilter() !== 'cosmetic',
@@ -879,9 +881,9 @@ const PageDb01: Component<Props> = (props) => {
       </div>
 
       {/* View tabs */}
-      <div class="flex items-center gap-0 px-6 border-b border-nacc-border shrink-0 bg-white">
+      <div class="db-tab-row flex items-center gap-0 px-6 border-b border-nacc-border shrink-0 bg-white">
         <button
-          class="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
+          class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
           classList={{
             'border-nacc-dark text-nacc-dark': state.dbView === 'index',
             'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'index',
@@ -891,7 +893,7 @@ const PageDb01: Component<Props> = (props) => {
           📋 Index
         </button>
         <button
-          class="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
+          class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
           classList={{
             'border-nacc-dark text-nacc-dark': state.dbView === 'table',
             'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'table',
@@ -901,7 +903,7 @@ const PageDb01: Component<Props> = (props) => {
           ≡ テーブル
         </button>
         <button
-          class="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
+          class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
           classList={{
             'border-nacc-dark text-nacc-dark': state.dbView === 'detail',
             'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'detail',

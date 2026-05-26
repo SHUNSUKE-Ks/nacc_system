@@ -31,6 +31,7 @@ const MainApp: Component = () => (
     <div class="flex flex-1 overflow-hidden relative">
       <div
         id="sidebarBackdrop"
+        class="md:hidden"
         classList={{ show: state.sidebarOpen }}
         onClick={() => setState({ sidebarOpen: false })}
       />

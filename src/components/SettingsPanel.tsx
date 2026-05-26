@@ -54,7 +54,7 @@ const SettingsPanel: Component = () => {
       {/* Slide-in panel */}
       <aside
         id="settingsPanel"
-        class="absolute right-0 top-0 bottom-0 w-72 bg-white border-l border-nacc-border shadow-xl z-40 flex flex-col desktop-right-panel"
+        class="absolute right-0 top-0 bottom-0 w-72 bg-white border-l border-nacc-border shadow-xl z-40 flex flex-col"
         style={{ transform: state.settingsPanelOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
         <div class="p-4 border-b border-nacc-border flex items-center justify-between shrink-0">

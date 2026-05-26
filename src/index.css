@@ -58,7 +58,7 @@ body {
 .mode-pill button.active { background: #fff; color: #37352f; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
 
 /* ── Sidebar ── */
-#sidebar { transition: width .2s ease, opacity .2s ease; }
+#sidebar { transition: transform .22s ease; }
 #sidebarBackdrop {
   display: none;
   position: fixed; inset: 0; top: 48px;
@@ -96,18 +96,48 @@ body {
 
 /* ── Mobile overrides ── */
 @media (max-width: 767px) {
+  /* Sidebar: fixed overlay, transform-based show/hide */
   #sidebar {
     position: fixed !important;
     left: 0; top: 48px; bottom: 0;
     z-index: 55;
+    width: 272px !important;
+    transform: translateX(-100%);
     box-shadow: 4px 0 20px rgba(0,0,0,.18);
   }
+  #sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Settings & gallery panels: fixed, full-width up to 340px */
   #settingsPanel, #galleryPanel {
     position: fixed !important;
     right: 0; top: 48px; bottom: 0;
     width: 100% !important;
     max-width: 340px;
   }
+
+  /* Compact DB page headers — fixed px so rem font-size doesn't inflate them */
+  .db-page-header {
+    padding: 8px 16px !important;
+    align-items: center !important;
+  }
+  .db-page-title {
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+  }
+  .db-page-subtitle { display: none !important; }
+  .db-page-title-full { display: none !important; }
+  .db-page-title-short { display: inline !important; }
+  .db-hdr-btn {
+    padding: 6px 10px !important;
+    gap: 0 !important;
+  }
+  .db-hdr-btn-label { display: none !important; }
+  .db-filter-row { padding: 6px 16px !important; }
+  .db-tab-row { padding-left: 8px !important; padding-right: 8px !important; }
+  .db-tab-btn { padding: 8px 10px !important; }
+
   .desktop-right-panel { display: none !important; }
   .mobile-back { display: flex !important; }
   button { min-height: 36px; }

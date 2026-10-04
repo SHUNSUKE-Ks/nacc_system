@@ -20,6 +20,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   signOut,
+  type Auth,
   type User,
 } from 'firebase/auth'
 import type { Memo, Blog, Notebook, Product, Nutrient } from '../types'
@@ -35,14 +36,22 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const firestore = getFirestore(app)
-export const auth = getAuth(app)
+// 接続設定が無い環境（手元の開発など）でもアプリ全体が止まらないようにする
+let auth: Auth | null = null
+try {
+  auth = getAuth(app)
+} catch (e) {
+  console.warn('[auth] Firebase Authentication を使えません（接続設定を確認してください）', e)
+}
 
 // ── Googleログイン（Firestore のルールで、登録したメールアドレスだけが読み書きできる） ──
 export function watchAuth(callback: (user: User | null) => void): () => void {
+  if (!auth) return () => {}
   return onAuthStateChanged(auth, callback)
 }
 
 export async function signInWithGoogle(): Promise<void> {
+  if (!auth) throw Object.assign(new Error('auth unavailable'), { code: 'auth/unavailable' })
   const provider = new GoogleAuthProvider()
   provider.setCustomParameters({ prompt: 'select_account' })
   try {
@@ -59,7 +68,7 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 export function signOutGoogle(): Promise<void> {
-  return signOut(auth)
+  return auth ? signOut(auth) : Promise.resolve()
 }
 
 // ── Leaflets（リーフレット）: 形が変わっても困らないよう JSON 文字列で丸ごと保存 ──
@@ -193,4 +202,16 @@ export async function updateNotebookFs(id: string, patch: Partial<Omit<Notebook,
 
 export async function deleteNotebookFs(id: string): Promise<void> {
   await deleteDoc(doc(firestore, 'notebooks', id))
+}
+
+// ── Catalog checks（新カタログチェック表）: 商品ごとに1件、JSON 文字列で丸ごと保存 ──
+export type CatalogCheckDoc = { productId: string; updatedAt: string; json: string }
+
+export async function fetchCatalogChecksFs(): Promise<CatalogCheckDoc[]> {
+  const snap = await getDocs(collection(firestore, 'catalogChecks'))
+  return snap.docs.map((d) => d.data() as CatalogCheckDoc)
+}
+
+export async function saveCatalogCheckFs(data: CatalogCheckDoc): Promise<void> {
+  await setDoc(doc(firestore, 'catalogChecks', data.productId), data)
 }

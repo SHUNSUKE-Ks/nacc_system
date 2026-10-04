@@ -1,5 +1,5 @@
 import { type Component, Show, createSignal } from 'solid-js'
-import { state, setState } from '../store'
+import { state, setState, navigate } from '../store'
 import type { Page } from '../types'
 import { exportDetailViewPdf } from '../utils/exportDetailPdf'
 import { openLeafletGallery } from '../pages/leaflet/store'
@@ -17,6 +17,7 @@ const PAGE_LABELS: Record<Page, string> = {
   trash:    '🗑️ ごみ箱',
   gallery:  '🖼 ギャラリー',
   leaflet:  '📄 リーフレット',
+  catalog:  '☑ カタログチェック',
 }
 
 const Header: Component = () => {
@@ -143,6 +144,16 @@ const Header: Component = () => {
       {/* Right: search (desktop) + gallery + settings */}
       <div class="ml-auto flex items-center gap-1.5">
         <CloudAccount />
+        <button
+          class="app-header-catalog flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-nacc-border hover:bg-[#eef6f0] active:scale-95 text-[#2f7a45] text-xs font-bold transition-all"
+          onClick={() => navigate('catalog')}
+          title="新カタログチェック表"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5h10M9 12h10M9 19h10M3.5 5.5l1.5 1.5 2.5-3M3.5 12.5l1.5 1.5 2.5-3M4 19h2" />
+          </svg>
+          <span class="hidden sm:inline">カタログチェック</span>
+        </button>
         <QuickMemo />
         <button
           class="app-header-leaflet flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-nacc-border hover:bg-[#f8eef0] active:scale-95 text-[#782f3d] text-xs font-bold transition-all"

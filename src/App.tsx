@@ -15,6 +15,7 @@ import SettingsPanel from './components/SettingsPanel'
 import GalleryPanel from './components/GalleryPanel'
 import GalleryPage from './pages/gallery'
 import LeafletPage from './pages/leaflet'
+import CatalogCheckPage from './pages/catalog'
 
 setFontSize(state.fontSize)
 
@@ -29,7 +30,11 @@ const App: Component = () => {
   })
   return (
     <Show when={state.page === 'gallery'} fallback={
-      <Show when={state.page === 'leaflet'} fallback={<MainApp />}>
+      <Show when={state.page === 'leaflet'} fallback={
+        <Show when={state.page === 'catalog'} fallback={<MainApp />}>
+          <CatalogCheckPage />
+        </Show>
+      }>
         <LeafletPage />
       </Show>
     }>

@@ -34,6 +34,10 @@ service cloud.firestore {
     match /leaflets/{id} {
       allow read, write: if true;
     }
+    // 新カタログチェック表（商品ごとの確認状況）
+    match /catalogChecks/{id} {
+      allow read, write: if true;
+    }
 
     // それ以外の場所は読み書きできない
   }

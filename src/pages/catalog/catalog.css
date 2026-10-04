@@ -1,0 +1,102 @@
+/* 新カタログチェック表 — 写真なしのリスト。確認作業に集中できるよう、落ち着いた配色 */
+.cc-page{--cc-ink:#37352f;--cc-sub:#8d7c68;--cc-line:#e8dfcf;--cc-gold:#b38247;--cc-ok:#2f7a45;--cc-hold:#b7791f;--cc-wine:#782f3d;
+  height:100dvh;overflow-y:auto;background:#faf7f1;color:var(--cc-ink)}
+.cc-page button{cursor:pointer}
+
+.cc-top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:12px clamp(14px,3vw,36px);border-bottom:1px solid var(--cc-line);background:rgba(255,253,248,.96);backdrop-filter:blur(10px)}
+.cc-back{min-height:36px;padding:0 12px;border-radius:8px;color:#7b5630;font-size:.68rem;font-weight:700}
+.cc-back:hover{background:#f6ecd9}
+.cc-title p{margin:0;color:var(--cc-gold);font-size:.5rem;font-weight:800;letter-spacing:.2em}
+.cc-title h1{margin:0;color:var(--cc-wine);font:600 1.05rem "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.06em}
+.cc-progress{display:flex;flex-wrap:wrap;gap:6px 14px;margin-left:auto;color:var(--cc-sub);font-size:.62rem}
+.cc-progress b{color:var(--cc-ink);font-size:.78rem}
+.cc-progress .is-hold b{color:var(--cc-hold)}
+.cc-cloud{padding:2px 9px;border-radius:999px;background:#f1ece2}
+.cc-cloud.is-ok{background:#e8f3ea;color:var(--cc-ok)}
+
+.cc-filters{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px clamp(14px,3vw,36px)}
+.cc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.cc-chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 15px;border:1px solid var(--cc-line);border-radius:999px;background:#fff;color:#6b6157;font-size:.66rem;font-weight:700}
+.cc-chip span{padding:1px 7px;border-radius:999px;background:#f3ede2;font-size:.55rem}
+.cc-chip.is-active{border-color:#37352f;background:#37352f;color:#fff}
+.cc-chip.is-active span{background:rgba(255,255,255,.2)}
+.cc-chip.is-unchecked.is-active{border-color:#6b6157;background:#6b6157}
+.cc-chip.is-checked.is-active{border-color:var(--cc-ok);background:var(--cc-ok)}
+.cc-chip.is-hold.is-active{border-color:var(--cc-hold);background:var(--cc-hold)}
+.cc-chips.is-sub .cc-chip{min-height:32px;font-size:.6rem}
+.cc-search{display:flex;align-items:center;gap:6px;min-width:220px;flex:1;max-width:360px;padding:6px 12px;border:1px solid var(--cc-line);border-radius:999px;background:#fff}
+.cc-search span{color:var(--cc-gold)}
+.cc-search input{width:100%;border:0;outline:0;background:transparent;font-size:16px}
+
+.cc-list{display:grid;gap:12px;padding:0 clamp(14px,3vw,36px) 64px}
+.cc-empty{margin:0;padding:30px;border:1px dashed var(--cc-line);border-radius:12px;color:var(--cc-sub);font-size:.66rem;text-align:center}
+.cc-empty.is-small{padding:14px;border:0;font-size:.6rem}
+
+/* 商品 */
+.cc-product{overflow:hidden;border:1px solid var(--cc-line);border-radius:12px;background:#fff}
+.cc-product.is-checked{background:#fbfdfb;border-color:#cfe5d4}
+.cc-product.is-hold{border-color:#f0d9a8}
+.cc-product-head{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto 128px;align-items:center;gap:10px;padding:10px 14px}
+.cc-toggle{width:34px;height:34px;border-radius:8px;color:var(--cc-sub);font-size:.8rem}
+.cc-toggle:hover{background:#f6ecd9}
+.cc-product-name{min-width:0}
+.cc-product-name strong{display:block;color:var(--cc-ink);font:600 .86rem "Yu Mincho","Hiragino Mincho ProN",serif}
+.cc-product-name strong.is-done{color:#8a8a8a;text-decoration:line-through;text-decoration-color:var(--cc-ok);text-decoration-thickness:2px}
+.cc-product-name small{display:block;margin-top:2px;color:var(--cc-sub);font-size:.56rem}
+.cc-bar{display:block;height:4px;margin-top:6px;overflow:hidden;border-radius:4px;background:#f0ebe1}
+.cc-bar i{display:block;height:100%;background:var(--cc-ok);transition:width .3s}
+.cc-product-done{min-height:36px;padding:0 14px;border:1px solid var(--cc-line);border-radius:999px;background:#f6f3ee;color:#b1a796;font-size:.62rem;font-weight:800;white-space:nowrap}
+.cc-product-done:disabled{cursor:not-allowed}
+/* 成分がすべて確認済みになったら光る */
+.cc-product-done.is-ready{border-color:var(--cc-ok);background:var(--cc-ok);color:#fff;animation:ccGlow 1.6s ease-in-out infinite}
+.cc-product-done.is-done{border-color:#cfe5d4;background:#e8f3ea;color:var(--cc-ok)}
+@keyframes ccGlow{0%,100%{box-shadow:0 0 0 0 rgba(47,122,69,.45)}50%{box-shadow:0 0 0 8px rgba(47,122,69,0),0 0 18px rgba(47,122,69,.55)}}
+.cc-product-memo{padding:0 14px 10px 62px}
+
+/* ステータス（角丸のプルダウン） */
+.cc-status{min-height:34px;padding:0 26px 0 12px;border:1px solid var(--cc-line);border-radius:999px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%238d7c68' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 9px center/10px;color:#6b6157;font-size:.62rem;font-weight:700;appearance:none;-webkit-appearance:none}
+.cc-status.is-checked{border-color:#b9dcc2;background-color:#e8f3ea;color:var(--cc-ok)}
+.cc-status.is-hold{border-color:#f0d9a8;background-color:#fdf3df;color:var(--cc-hold)}
+.cc-date{color:var(--cc-sub);font-size:.56rem;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* 成分の表 */
+.cc-table{border-top:1px solid var(--cc-line)}
+.cc-row{display:grid;grid-template-columns:46px minmax(130px,1.1fr) minmax(0,2fr) 112px minmax(150px,1.3fr) 128px;align-items:start;gap:10px;padding:8px 14px;border-bottom:1px solid #f1ebe0}
+.cc-row:last-child{border-bottom:0}
+.cc-row.is-head{position:sticky;top:0;align-items:center;padding-top:6px;padding-bottom:6px;background:#faf7f1;color:var(--cc-sub);font-size:.52rem;font-weight:800;letter-spacing:.08em}
+.cc-row.is-head span:last-child{text-align:right}
+.cc-row.is-checked{background:#fbfdfb}
+.cc-row.is-hold{background:#fffaf0}
+.cc-check{display:grid;place-items:center;width:38px;height:38px;border:1.5px solid #cfc6b5;border-radius:10px;background:#fff;color:transparent;transition:background .15s,border-color .15s,color .15s}
+.cc-check svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.cc-check:hover{border-color:var(--cc-ok);color:#b9dcc2}
+.cc-check.is-on{border-color:var(--cc-ok);background:var(--cc-ok);color:#fff}
+.cc-item-name{padding-top:8px}
+.cc-item-name strong{display:block;color:var(--cc-wine);font:600 .74rem "Yu Mincho","Hiragino Mincho ProN",serif;line-height:1.5}
+.cc-row.is-checked .cc-item-name strong{color:#5f6b62}
+.cc-item-name small{color:var(--cc-sub);font-size:.5rem}
+.cc-item-desc{display:-webkit-box;overflow:hidden;margin:0;padding-top:8px;color:#5a5048;font-size:.6rem;line-height:1.7;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+.cc-row .cc-status{margin-top:2px}
+.cc-row .cc-date{padding-top:10px}
+
+/* メモ（保留のとき目立たせる） */
+.cc-memo{position:relative}
+.cc-memo input{width:100%;min-height:36px;padding:6px 10px;border:1px solid #ece4d6;border-radius:8px;outline:0;background:#fffdf8;color:var(--cc-ink);font-size:16px}
+.cc-memo input:focus{border-color:var(--cc-gold);box-shadow:0 0 0 3px rgba(179,130,71,.12)}
+.cc-memo.is-hold input{border-color:#f0d9a8;background:#fffaf0}
+.cc-suggest{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.cc-suggest button{min-height:30px;padding:0 10px;border:1px dashed #d9c39b;border-radius:999px;background:#fff;color:#8a5c27;font-size:.56rem;font-weight:700}
+.cc-suggest button:hover{border-style:solid;background:#fbf4e4}
+
+/* 幅が狭いとき（iPad縦・スマホ）: 成分の行を2段に */
+@media (max-width:900px){
+  .cc-product-head{grid-template-columns:38px minmax(0,1fr) auto;grid-template-areas:"t n done" ". s date"}
+  .cc-product-head .cc-toggle{grid-area:t}.cc-product-head .cc-product-name{grid-area:n}.cc-product-head .cc-product-done{grid-area:done}
+  .cc-product-head .cc-status{grid-area:s;justify-self:start}.cc-product-head .cc-date{grid-area:date}
+  .cc-row{grid-template-columns:46px minmax(0,1fr) 112px;grid-template-areas:"c n s" ". d d" ". m date"}
+  .cc-row.is-head{display:none}
+  .cc-row .cc-check{grid-area:c}.cc-row .cc-item-name{grid-area:n}.cc-row .cc-status{grid-area:s}
+  .cc-row .cc-item-desc{grid-area:d;padding-top:0}.cc-row .cc-memo{grid-area:m}.cc-row .cc-date{grid-area:date;align-self:center;padding-top:0}
+  .cc-product-memo{padding-left:14px}
+}
+@media print{.cc-top,.cc-filters{position:static}.cc-check{border-width:1px}}

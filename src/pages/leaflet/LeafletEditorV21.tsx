@@ -321,14 +321,14 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
       <header class="lf-hero is-wide lf21-hero">
         <input class="lf-inline lf-hero-kicker lf21-kicker" value={props.leaflet.audience} placeholder="対象者・用途（例: 新人向け）" onChange={(e) => updateLeaflet(props.leaflet.id, { audience: e.currentTarget.value })} />
         <div class="lf-hero-titlebox">
-          <input class="lf-inline lf-hero-title" value={props.leaflet.title} placeholder={props.product.name} onChange={(e) => updateLeaflet(props.leaflet.id, { title: e.currentTarget.value })} />
+          <input class="lf-inline lf-hero-title" value={props.leaflet.title || props.product.name} placeholder={props.product.name} onChange={(e) => updateLeaflet(props.leaflet.id, { title: e.currentTarget.value.trim() === props.product.name ? '' : e.currentTarget.value })} />
         </div>
         <button type="button" class="lf-hero-photo lf21-photo" onClick={() => setPickerOpen(true)} title="画像を変更">
           <LeafletVisual image={props.leaflet.image} product={props.product} class="is-hero" />
           <span class="lf21-photo-label">画像を変更</span>
         </button>
         <div class="lf-hero-text">
-          <textarea class="lf-inline lf-comment" rows="2" value={props.leaflet.comment} placeholder={props.product.description || '商品に入れるコメント'} onChange={(e) => updateLeaflet(props.leaflet.id, { comment: e.currentTarget.value })} />
+          <textarea class="lf-inline lf-comment" rows="2" value={props.leaflet.comment || props.product.description || ''} placeholder="商品に入れるコメント" onChange={(e) => updateLeaflet(props.leaflet.id, { comment: e.currentTarget.value })} />
           <input class="lf-inline lf-contact" value={props.leaflet.contact} placeholder="注意書き・問い合わせ先・担当者" onChange={(e) => updateLeaflet(props.leaflet.id, { contact: e.currentTarget.value })} />
         </div>
       </header>

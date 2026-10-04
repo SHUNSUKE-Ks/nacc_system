@@ -186,7 +186,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
   // ── セクション操作 ──────────────────────────────────────────────────────
   const save = (next: LeafletSection[]) => setLeafletSections(props.leaflet.id, next)
   const copySections = () => sections().map((section) => ({
-    ...section, cardKeys: [...section.cardKeys], labels: { ...section.labels }, names: { ...section.names },
+    ...section, cardKeys: [...section.cardKeys], labels: { ...section.labels }, names: { ...section.names }, descs: { ...(section.descs ?? {}) },
   }))
 
   function patchSection(id: string, patch: Partial<LeafletSection>) {
@@ -411,6 +411,11 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
     const members = () => sec.section.cardKeys.map(cardByKey).filter((card): card is LeafletCard => !!card)
     const addable = () => cards().filter((card) => !sec.section.cardKeys.includes(card.key))
     const nameOf = (card: LeafletCard) => sec.section.names[card.key] || cardTitle(card)
+    /** 丸の中の説明。まだ触っていなければカードの説明を引用。空にすれば何も出さない */
+    const descOf = (card: LeafletCard) => {
+      const descs = sec.section.descs ?? {}
+      return card.key in descs ? descs[card.key] : cardDescription(card)
+    }
     // 複数選択: チェックを入れてまとめて追加（空き枠の数まで）
     const [pickOpen, setPickOpen] = createSignal(false)
     const [picked, setPicked] = createSignal<string[]>([])
@@ -470,6 +475,17 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
                     value={nameOf(card)}
                     title="Enterで改行。空にすると成分名に戻ります"
                     onChange={(e) => patchSection(sec.section.id, { names: { ...sec.section.names, [card.key]: e.currentTarget.value.trim() ? e.currentTarget.value : '' } })}
+                  />
+                </Show>
+                {/* 説明（DICT）: 原本とは切り離して、サークル用に短く書き換えられる */}
+                <Show when={!asText()} fallback={<Show when={descOf(card)}><span class="lf-circle-desc">{descOf(card)}</span></Show>}>
+                  <textarea
+                    class="lf-circle-desc-input"
+                    rows="3"
+                    value={descOf(card)}
+                    placeholder="説明（空にすると表示しません）"
+                    title="丸に収まるよう短く書き換えられます（原本の説明は変わりません）"
+                    onChange={(e) => patchSection(sec.section.id, { descs: { ...(sec.section.descs ?? {}), [card.key]: e.currentTarget.value } })}
                   />
                 </Show>
                 <span class="lf-circle-tools lf-app-only">
@@ -740,7 +756,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
           <p class="lf-hero-kicker">{props.leaflet.audience || 'NACC · PRODUCT LEAFLET'}</p>
           <div class="lf-hero-titlebox">
             <Show when={!asText()} fallback={<h1 class="lf-hero-title">{titleText()}</h1>}>
-              <input class="lf-inline lf-hero-title" value={props.leaflet.title} placeholder={props.product.name} onChange={(e) => updateLeaflet(props.leaflet.id, { title: e.currentTarget.value })} />
+              <input class="lf-inline lf-hero-title" value={titleText()} placeholder={props.product.name} onChange={(e) => updateLeaflet(props.leaflet.id, { title: e.currentTarget.value.trim() === props.product.name ? '' : e.currentTarget.value })} />
             </Show>
             <Show when={headerRule() === 'title'}><span class="lf-double-rule" aria-hidden="true" /></Show>
           </div>
@@ -775,7 +791,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
             </Show>
           </div>
           <div class="lf-hero-text">
-            <EditableText value={props.leaflet.comment} placeholder={props.product.description || '商品に入れるコメント'} multiline class="lf-comment" markId="leaflet:comment" onSave={(comment) => updateLeaflet(props.leaflet.id, { comment })} />
+            <EditableText value={props.leaflet.comment || props.product.description || ''} placeholder="商品に入れるコメント" multiline class="lf-comment" markId="leaflet:comment" onSave={(comment) => updateLeaflet(props.leaflet.id, { comment })} />
             <EditableText value={props.leaflet.contact} placeholder="注意書き・問い合わせ先・担当者" class="lf-contact" onSave={(contact) => updateLeaflet(props.leaflet.id, { contact })} />
           </div>
         </header>

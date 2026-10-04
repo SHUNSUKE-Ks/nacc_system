@@ -58,3 +58,16 @@
 .lf-carry{position:fixed;z-index:260;display:grid;gap:2px;padding:8px 14px;transform:translate(-50%,-130%);border-radius:14px;background:#3a2b22;color:#fff8ea;font:600 .66rem "Yu Mincho",serif;box-shadow:0 14px 30px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap}
 .lf-carry small{color:#d9c7aa;font:600 .46rem sans-serif}
 .lf-carry.is-over{background:var(--lf-wine)}
+
+/* Ver2.1 はページ全体でスクロール（2カラム編集用の高さ固定・スクロール禁止を打ち消す） */
+.lf-page:has(> .lf-editor.lf21){overflow-y:auto}
+.lf-editor.lf21{display:block;height:auto;padding-bottom:64px}
+.lf-editor.lf21>.lf-topbar{position:sticky;top:0;margin-bottom:18px}
+.lf-editor.lf21>.lf-hero{max-height:none;overflow:visible}
+
+/* 主成分サークル: 丸の中の説明（DICT） */
+.lf-circle-desc{display:block;width:84%;margin:4px 0 0;color:#5a4a3e;font-size:clamp(.5rem,calc(var(--size) * .046),.72rem);line-height:1.55;text-align:center;white-space:pre-line;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5}
+.lf-circle-desc-input{display:block;width:84%;margin:4px 0 0;padding:4px;border:1px dashed rgba(120,47,61,.22);border-radius:8px;outline:0;background:transparent;color:#5a4a3e;font:inherit;font-size:clamp(.5rem,calc(var(--size) * .046),.72rem);line-height:1.55;text-align:center;resize:none}
+.lf-circle-desc-input:focus{border-style:solid;border-color:var(--lf-wine);background:rgba(255,255,255,.7)}
+.lf-circles-row .lf-circle-name{font-size:clamp(.68rem,calc(var(--size) * .068),1.15rem)}
+.lf-circles-row .lf-circle-name-input{min-height:0}

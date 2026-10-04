@@ -34,6 +34,8 @@ export type LeafletSection = {
   icon: TopicIcon
   /** circles の丸の中の文字（改行入り）。未設定なら成分名 */
   names: Record<string, string>
+  /** circles の丸の中の説明（原本の説明を引用して、ここで自由に書き換える） */
+  descs: Record<string, string>
   /** topic の見出しの下線 */
   underline: TopicUnderline
 }
@@ -103,7 +105,7 @@ const STORAGE_KEY = 'nacc-leaflets-v1'
 export const newKey = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 
 export function newSection(type: SectionType): LeafletSection {
-  return { id: newKey('s'), type, title: '', look: 'card', cardKeys: [], labels: {}, body: '', icon: type === 'topic' ? 'point' : 'none', names: {}, underline: 'line' }
+  return { id: newKey('s'), type, title: '', look: 'card', cardKeys: [], labels: {}, body: '', icon: type === 'topic' ? 'point' : 'none', names: {}, descs: {}, underline: 'line' }
 }
 
 /** 旧形式（sections / image / title なし）を読み替える */

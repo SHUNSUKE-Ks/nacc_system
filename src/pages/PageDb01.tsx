@@ -761,46 +761,25 @@ const IndexView: Component<{ products: Product[] }> = (props) => (
   </div>
 )
 
-// ── お気に入りの星（1秒長押しで登録／解除。短く押しても何もしない） ─────────
-const FAVORITE_PRESS_MS = 1000
-
+// ── お気に入りの星（☆を押すと★に。もう一度押すと解除） ──────────────────
 const FavoriteStar: Component<{ productId: string }> = (props) => {
-  const [pressing, setPressing] = createSignal(false)
-  let timer = 0
-
-  const stop = () => { window.clearTimeout(timer); setPressing(false) }
-  const start = (event: PointerEvent) => {
+  const toggle = (event: Event) => {
     event.stopPropagation()
     event.preventDefault()
-    setPressing(true)
-    timer = window.setTimeout(() => {
-      toggleFavorite(props.productId)
-      navigator.vibrate?.(12)
-      setPressing(false)
-    }, FAVORITE_PRESS_MS)
+    toggleFavorite(props.productId)
   }
 
   return (
     <span
       class="product-favorite-star"
-      classList={{ 'is-on': isFavorite(props.productId), 'is-pressing': pressing() }}
+      classList={{ 'is-on': isFavorite(props.productId) }}
       role="button"
       tabindex="0"
       aria-pressed={isFavorite(props.productId)}
-      aria-label={isFavorite(props.productId) ? 'お気に入り解除（1秒長押し）' : 'お気に入り登録（1秒長押し）'}
-      title="1秒長押しでお気に入り登録／解除"
-      onPointerDown={start}
-      onPointerUp={stop}
-      onPointerLeave={stop}
-      onPointerCancel={stop}
-      onContextMenu={(event) => event.preventDefault()}
-      onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return
-        event.preventDefault()
-        event.stopPropagation()
-        toggleFavorite(props.productId)
-      }}
+      aria-label={isFavorite(props.productId) ? 'お気に入りを解除' : 'お気に入りに登録'}
+      title={isFavorite(props.productId) ? 'お気に入りを解除' : 'お気に入りに登録'}
+      onClick={toggle}
+      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') toggle(event) }}
     >
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" /></svg>
     </span>
@@ -847,7 +826,7 @@ const ProductGalleryView: Component<{ products: Product[] }> = (props) => {
 
       <div class="product-gallery-count"><strong>{filtered().length}</strong> products</div>
       <div class="product-gallery-grid">
-        <For each={filtered()} fallback={<div class="product-gallery-empty">{props.products.length === 0 ? 'お気に入りはまだありません。上の「全て」から、カード右上の★を1秒長押しすると登録できます。' : '一致する商品がありません。'}</div>}>
+        <For each={filtered()} fallback={<div class="product-gallery-empty">{props.products.length === 0 ? 'お気に入りはまだありません。上の「全て」から、カード右上の☆を押すと登録できます。' : '一致する商品がありません。'}</div>}>
           {(product) => (
             <button class="product-gallery-card" onClick={() => openProduct(product)}>
               <div class="product-gallery-thumb">

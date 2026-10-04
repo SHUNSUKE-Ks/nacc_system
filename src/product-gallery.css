@@ -95,3 +95,8 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .help-panel li span{color:#6b6157;font-size:.68rem;line-height:1.7}
 @media (max-width:640px){.help-panel{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto}}
 @media print{.help-button{display:none!important}}
+
+/* お気に入りはクリックで切り替え（長押しゲージは使わない） */
+.product-favorite-star{cursor:pointer;touch-action:manipulation}
+.product-favorite-star::before{display:none}
+.product-favorite-star:active{transform:scale(.9)}

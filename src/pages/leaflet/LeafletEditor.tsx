@@ -51,6 +51,8 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
   const [copyMode, setCopyMode] = createSignal(false)
   /** 商品・コメント欄は普段たたんでおき、2カラムを広く使う */
   const [headerOpen, setHeaderOpen] = createSignal(false)
+  /** 一括選択: null = 使っていない。使っている間はチェックの入った成分ID */
+  const [bulkChecked, setBulkChecked] = createSignal<string[] | null>(null)
   const [editingTopicKey, setEditingTopicKey] = createSignal<string | null>(null)
   const [draftHeading, setDraftHeading] = createSignal('')
   const [draftBody, setDraftBody] = createSignal('')
@@ -416,6 +418,36 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
 
   onCleanup(cancel)
 
+  // ── 一括選択（左の候補をまとめて右へ） ─────────────────────────────────
+  const bulkOn = () => bulkChecked() !== null
+  const isChecked = (nutrientId: string) => bulkChecked()?.includes(nutrientId) ?? false
+  const checkedCount = () => candidates().filter((card) => isChecked(card.nutrientId)).length
+
+  /** 押すと全部にチェック。外したものだけ移動から外れる */
+  function startBulk() {
+    setBulkChecked(candidates().map((card) => card.nutrientId))
+  }
+
+  function toggleChecked(nutrientId: string) {
+    const current = bulkChecked() ?? []
+    setBulkChecked(current.includes(nutrientId) ? current.filter((id) => id !== nutrientId) : [...current, nutrientId])
+  }
+
+  function toggleAllChecked() {
+    setBulkChecked(checkedCount() === candidates().length ? [] : candidates().map((card) => card.nutrientId))
+  }
+
+  function moveChecked() {
+    const ids = candidates().filter((card) => isChecked(card.nutrientId)).map((card) => card.nutrientId)
+    if (!ids.length) return
+    flip(() => setLeafletItems(props.leaflet.id, [
+      ...items().map((item) => ({ ...item })),
+      ...ids.map((nutrientId): LeafletCard => ({ kind: 'card', key: newKey('c'), nutrientId, visible: true })),
+    ]))
+    setBulkChecked(null)
+    showToast(`${ids.length}件を「この資料に掲載する内容」へ移動しました`)
+  }
+
   // ── カード・Topic の操作 ──────────────────────────────────────────────────
   function toggleVisible(key: string) {
     setLeafletItems(props.leaflet.id, items().map((item) =>
@@ -483,6 +515,16 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
           >
             {cardProps.number}
           </span>
+          <Show when={cardProps.col === 'left' && bulkOn()}>
+            <label class="lf-check" title="外すと移動しません">
+              <input
+                type="checkbox"
+                checked={isChecked(cardProps.card.nutrientId)}
+                onChange={() => toggleChecked(cardProps.card.nutrientId)}
+                aria-label={`${nutrient()?.name ?? ''}を移動する`}
+              />
+            </label>
+          </Show>
           <Show when={cardProps.col === 'right'}>
             <button
               class="lf-chip"
@@ -568,6 +610,13 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
           'is-pressing': pressingKey() === item.key,
           'is-landed': landedKey() === item.key,
           'is-ghost': col === 'left' && drag()?.src.key === item.key,
+          'is-unchecked': col === 'left' && bulkOn() && !isChecked(item.nutrientId),
+        }}
+        onClick={(event) => {
+          // 一括選択中は、カードを押してもチェックを切り替えられる（iPadで押しやすいように）
+          if (col !== 'left' || !bulkOn()) return
+          if ((event.target as HTMLElement).closest('input, button, label')) return
+          toggleChecked(item.nutrientId)
         }}
       >
         <CardBody card={item} number={col === 'right' ? pad(cardNumbers().get(item.key)) : pad((originalIndex().get(item.nutrientId) ?? 0) + 1)} col={col} />
@@ -651,6 +700,21 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
           <header class="lf-col-head">
             <p>CANDIDATES</p>
             <h2>掲載候補 <small>原本から選ぶ · {candidates().length}件</small></h2>
+            <Show when={candidates().length}>
+              <div class="lf-bulk">
+                <Show when={bulkOn()} fallback={
+                  <button type="button" class="lf-bulk-start" onClick={startBulk}>☑ 一括選択</button>
+                }>
+                  <label class="lf-bulk-all">
+                    <input type="checkbox" checked={checkedCount() === candidates().length} onChange={toggleAllChecked} />
+                    すべて
+                  </label>
+                  <span class="lf-bulk-count">{checkedCount()}件 選択中</span>
+                  <button type="button" class="lf-bulk-move" onClick={moveChecked} disabled={!checkedCount()}>右へ移動 →</button>
+                  <button type="button" class="lf-bulk-cancel" onClick={() => setBulkChecked(null)}>やめる</button>
+                </Show>
+              </div>
+            </Show>
           </header>
           <div class="lf-grid" ref={leftGridRef}>
             <For each={leftSlots()} fallback={<p class="lf-empty">原本の成分はすべて掲載中です。</p>}>

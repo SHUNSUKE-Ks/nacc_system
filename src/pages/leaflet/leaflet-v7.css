@@ -35,3 +35,16 @@
 .lf-move button:disabled{opacity:.25}
 .lf-move button:not(:disabled):active{background:#f6ecd9}
 .lf-card.is-main .lf-move{flex-direction:row;margin:4px 0 0}
+
+/* ── 左の候補: 一括選択 ───────────────────────────────────────────── */
+.lf-bulk{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:8px}
+.lf-bulk button{min-height:0;padding:5px 12px;border:1px solid rgba(120,47,61,.24);border-radius:999px;background:#fffdf8;color:var(--lf-wine);font-size:.58rem;font-weight:700}
+.lf-bulk .lf-bulk-move{border-color:var(--lf-wine);background:var(--lf-wine);color:#fff}
+.lf-bulk .lf-bulk-move:disabled{opacity:.4}
+.lf-bulk .lf-bulk-cancel{color:#8d7c68}
+.lf-bulk-all{display:inline-flex;align-items:center;gap:5px;color:#4a3a2f;font-size:.6rem;font-weight:700}
+.lf-bulk-count{color:#8d7c68;font-size:.56rem}
+.lf-bulk input,.lf-check input{width:20px;height:20px;accent-color:var(--lf-wine);cursor:pointer}
+.lf-check{display:grid;place-items:center;width:34px;height:34px;margin:-6px -6px -6px auto;border-radius:8px;cursor:pointer}
+.lf-check:hover{background:rgba(120,47,61,.06)}
+.lf-editor .lf-card.is-unchecked{opacity:.45}

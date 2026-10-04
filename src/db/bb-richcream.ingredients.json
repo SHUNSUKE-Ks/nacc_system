@@ -38,6 +38,10 @@
     {"id":"bb-021","title":"アテロコラーゲン","aliases":[],"category":"保湿成分","dict":"火傷や皮膚欠損部の皮膚カバーとして医療にも使用されているコラーゲンで、高い保湿効果が期待されます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
     {"id":"bb-022","title":"コンドロイチン","aliases":["コンドロイチン硫酸"],"category":"保湿成分","dict":"「コンドロイチン硫酸」として人間の体内に多く含まれており、潤滑油としての機能や肌の保湿作用など様々な効果が期待できます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
     {"id":"bb-023","title":"加水分解シルク","aliases":[],"category":"保湿成分","dict":"保湿効果・皮膜形成効果があります。また、チロシナーゼ活性抑制作用がありメラニン色素の生成を抑え、美白効果も期待できます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
-    {"id":"bb-024","title":"アルゲエキス","aliases":["褐藻・緑藻・紅藻エキス"],"category":"海藻エキス","dict":"褐藻・緑藻・紅藻エキスから成る成分で、メラニン生成を抑え、肌代謝を促進し、明るくクリアな肌へ導きます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"}
+    {"id":"bb-024","title":"アルゲエキス","aliases":["褐藻・緑藻・紅藻エキス"],"category":"海藻エキス","dict":"褐藻・緑藻・紅藻エキスから成る成分で、メラニン生成を抑え、肌代謝を促進し、明るくクリアな肌へ導きます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-025","title":"プラセンタ","aliases":["胎盤エキス"],"category":"成長因子","dict":"美しさと健康を作り出す「成長因子」を含み、細胞の生まれ変わりを助け新陳代謝をアップさせます。\nEGF・FGF・IGF・HGF・NGF/TGF/IL-1/IL-2/IL-3/IL-4","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-026","title":"EGF（上皮細胞増殖因子）","aliases":["EGF","ヒトオリゴペプチド-1"],"category":"成長因子","dict":"新しい細胞の生産を促進し、肌の再生周期（ターンオーバー）を本来の活発なものへと導きます。また、紫外線によって誘発される皮膚の老化と脱水症状を改善します。\n（他：FGF・IGF）","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-027","title":"ラクトフェリン","aliases":["ラクトフェリン(牛乳)"],"category":"整肌成分","dict":"抗酸化作用があり、老化予防に働きかけます。また、アクネ菌などの皮膚常在菌の抑制をし、悪玉常在菌が起こす様々なトラブルを防ぐ効果が期待できます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-028","title":"ビオチン","aliases":["ビタミンB7","ビタミンH"],"category":"ビタミン","dict":"健康な肌を作るためには欠かす事が出来ない栄養素の一つで、肌や髪を健やかに保ちます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"}
   ]
 }

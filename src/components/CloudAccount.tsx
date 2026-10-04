@@ -48,16 +48,20 @@ const CloudAccount: Component = () => {
       <button type="button" class={`cloud-account-trigger is-${status()}`} onClick={() => setOpen(!open())} aria-expanded={open()} title={label()}>
         <span class="cloud-dot" aria-hidden="true" />
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z" /></svg>
-        <span class="hidden sm:inline">{state.cloudUser ? label() : 'ログイン'}</span>
+        <span class="hidden sm:inline">{state.cloudUser || status() === 'ok' ? label() : 'ログイン'}</span>
       </button>
       <Show when={open()}>
         <section class="cloud-account-panel" role="dialog" aria-label="クラウド保存">
           <strong>クラウド保存</strong>
           <Show when={state.cloudUser} fallback={
-            <>
-              <p>今は<b>この端末だけ</b>に保存しています。Googleでログインすると、成分カードの修正やリーフレットがクラウドに保存され、ほかの端末と共有できます。</p>
-              <button type="button" class="cloud-login" onClick={login} disabled={busy()}>{busy() ? 'ログイン中…' : 'Googleでログイン'}</button>
-            </>
+            <Show when={status() === 'ok'} fallback={
+              <>
+                <p>今は<b>この端末だけ</b>に保存しています。Googleでログインすると、成分カードの修正やリーフレットがクラウドに保存され、ほかの端末と共有できます。</p>
+                <button type="button" class="cloud-login" onClick={login} disabled={busy()}>{busy() ? 'ログイン中…' : 'Googleでログイン'}</button>
+              </>
+            }>
+              <p class="cloud-ok">クラウドに保存しています（ログインは不要です）。ほかの端末とも共有されます。{cloudState() === 'syncing' ? '（同期中…）' : ''}</p>
+            </Show>
           }>
             {(user) => (
               <>

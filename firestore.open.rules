@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// NACC Note の Firestore ルール（ログインなし版・案）
+// ログインやメールアドレスの登録なしで、アプリ（PWA）から誰でも読み書きできる。
+// その代わり、アプリが使うデータの置き場所だけに限り、商品・成分は削除できないようにしている。
+//
+// 注意: アプリの設定（Firebase の接続情報）は公開されているため、
+//       それを知っている人は、ここに書いた範囲でデータを読み書きできる。
+//
+// 反映するとき（管理者が自分で実行する）:
+//   firebase deploy --only firestore:rules --project naccdb2026 --config firebase.open.json
+// 元の「Googleログイン＋メール許可リスト」に戻すとき:
+//   firebase deploy --only firestore:rules --project naccdb2026
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 商品・成分カード: 読む・作る・直すは可。消すのは不可
+    match /products/{id} {
+      allow read, create, update: if true;
+    }
+    match /nutrients/{id} {
+      allow read, create, update: if true;
+    }
+
+    // メモ・ブログ・ノート・リーフレット: 読み書き・削除まで可
+    match /memos/{id} {
+      allow read, write: if true;
+    }
+    match /blogs/{id} {
+      allow read, write: if true;
+    }
+    match /notebooks/{id} {
+      allow read, write: if true;
+    }
+    match /leaflets/{id} {
+      allow read, write: if true;
+    }
+
+    // それ以外の場所は読み書きできない
+  }
+}

@@ -95,9 +95,11 @@ export type Leaflet = {
 
 export type LeafletView =
   | { view: 'gallery' }
+  /** 全商品の編集中（下書き）リーフレット */
+  | { view: 'drafts' }
   | { view: 'edit'; id: string }
   | { view: 'edit21'; id: string }
-  | { view: 'layout'; id: string }
+  | { view: 'layout'; id: string; clean?: boolean }
 
 export const MAX_CIRCLES = 4
 const STORAGE_KEY = 'nacc-leaflets-v1'
@@ -151,15 +153,58 @@ export function saveLeafletsNow(): boolean {
   }
 }
 
-/** アプリのheaderから直接リーフレットGalleryへ。商品未選択なら最後に触ったリーフレットの商品 */
+/** アプリのheader「リーフレット」: 全商品の編集中リーフレットを一覧で開く */
 export function openLeafletGallery() {
-  if (!state.selectedProductId) {
-    const recent = [...leaflets].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
-    const productId = recent?.productId ?? state.products[0]?.id ?? null
-    setState({ selectedProductId: productId })
-  }
-  setLeafletView({ view: 'gallery' })
+  setLeafletView({ view: 'drafts' })
   navigate('leaflet')
+}
+
+/** 一覧などから、そのリーフレットの商品を選んだうえで画面を開く */
+export function openLeaflet(leaflet: Leaflet, view: 'edit' | 'layout' | 'preview') {
+  setState({ selectedProductId: leaflet.productId })
+  if (view === 'edit') openLeafletEditor(leaflet)
+  else setLeafletView({ view: 'layout', id: leaflet.id, clean: view === 'preview' })
+  navigate('leaflet')
+}
+
+/** 原本（商品ノート）にある成分ID（並びは原本どおり） */
+export function originalNutrientIds(productId: string): string[] {
+  const product = state.products.find((item) => item.id === productId)
+  if (!product) return []
+  return state.nutrients
+    .filter((nutrient) => product.nutrientIds.includes(nutrient.id) || nutrient.productIds.includes(product.id))
+    .map((nutrient) => nutrient.id)
+}
+
+/** リーフレットを作った後で原本に増えた成分（まだ確認していないもの） */
+export function newOriginalNutrients(leaflet: Leaflet): string[] {
+  const known = new Set(leaflet.source.nutrientIds)
+  const used = new Set(leaflet.items.filter((item): item is LeafletCard => item.kind === 'card').map((card) => card.nutrientId))
+  return originalNutrientIds(leaflet.productId).filter((id) => !known.has(id) && !used.has(id))
+}
+
+/** 原本の確認済みリストに足す（そろえた・見送ったどちらでも、次からは聞かない） */
+export function acknowledgeNutrients(id: string, nutrientIds: string[]) {
+  setLeaflets((leaflet) => leaflet.id === id, 'source', (source) => ({
+    ...source,
+    nutrientIds: Array.from(new Set([...source.nutrientIds, ...nutrientIds])),
+  }))
+  persist()
+}
+
+/** 成分カードをリーフレットに足す（表示中のカードの最後へ。並び順は今のまま） */
+export function addCardsToLeaflet(id: string, nutrientIds: string[]) {
+  const leaflet = leaflets.find((item) => item.id === id)
+  if (!leaflet) return
+  const used = new Set(leaflet.items.filter((item): item is LeafletCard => item.kind === 'card').map((card) => card.nutrientId))
+  const adding: LeafletCard[] = nutrientIds.filter((nid) => !used.has(nid)).map((nutrientId) => ({ kind: 'card', key: newKey('c'), nutrientId, visible: true }))
+  if (!adding.length) return
+  const items = leaflet.items.map((item) => ({ ...item }))
+  const firstHidden = items.findIndex((item) => item.kind === 'card' && !item.visible)
+  if (firstHidden >= 0) items.splice(firstHidden, 0, ...adding)
+  else items.push(...adding)
+  setLeafletItems(id, items)
+  acknowledgeNutrients(id, nutrientIds)
 }
 
 function persist() {

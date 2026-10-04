@@ -8,7 +8,7 @@ import { defaultImageFor } from './photos'
 import HelpButton, { HELP_LEAFLET_GALLERY } from '../../components/HelpButton'
 import {
   type Leaflet,
-  createLeaflet, deleteLeaflet, duplicateLeaflet, leaflets, leafletView, openLeafletEditor, setLeafletView,
+  createLeaflet, deleteLeaflet, duplicateLeaflet, leaflets, leafletView, openLeaflet, openLeafletEditor, setLeafletView,
 } from './store'
 import { categoryLabel, formatDate, LeafletVisual, OriginalSafeNote, originalNutrients, PhotoGallery, statusLabel, Toast } from './shared'
 import './leaflet.css'
@@ -29,7 +29,7 @@ const LeafletPage: Component = () => {
   const product = () => state.products.find((item) => item.id === state.selectedProductId) ?? null
   const current = () => {
     const view = leafletView()
-    return view.view === 'gallery' ? null : leaflets.find((leaflet) => leaflet.id === view.id) ?? null
+    return 'id' in view ? leaflets.find((leaflet) => leaflet.id === view.id) ?? null : null
   }
 
   const openOriginal = () => {
@@ -39,6 +39,7 @@ const LeafletPage: Component = () => {
 
   return (
     <div class="lf-page">
+      <Show when={leafletView().view !== 'drafts'} fallback={<DraftsView />}>
       <Show when={product()} fallback={
         <div class="lf-empty-page">
           <p>商品が選択されていません。</p>
@@ -54,7 +55,10 @@ const LeafletPage: Component = () => {
               {(leaflet) => <LeafletEditorV21 leaflet={leaflet()} product={p()} />}
             </Match>
             <Match when={leafletView().view === 'layout' && current()}>
-              {(leaflet) => <LeafletLayout leaflet={leaflet()} product={p()} />}
+              {(leaflet) => {
+                const view = leafletView()
+                return <LeafletLayout leaflet={leaflet()} product={p()} initialClean={view.view === 'layout' && !!view.clean} />
+              }}
             </Match>
             <Match when={true}>
               <LeafletGallery product={p()} onOpenOriginal={openOriginal} />
@@ -62,7 +66,54 @@ const LeafletPage: Component = () => {
           </Switch>
         )}
       </Show>
+      </Show>
       <Toast />
+    </div>
+  )
+}
+
+// ── 全商品の編集中（下書き）リーフレット（アプリの header「リーフレット」） ──
+const DraftsView: Component = () => {
+  const drafts = createMemo(() =>
+    leaflets.filter((leaflet) => leaflet.status !== 'ready').slice().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  )
+  const productOf = (leaflet: Leaflet) => state.products.find((product) => product.id === leaflet.productId)
+
+  return (
+    <div class="lf-gallery" data-state="LEAFLET_DRAFTS">
+      <div class="lf-topbar">
+        <button class="lf-back" onClick={() => setState({ page: 'db01', dbView: 'gallery' })}>← 商品ページ</button>
+        <OriginalSafeNote />
+      </div>
+      <header class="lf-gallery-head">
+        <p class="lf-kicker">NACC · LEAFLETS IN PROGRESS</p>
+        <h1>編集中のリーフレット</h1>
+        <p>全商品の下書きをまとめて表示しています。「配布可」にしたものは、商品ページの「配布用」タブに移ります。</p>
+      </header>
+      <div class="lf-leaflet-grid">
+        <For each={drafts()} fallback={<p class="lf-empty">編集中のリーフレットはありません。商品ノートの「リーフレット Ver2.1」などから作れます。</p>}>
+          {(leaflet) => (
+            <article class="lf-leaflet-card lf-draft-card">
+              <div class="lf-draft-head">
+                <Show when={productOf(leaflet)}>
+                  {(product) => <LeafletVisual image={leaflet.image} product={product()} class="lf-draft-thumb" />}
+                </Show>
+                <div>
+                  <span class="lf-badge">{statusLabel(leaflet)}</span>
+                  <Show when={leaflet.version === '2.1'}><span class="lf21-badge is-small">Ver2.1</span></Show>
+                  <h3>{leaflet.name}</h3>
+                  <p>{productOf(leaflet)?.name ?? leaflet.source.productName} · {formatDate(leaflet.updatedAt)}</p>
+                </div>
+              </div>
+              <div class="lf-actions">
+                <button class="lf-primary" onClick={() => openLeaflet(leaflet, 'edit')}>編集</button>
+                <button onClick={() => openLeaflet(leaflet, 'layout')}>配布用レイアウト</button>
+                <button onClick={() => { setState({ selectedProductId: leaflet.productId, page: 'db01', dbView: 'detail' }); setLeafletView({ view: 'gallery' }) }}>商品ノート</button>
+              </div>
+            </article>
+          )}
+        </For>
+      </div>
     </div>
   )
 }

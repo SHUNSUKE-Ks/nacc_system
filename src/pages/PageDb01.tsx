@@ -1,8 +1,9 @@
-import { type Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { type Component, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import type { Product } from '../types'
 import { productImageUrl } from '../db/products'
 import { state, setState, updateProduct, updateNutrient, navigate, addCustomNutrient } from '../store'
-import { openLeafletV21 } from './leaflet/store'
+import { leaflets, openLeaflet, openLeafletV21 } from './leaflet/store'
+import { LeafletVisual } from './leaflet/shared'
 import { favoriteIds, isFavorite, toggleFavorite } from '../utils/favorites'
 import HelpButton, { HELP_PRODUCT_GALLERY } from '../components/HelpButton'
 
@@ -901,10 +902,103 @@ const ProductGalleryView: Component<{ products: Product[] }> = (props) => {
   )
 }
 
+// ── 表示形式（基本は Gallery。目次・テーブルは機能として残し、アイコンから切り替える） ──
+const VIEW_FORMATS: { id: 'gallery' | 'index' | 'table'; label: string; icon: string }[] = [
+  { id: 'gallery', label: 'Gallery', icon: '◇' },
+  { id: 'index', label: '目次', icon: '☰' },
+  { id: 'table', label: 'テーブル', icon: '▦' },
+]
+
+const ViewFormatMenu: Component = () => {
+  const [open, setOpen] = createSignal(false)
+  let rootRef!: HTMLDivElement
+  const current = () => VIEW_FORMATS.find((format) => format.id === state.dbView) ?? VIEW_FORMATS[0]
+  const onOutside = (event: PointerEvent) => { if (open() && !rootRef.contains(event.target as Node)) setOpen(false) }
+  document.addEventListener('pointerdown', onOutside)
+  onCleanup(() => document.removeEventListener('pointerdown', onOutside))
+  return (
+    <div class="view-format" ref={rootRef}>
+      <button type="button" class="view-format-trigger" onClick={() => setOpen(!open())} aria-expanded={open()} title="表示形式を変える">
+        <span aria-hidden="true">{current().icon}</span>
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+      </button>
+      <Show when={open()}>
+        <div class="view-format-menu" role="menu">
+          <p>表示形式</p>
+          <For each={VIEW_FORMATS}>
+            {(format) => (
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={state.dbView === format.id}
+                classList={{ 'is-active': state.dbView === format.id }}
+                onClick={() => { setState({ dbView: format.id, selectedProductId: null }); setOpen(false) }}
+              >
+                <span aria-hidden="true">{format.icon}</span>{format.label}
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
+    </div>
+  )
+}
+
+// ── 配布用（配布可にしたリーフレットだけ。編集中は含めない） ─────────────────
+const DistributionGallery: Component<{ productIds: string[] }> = (props) => {
+  const list = createMemo(() =>
+    leaflets
+      .filter((leaflet) => leaflet.status === 'ready' && props.productIds.includes(leaflet.productId))
+      .slice()
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  )
+  const productOf = (id: string) => state.products.find((product) => product.id === id)
+  return (
+    <div class="product-gallery-shell flex-1 overflow-y-auto">
+      <div class="product-gallery-hero">
+        <div>
+          <p class="product-gallery-kicker">NACC LEAFLETS · READY TO SHARE</p>
+          <h2>配布用の資料</h2>
+          <p>「配布可」にしたリーフレットだけを並べています。編集中のものは、上の「リーフレット」から開けます。</p>
+        </div>
+      </div>
+      <div class="product-gallery-count"><strong>{list().length}</strong> leaflets</div>
+      <div class="product-gallery-grid">
+        <For each={list()} fallback={<div class="product-gallery-empty">配布用のリーフレットはまだありません。リーフレットの編集画面で「配布可にする」を押すとここに並びます。</div>}>
+          {(leaflet) => (
+            <article class="product-gallery-card distribution-card" onClick={() => openLeaflet(leaflet, 'preview')} role="button" tabindex="0">
+              <div class="product-gallery-thumb">
+                <Show when={productOf(leaflet.productId)} fallback={<span>{leaflet.name.slice(0, 1)}</span>}>
+                  {(product) => <LeafletVisual image={leaflet.image} product={product()} class="distribution-thumb" />}
+                </Show>
+                <small>{leaflet.version === '2.1' ? 'LEAFLET · Ver2.1' : 'LEAFLET'}</small>
+              </div>
+              <div class="product-gallery-body">
+                <p class="product-gallery-id">{productOf(leaflet.productId)?.name ?? leaflet.source.productName}</p>
+                <h3>{leaflet.name}</h3>
+                <p>{leaflet.audience || '対象者未設定'}</p>
+                <div class="product-gallery-meta">
+                  <span>更新 {leaflet.updatedAt.slice(0, 10).replace(/-/g, '/')}</span>
+                  <span class="distribution-actions">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); openLeaflet(leaflet, 'preview') }}>表示</button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); openLeaflet(leaflet, 'edit') }}>編集</button>
+                  </span>
+                </div>
+              </div>
+            </article>
+          )}
+        </For>
+      </div>
+    </div>
+  )
+}
+
 // ── Page Root ──────────────────────────────────────────────────────────────
 const PageDb01: Component<Props> = (props) => {
   // アプリを開いたときの初期画面はお気に入り
   const [categoryFilter, setCategoryFilter] = createSignal<CategoryFilter>('favorite')
+  const [docTab, setDocTab] = createSignal<'original' | 'distribution'>('original')
+  const readyCount = () => leaflets.filter((leaflet) => leaflet.status === 'ready').length
   const [memoPanelOpen, setMemoPanelOpen] = createSignal(false)
   const [memoPanelProduct, setMemoPanelProduct] = createSignal<Product | null>(null)
 
@@ -975,7 +1069,7 @@ const PageDb01: Component<Props> = (props) => {
         </button>
       </div>
 
-      {/* View tabs */}
+      {/* タブ: 原本／配布用。表示形式（Gallery・目次・テーブル）は右端のアイコンから */}
       <div class="db-tab-row flex items-center gap-0 px-6 border-b border-nacc-border shrink-0 bg-white">
         <Show when={state.dbView === 'detail'}>
           <button
@@ -990,61 +1084,50 @@ const PageDb01: Component<Props> = (props) => {
         <button
           class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
           classList={{
-            'border-nacc-dark text-nacc-dark': state.dbView === 'gallery',
-            'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'gallery',
+            'border-nacc-dark text-nacc-dark': docTab() === 'original',
+            'border-transparent text-gray-400 hover:text-gray-600': docTab() !== 'original',
           }}
-          onClick={() => setState({ dbView: 'gallery' })}
+          onClick={() => setDocTab('original')}
         >
-          ◇ Gallery
+          原本
         </button>
         <button
           class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
           classList={{
-            'border-nacc-dark text-nacc-dark': state.dbView === 'index',
-            'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'index',
+            'border-nacc-dark text-nacc-dark': docTab() === 'distribution',
+            'border-transparent text-gray-400 hover:text-gray-600': docTab() !== 'distribution',
           }}
-          onClick={() => setState({ dbView: 'index' })}
+          onClick={() => setDocTab('distribution')}
         >
-          📋 Index
+          配布用 <span class="opacity-60">({readyCount()})</span>
         </button>
-        <button
-          class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
-          classList={{
-            'border-nacc-dark text-nacc-dark': state.dbView === 'table',
-            'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'table',
-          }}
-          onClick={() => setState({ dbView: 'table' })}
-        >
-          ≡ テーブル
-        </button>
-        <button
-          class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
-          classList={{
-            'border-nacc-dark text-nacc-dark': state.dbView === 'detail',
-            'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'detail',
-          }}
-          onClick={() => setState({ dbView: 'detail' })}
-        >
-          🗂 詳細View
-        </button>
-        <HelpButton title="商品Gallery" items={HELP_PRODUCT_GALLERY} class="ml-auto" />
+        <span class="ml-auto flex items-center gap-1.5">
+          <Show when={docTab() === 'original'}>
+            <ViewFormatMenu />
+          </Show>
+          <HelpButton title="商品Gallery" items={HELP_PRODUCT_GALLERY} />
+        </span>
       </div>
 
       {/* Content */}
-      <Show when={state.dbView === 'gallery'}>
+      <Show when={docTab() === 'distribution'}>
+        {/* お気に入りは商品の印なので、配布用ではサプリ／コスメの絞り込みだけを使う */}
+        <DistributionGallery productIds={(categoryFilter() === 'supplement' || categoryFilter() === 'cosmetic' ? filteredProducts() : props.products).map((p) => p.id)} />
+      </Show>
+      <Show when={docTab() === 'original' && state.dbView === 'gallery'}>
         <ProductGalleryView products={filteredProducts()} />
       </Show>
-      <Show when={state.dbView === 'table'}>
+      <Show when={docTab() === 'original' && state.dbView === 'table'}>
         <TableView
           products={filteredProducts()}
           onUpdate={updateProduct}
           onRowSelect={handleRowSelect}
         />
       </Show>
-      <Show when={state.dbView === 'detail'}>
-        <DetailView products={filteredProducts()} />
+      <Show when={docTab() === 'original' && state.dbView === 'detail'}>
+        <DetailView products={props.products} />
       </Show>
-      <Show when={state.dbView === 'index'}>
+      <Show when={docTab() === 'original' && state.dbView === 'index'}>
         <IndexView products={filteredProducts()} />
       </Show>
     </div>

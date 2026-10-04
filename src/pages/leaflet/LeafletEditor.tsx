@@ -6,6 +6,7 @@ import {
   newKey, savedAt, setLeafletItems, setLeafletView, updateLeaflet,
 } from './store'
 import HelpButton, { HELP_LEAFLET_EDITOR } from '../../components/HelpButton'
+import { AddIngredientDialog, SyncDialog } from './IngredientDialogs'
 import { cardDescription, cardTitle, categoryLabel, CopyButton, LeafletVisual, nutrientById, OriginalSafeNote, originalNutrients, SaveButton, showToast } from './shared'
 
 type Col = 'left' | 'right'
@@ -51,6 +52,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
   const [copyMode, setCopyMode] = createSignal(false)
   /** 商品・コメント欄は普段たたんでおき、2カラムを広く使う */
   const [headerOpen, setHeaderOpen] = createSignal(false)
+  const [addOpen, setAddOpen] = createSignal(false)
   /** 一括選択: null = 使っていない。使っている間はチェックの入った成分ID */
   const [bulkChecked, setBulkChecked] = createSignal<string[] | null>(null)
   const [editingTopicKey, setEditingTopicKey] = createSignal<string | null>(null)
@@ -700,6 +702,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
           <header class="lf-col-head">
             <p>CANDIDATES</p>
             <h2>掲載候補 <small>原本から選ぶ · {candidates().length}件</small></h2>
+            <div class="lf-bulk lf-bulk-add"><button type="button" class="lf-bulk-start" onClick={() => setAddOpen(true)}>＋ 成分を追加</button></div>
             <Show when={candidates().length}>
               <div class="lf-bulk">
                 <Show when={bulkOn()} fallback={
@@ -741,6 +744,11 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
       <p class="lf-help">
         iPad：カードを0.6秒長押し → 持ち上がったら指を動かして左右へ移動・並び替え／マウス：そのままドラッグ（Number長押しでも可）／カラムの外で離すと取り消し
       </p>
+
+      <SyncDialog leaflet={props.leaflet} />
+      <Show when={addOpen()}>
+        <AddIngredientDialog leaflet={props.leaflet} product={props.product} onClose={() => setAddOpen(false)} />
+      </Show>
 
       <Show when={drag()}>
         {(d) => (

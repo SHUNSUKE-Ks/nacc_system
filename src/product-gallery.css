@@ -117,3 +117,23 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .nutrient-new-form>div button{padding:7px 14px;border:1px solid rgba(120,47,61,.24);border-radius:999px;color:#725f4d;font-size:.62rem;font-weight:700}
 .nutrient-new-form>div button.primary{border-color:#782f3d;background:#782f3d;color:#fff}
 .nutrient-new-form>div button:disabled{opacity:.4}
+
+/* タブ右端: 表示形式のアイコンメニュー */
+.view-format{position:relative}
+.view-format-trigger{display:inline-flex;align-items:center;gap:4px;height:30px;min-height:0;padding:0 9px;border:1px solid rgba(179,130,71,.4);border-radius:8px;background:#fffaf1;color:#8a5c27;font-size:.8rem}
+.view-format-trigger svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6}
+.view-format-trigger[aria-expanded="true"]{background:#855626;color:#fff}
+.view-format-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:60;display:grid;min-width:170px;padding:6px;border:1px solid rgba(179,130,71,.3);border-radius:10px;background:#fffdf8;box-shadow:0 14px 34px rgba(66,46,22,.16)}
+.view-format-menu p{margin:2px 8px 6px;color:#b38247;font-size:.55rem;font-weight:800;letter-spacing:.16em}
+.view-format-menu button{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 10px;border-radius:8px;color:#4a3a2f;font-size:.72rem;text-align:left}
+.view-format-menu button span{width:18px;color:#b38247;text-align:center}
+.view-format-menu button:hover{background:#f6ecd9}
+.view-format-menu button.is-active{background:#855626;color:#fff}
+.view-format-menu button.is-active span{color:#fff}
+
+/* 配布用タブのカード */
+.distribution-card{cursor:pointer}
+.distribution-card .distribution-thumb{width:100%;height:100%;border:0;border-radius:0;background:transparent}
+.distribution-card .distribution-thumb img{object-fit:contain;padding:10px}
+.distribution-actions{display:inline-flex;gap:6px}
+.distribution-actions button{min-height:0;padding:3px 10px;border:1px solid rgba(179,130,71,.4);border-radius:999px;background:#fffaf1;color:#855626;font-size:.55rem;font-weight:700}

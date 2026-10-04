@@ -1,12 +1,13 @@
 import { type Component, batch, createMemo, createSignal, For, onCleanup, Show } from 'solid-js'
 import { Portal } from 'solid-js/web'
 import type { Product } from '../../types'
-import { setState } from '../../store'
+import { setState, updateNutrient } from '../../store'
 import HelpButton, { HELP_LEAFLET_V21 } from '../../components/HelpButton'
 import {
   type Leaflet, type LeafletCard, type LeafletItem,
   savedAt, setLeafletItems, setLeafletView, updateLeaflet,
 } from './store'
+import { AddIngredientDialog, SyncDialog } from './IngredientDialogs'
 import { cardDescription, cardTitle, CopyButton, LeafletVisual, nutrientById, OriginalSafeNote, PhotoGallery, SaveButton } from './shared'
 
 // リーフレット Ver2.1
@@ -43,6 +44,7 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
   const [draftTitle, setDraftTitle] = createSignal('')
   const [draftBody, setDraftBody] = createSignal('')
   const [pickerOpen, setPickerOpen] = createSignal(false)
+  const [addOpen, setAddOpen] = createSignal(false)
   let pending: Pending | null = null
   let touchEl: HTMLElement | null = null
   let scrollFrame = 0
@@ -118,6 +120,15 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
       title: title && title !== original?.name ? title : undefined,
       description: description !== (original?.description ?? '') ? description : undefined,
     }))
+    setEditingKey(null)
+  }
+
+  /** 原本（商品ノート）の成分カードを直す。ほかのリーフレットにも反映される */
+  function saveToOriginal(card: LeafletCard) {
+    const title = draftTitle().trim()
+    if (!title) return
+    updateNutrient(card.nutrientId, { name: title, description: draftBody().trim() })
+    save(cards().map((item) => (item.key === card.key ? { ...item, title: undefined, description: undefined } : item)))
     setEditingKey(null)
   }
 
@@ -313,6 +324,14 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
             )}
           </For>
         </span>
+        <button
+          class="lf21-status"
+          classList={{ 'is-ready': props.leaflet.status === 'ready' }}
+          onClick={() => updateLeaflet(props.leaflet.id, { status: props.leaflet.status === 'ready' ? 'draft' : 'ready' })}
+          title="配布可にすると、商品ページの「配布用」タブに並びます"
+        >
+          {props.leaflet.status === 'ready' ? '✓ 配布可' : '下書き → 配布可にする'}
+        </button>
         <button class="lf-back" onClick={() => setLeafletView({ view: 'gallery' })}>リーフレット一覧</button>
         <button class="lf-primary" onClick={() => setLeafletView({ view: 'layout', id: props.leaflet.id })}>配布用レイアウト →</button>
       </div>
@@ -339,6 +358,7 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
           <h2>成分カード <small>表示中 {visibleCards().length}枚 · 非表示 {hiddenCards().length}枚</small></h2>
         </div>
         <span>Numberを{pressMs() / 1000}秒長押しで並び替え／「表示」のチェックを外すと最後に回って配布用に出ません</span>
+        <button type="button" class="lf21-add" onClick={() => setAddOpen(true)}>＋ 成分を追加</button>
       </section>
 
       <div class="lf-grid lf21-grid" ref={gridRef}>
@@ -396,13 +416,14 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
                   <div class="lf-topic-editor lf21-editor">
                     <label>タイトル<input value={draftTitle()} onInput={(e) => setDraftTitle(e.currentTarget.value)} /></label>
                     <label>説明<textarea rows="6" value={draftBody()} onInput={(e) => setDraftBody(e.currentTarget.value)} /></label>
-                    <p class="lf21-note">原本の成分カードは変わりません（このリーフレットだけ）</p>
-                    <div>
+                    <p class="lf21-note">「このリーフレットだけ」は原本を変えません。「原本に保存」は商品ノートを直し、ほかのリーフレットにも反映されます。</p>
+                    <div class="lf21-edit-actions">
                       <Show when={card.title || card.description !== undefined}>
                         <button onClick={() => resetEdit(card)}>原本の文に戻す</button>
                       </Show>
                       <button onClick={() => setEditingKey(null)}>キャンセル</button>
-                      <button class="primary" onClick={() => saveEdit(card)}>保存</button>
+                      <button class="is-original" onClick={() => saveToOriginal(card)}>原本に保存</button>
+                      <button class="primary" onClick={() => saveEdit(card)}>このリーフレットだけ</button>
                     </div>
                   </div>
                 </Show>
@@ -424,6 +445,11 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
             </div>
           </Portal>
         )}
+      </Show>
+
+      <SyncDialog leaflet={props.leaflet} />
+      <Show when={addOpen()}>
+        <AddIngredientDialog leaflet={props.leaflet} product={props.product} onClose={() => setAddOpen(false)} />
       </Show>
 
       <Show when={pickerOpen()}>

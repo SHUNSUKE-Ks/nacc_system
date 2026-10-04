@@ -68,8 +68,8 @@ const UnderlinePicker: Component<{ value?: TopicUnderline; onChange: (value: Top
 )
 
 // 配布用レイアウト編集（LAYOUT_EDIT）。仕上がりを確認すると編集枠が消え、そのまま印刷できる
-const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props) => {
-  const [clean, setClean] = createSignal(false)
+const LeafletLayout: Component<{ leaflet: Leaflet; product: Product; initialClean?: boolean }> = (props) => {
+  const [clean, setClean] = createSignal(!!props.initialClean)
   const [penOn, setPenOn] = createSignal(false)
   const [showPages, setShowPages] = createSignal(false)
   const [liveAdjust, setLiveAdjust] = createSignal<ImageAdjust | null>(null)
@@ -685,6 +685,14 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
           <span class="lf-pen-dot" aria-hidden="true" />{penOn() ? 'マーカーを終了' : 'マーカー'}
         </button>
         <SaveButton />
+        <button
+          class="lf21-status"
+          classList={{ 'is-ready': props.leaflet.status === 'ready' }}
+          onClick={() => updateLeaflet(props.leaflet.id, { status: props.leaflet.status === 'ready' ? 'draft' : 'ready' })}
+          title="配布可にすると、商品ページの「配布用」タブに並びます"
+        >
+          {props.leaflet.status === 'ready' ? '✓ 配布可' : '配布可にする'}
+        </button>
         <button classList={{ 'is-on': showPages() }} onClick={togglePages} title="A4で印刷したときのページの分かれ目を表示します">A4ページ区切り</button>
         <button classList={{ 'is-on': clean() }} onClick={() => { if (clean()) setShowPages(false); setClean(!clean()) }}>{clean() ? '編集に戻る' : '仕上がりを確認'}</button>
         <button class="lf-primary" onClick={print}>印刷 / PDF</button>

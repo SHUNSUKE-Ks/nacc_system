@@ -57,10 +57,40 @@ function loadCustomNutrients(): Nutrient[] {
   }
 }
 
-/** 一覧に、まだ入っていない自作カードを足す */
+// 成分カードの修正（名前・説明・商品との結び付け）も端末に保存しておく。
+// Firestore に書けない状態でも、再読み込みで修正が消えないようにするため
+const NUTRIENT_EDITS_KEY = 'nacc-nutrient-edits'
+type NutrientEdit = Partial<Pick<Nutrient, 'name' | 'description' | 'productIds'>>
+
+function loadNutrientEdits(): Record<string, NutrientEdit> {
+  try {
+    return JSON.parse(localStorage.getItem(NUTRIENT_EDITS_KEY) || '{}') as Record<string, NutrientEdit>
+  } catch {
+    return {}
+  }
+}
+
+function saveNutrientEdit(id: string, patch: Partial<Nutrient>) {
+  const keep: NutrientEdit = {}
+  if (patch.name !== undefined) keep.name = patch.name
+  if (patch.description !== undefined) keep.description = patch.description
+  if (patch.productIds !== undefined) keep.productIds = patch.productIds
+  if (!Object.keys(keep).length) return
+  try {
+    const edits = loadNutrientEdits()
+    edits[id] = { ...edits[id], ...keep }
+    localStorage.setItem(NUTRIENT_EDITS_KEY, JSON.stringify(edits))
+  } catch (e) {
+    console.warn('[nutrient] local edit save failed', e)
+  }
+}
+
+/** 一覧に、まだ入っていない自作カードを足し、端末に残した修正を重ねる */
 function withCustomNutrients(list: Nutrient[]): Nutrient[] {
   const ids = new Set(list.map((n) => n.id))
+  const edits = loadNutrientEdits()
   return [...list, ...loadCustomNutrients().filter((n) => !ids.has(n.id))]
+    .map((n) => (edits[n.id] ? { ...n, ...edits[n.id] } : n))
 }
 
 function initDarkMode(): boolean {
@@ -287,7 +317,15 @@ export function addCustomNutrient(data: { name: string; description: string; pro
 
 export function updateNutrient(id: string, patch: Partial<Nutrient>): void {
   setState('nutrients', (prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)))
+  saveNutrientEdit(id, patch)
   updateNutrientFs(id, patch).catch(console.warn)
+}
+
+/** 共有成分DBのカードを商品（原本）に結び付ける */
+export function linkNutrientToProduct(nutrientId: string, productId: string): void {
+  const nutrient = state.nutrients.find((n) => n.id === nutrientId)
+  if (!nutrient || nutrient.productIds.includes(productId)) return
+  updateNutrient(nutrientId, { productIds: [...nutrient.productIds, productId] })
 }
 
 // ── Symptom CRUD ──────────────────────────────────────────────────────────────

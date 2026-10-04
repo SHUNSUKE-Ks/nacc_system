@@ -1,0 +1,37 @@
+/* Leaflet v7 — iPad対応・2カラムを広く・レイアウト画面の並び替え */
+
+/* ── iPad: 長押しで文字選択やメニューが出ないように ─────────────────── */
+.lf-editor .lf-card,.lf-editor .lf-topic{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.lf-editor .lf-topic-editor,.lf-editor .lf-topic-editor *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.lf-editor .lf-card.is-pressing,.lf-editor .lf-topic.is-pressing{box-shadow:0 0 0 2px rgba(120,47,61,.35),0 8px 20px rgba(63,44,24,.12);transition:box-shadow .6s}
+
+/* ── header（商品・コメント）は普段たたむ ──────────────────────────── */
+.lf-header-compact{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px;border:1px solid var(--lf-line);border-radius:12px;background:rgba(255,253,245,.85)}
+.lf-header-compact .lf-visual{width:44px;border-radius:10px}
+.lf-header-compact-text{display:grid;min-width:0;flex:1}
+.lf-header-compact-text strong{overflow:hidden;color:var(--lf-wine);font:600 .82rem "Yu Mincho","Hiragino Mincho ProN",serif;white-space:nowrap;text-overflow:ellipsis}
+.lf-header-compact-text span{overflow:hidden;color:#8d7c68;font-size:.56rem;white-space:nowrap;text-overflow:ellipsis}
+.lf-header-toggle{flex:0 0 auto;padding:6px 12px;border:1px solid rgba(120,47,61,.24);border-radius:999px;background:#fffdf8;color:var(--lf-wine);font-size:.58rem;font-weight:700}
+.lf-header-toggle.is-close{display:block;margin:-12px 0 12px auto}
+
+/* ── 横幅が広いとき: 画面いっぱいの高さで、左右の列がそれぞれスクロール ── */
+@media (min-width:861px){
+  .lf-page:has(> .lf-editor){overflow:hidden}
+  .lf-editor{display:flex;flex-direction:column;height:100dvh;padding-bottom:10px}
+  .lf-editor>.lf-topbar{position:relative;flex:0 0 auto;margin-bottom:12px}
+  .lf-editor>.lf-header,.lf-editor>.lf-header-compact,.lf-editor>.lf-header-toggle{flex:0 0 auto}
+  .lf-editor>.lf-header{max-height:46dvh;overflow-y:auto}
+  .lf-editor .lf-columns{flex:1 1 auto;min-height:0;align-items:stretch}
+  .lf-editor .lf-columns>.lf-col,.lf-editor .lf-columns>.lf-col:first-child{position:relative;top:auto;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .lf-editor .lf-col-head{position:sticky;top:-14px;z-index:2;margin:-14px -14px 12px;padding:14px 18px 8px;background:inherit;border-radius:16px 16px 0 0;backdrop-filter:blur(8px)}
+  .lf-editor .lf-col.is-right .lf-col-head{background:rgba(255,253,245,.95)}
+  .lf-editor .lf-col:not(.is-right) .lf-col-head{background:rgba(250,246,236,.95)}
+  .lf-editor>.lf-help{flex:0 0 auto;margin-top:8px}
+}
+
+/* ── 配布用レイアウト: カードの並び替えボタン ─────────────────────────── */
+.lf-move{display:inline-flex;gap:3px;margin-left:auto}
+.lf-move button{display:grid;place-items:center;width:28px;height:28px;min-height:0;padding:0;border:1px solid rgba(120,47,61,.22);border-radius:8px;background:#fffdf8;color:var(--lf-wine);font:600 1rem/1 serif}
+.lf-move button:disabled{opacity:.25}
+.lf-move button:not(:disabled):active{background:#f6ecd9}
+.lf-card.is-main .lf-move{flex-direction:row;margin:4px 0 0}

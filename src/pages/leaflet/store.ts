@@ -105,7 +105,7 @@ function normalize(raw: Partial<Leaflet>): Leaflet {
   const leaflet = {
     title: '',
     image: { kind: 'product' },
-    headerStyle: 'split',
+    headerStyle: 'wide',
     headerRule: 'none',
     pageMark: { name: true, number: true, corner: 'br' },
     marks: {},
@@ -176,7 +176,7 @@ export function createLeaflet(product: Product, nutrientIds: string[], image: Le
       name: `${product.name} リーフレット ${count + 1}`,
       title: '',
       image,
-      headerStyle: 'split',
+      headerStyle: 'wide',
       headerRule: 'none',
       pageMark: { name: true, number: true, corner: 'br' },
       marks: {},

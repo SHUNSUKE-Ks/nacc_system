@@ -15,6 +15,7 @@ import './leaflet-layout.css'
 import './leaflet-v3.css'
 import './leaflet-v5.css'
 import './leaflet-v6.css'
+import './leaflet-v7.css'
 
 // NAVIなしの全画面ページ。原本（商品ノート）とは別の書類ステートとして扱う。
 const LeafletPage: Component = () => {

@@ -16,8 +16,8 @@ const SECTION_LABELS: Record<SectionType, string> = {
 }
 const LOOK_LABELS: Record<GalleryLook, string> = { card: 'カード', main: '主要成分' }
 const HEADER_STYLES: { id: HeaderStyle; label: string }[] = [
-  { id: 'split', label: 'ビジュアル右' },
   { id: 'wide', label: 'ワイド' },
+  { id: 'split', label: 'ビジュアル右' },
   { id: 'classic', label: 'クラシック' },
   { id: 'banner', label: 'アーチ' },
 ]
@@ -144,6 +144,29 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
     ))
   }
 
+  /** 配布表示の並びで1つ前／後ろへ（非表示のカードは飛ばす） */
+  function moveItem(key: string, dir: -1 | 1) {
+    const list = props.leaflet.items.map((item) => ({ ...item }))
+    const visible = list.filter((item) => item.kind === 'topic' || item.visible)
+    const at = visible.findIndex((item) => item.key === key)
+    const other = visible[at + dir]
+    if (at < 0 || !other) return
+    const a = list.findIndex((item) => item.key === key)
+    const b = list.findIndex((item) => item.key === other.key)
+    ;[list[a], list[b]] = [list[b], list[a]]
+    setLeafletItems(props.leaflet.id, list)
+  }
+
+  const MoveButtons: Component<{ itemKey: string }> = (move) => {
+    const position = () => visibleItems().findIndex((item) => item.key === move.itemKey)
+    return (
+      <span class="lf-move lf-app-only">
+        <button type="button" onClick={() => moveItem(move.itemKey, -1)} disabled={position() <= 0} title="前へ" aria-label="前へ移動">‹</button>
+        <button type="button" onClick={() => moveItem(move.itemKey, 1)} disabled={position() >= visibleItems().length - 1} title="後ろへ" aria-label="後ろへ移動">›</button>
+      </span>
+    )
+  }
+
   function applyPen(targetId: string, s: number, e: number, action: PenAction) {
     setLeafletMarks(props.leaflet.id, targetId, applyMark(marksOf(targetId) ?? [], s, e, action))
   }
@@ -248,6 +271,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
     <aside class="lf-topic is-preview">
       <Show when={!asText()}>
         <div class="lf-topic-controls">
+          <MoveButtons itemKey={topic.topic.key} />
           <IconPicker value={topic.topic.icon} onChange={(icon) => patchTopicItem(topic.topic.key, { icon })} />
           <UnderlinePicker value={topic.topic.underline} onChange={(underline) => patchTopicItem(topic.topic.key, { underline })} />
         </div>
@@ -277,6 +301,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
                       <div class="lf-card-top">
                         <span class="lf-number">{pad(cardNumber().get(card().key))}</span>
                         <Show when={sec.section.look === 'main'}><span class="lf-main-tag">主要成分</span></Show>
+                        <Show when={!asText()}><MoveButtons itemKey={card().key} /></Show>
                       </div>
                       <h3>{nutrient()?.name}<CopyButton text={nutrient()?.name ?? ''} label="タイトル" /></h3>
                       <MarkedText text={nutrient()?.description ?? ''} marks={marksOf(`card:${card().key}:desc`)} targetId={`card:${card().key}:desc`} />
@@ -502,7 +527,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
     setShowPages(next)
     if (next) { setClean(true); setPenOn(false) }
   }
-  const headerStyle = () => props.leaflet.headerStyle ?? 'split'
+  const headerStyle = () => props.leaflet.headerStyle ?? 'wide'
   const headerRule = () => props.leaflet.headerRule ?? 'none'
 
   return (

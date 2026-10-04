@@ -49,6 +49,8 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null)
   const [landedKey, setLandedKey] = createSignal<string | null>(null)
   const [copyMode, setCopyMode] = createSignal(false)
+  /** 商品・コメント欄は普段たたんでおき、2カラムを広く使う */
+  const [headerOpen, setHeaderOpen] = createSignal(false)
   const [editingTopicKey, setEditingTopicKey] = createSignal<string | null>(null)
   const [draftHeading, setDraftHeading] = createSignal('')
   const [draftBody, setDraftBody] = createSignal('')
@@ -61,10 +63,13 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
     scrollFrame = 0
     const d = drag()
     if (!d) return
-    const scroller = rootRef.closest('.lf-page') as HTMLElement | null
+    // 列が独立してスクロールする画面（横幅が広いとき）は列を、そうでなければページを動かす
+    const col = [leftColRef, rightColRef].find((c) => contains(c, d.x, d.y) && c.scrollHeight > c.clientHeight + 4)
+    const scroller = col ?? (rootRef.closest('.lf-page') as HTMLElement | null)
     if (!scroller) return
-    const edge = 72
-    const speed = d.y < edge ? -(edge - d.y) / 4 : d.y > window.innerHeight - edge ? (d.y - (window.innerHeight - edge)) / 4 : 0
+    const box = col ? col.getBoundingClientRect() : { top: 0, bottom: window.innerHeight }
+    const edge = 64
+    const speed = d.y < box.top + edge ? -(box.top + edge - d.y) / 4 : d.y > box.bottom - edge ? (d.y - (box.bottom - edge)) / 4 : 0
     if (speed === 0) return
     scroller.scrollTop += speed
     updateTarget(d.x, d.y)
@@ -201,12 +206,10 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
 
   // ── ポインター操作 ────────────────────────────────────────────────────────
   function onPointerDown(event: PointerEvent, src: DragSource, viaHandle: boolean) {
+    // iPad（指・Apple Pencil）は下の touch イベントで扱う。Safari はポインターだとスクロールに取られるため
+    if (event.pointerType !== 'mouse') return
     if (event.button !== 0 || drag() || pending) return
-    if (!viaHandle) {
-      // タッチではカード本体のドラッグはスクロールを優先する（Number長押しで操作）
-      if (event.pointerType !== 'mouse') return
-      if ((event.target as HTMLElement).closest('button, input, textarea, [data-handle]')) return
-    }
+    if (!viaHandle && (event.target as HTMLElement).closest('button, input, textarea, select, [data-handle]')) return
     const el = (event.currentTarget as HTMLElement).closest('[data-key]') as HTMLElement
     lastPointerType = event.pointerType
     pending = {
@@ -221,6 +224,67 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
       pending.timer = window.setTimeout(() => begin('reordering'), LONG_PRESS_MS)
     }
     attach()
+  }
+
+  // ── タッチ（iPad）: カードのどこでも0.6秒長押しで持ち上げる ─────────────
+  // 長押しの前に指が動いたらスクロールとして扱う。持ち上げた後は touchmove を止めてスクロールさせない。
+  // リスナーは触れた要素に付ける（並び替え中に要素がDOMから外れても、iOSは元の要素へイベントを送り続ける）
+  let touchEl: HTMLElement | null = null
+
+  function onTouchStart(event: TouchEvent, src: DragSource, viaHandle: boolean) {
+    if (drag() || pending || event.touches.length !== 1) return
+    if ((event.target as HTMLElement).closest('button, input, textarea, select')) return
+    const touch = event.touches[0]
+    const el = (event.currentTarget as HTMLElement).closest('[data-key]') as HTMLElement
+    lastPointerType = 'touch'
+    pending = {
+      src, el,
+      startX: touch.clientX, startY: touch.clientY,
+      x: touch.clientX, y: touch.clientY,
+      viaHandle, pointerType: 'touch',
+    }
+    setPressingKey(src.key)
+    pending.timer = window.setTimeout(() => begin('reordering'), LONG_PRESS_MS)
+    touchEl = event.currentTarget as HTMLElement
+    touchEl.addEventListener('touchmove', onTouchMove, { passive: false })
+    touchEl.addEventListener('touchend', onTouchEnd)
+    touchEl.addEventListener('touchcancel', onTouchCancel)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('contextmenu', onContextMenu)
+  }
+
+  function onTouchMove(event: TouchEvent) {
+    const touch = event.touches[0]
+    if (!touch) return
+    if (pending) {
+      pending.x = touch.clientX
+      pending.y = touch.clientY
+      if (Math.hypot(touch.clientX - pending.startX, touch.clientY - pending.startY) > MOVE_TOLERANCE) cancel()
+      return
+    }
+    const d = drag()
+    if (!d) return
+    if (event.cancelable) event.preventDefault()
+    setDrag({ ...d, x: touch.clientX, y: touch.clientY, copy: copyMode() })
+    updateTarget(touch.clientX, touch.clientY)
+    if (!scrollFrame) scrollFrame = requestAnimationFrame(autoScroll)
+  }
+
+  function onTouchEnd(event: TouchEvent) {
+    if (drag() && event.cancelable) event.preventDefault()
+    onUp()
+  }
+
+  function onTouchCancel() {
+    cancel()
+  }
+
+  function detachTouch() {
+    if (!touchEl) return
+    touchEl.removeEventListener('touchmove', onTouchMove)
+    touchEl.removeEventListener('touchend', onTouchEnd)
+    touchEl.removeEventListener('touchcancel', onTouchCancel)
+    touchEl = null
   }
 
   function begin(mode: DragState['mode']) {
@@ -303,6 +367,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
   function detach() {
     cancelAnimationFrame(scrollFrame)
     scrollFrame = 0
+    detachTouch()
     window.removeEventListener('pointermove', onMove)
     window.removeEventListener('pointerup', onUp)
     window.removeEventListener('pointercancel', cancel)
@@ -414,6 +479,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
             data-handle
             title="長押し（0.6秒）で並び替え"
             onPointerDown={(event) => onPointerDown(event, { col: cardProps.col, key: cardProps.card.key, item: cardProps.card }, true)}
+            onTouchStart={(event) => onTouchStart(event, { col: cardProps.col, key: cardProps.card.key, item: cardProps.card }, true)}
           >
             {cardProps.number}
           </span>
@@ -447,6 +513,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
               data-handle
               title="長押し（0.6秒）で並び替え"
               onPointerDown={(event) => onPointerDown(event, { col: 'right', key: topicProps.topic.key, item: topicProps.topic }, true)}
+              onTouchStart={(event) => onTouchStart(event, { col: 'right', key: topicProps.topic.key, item: topicProps.topic }, true)}
             >
               TOPIC
             </span>
@@ -482,6 +549,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
       'data-key': item.key,
       'data-flip': '',
       onPointerDown: (event: PointerEvent) => onPointerDown(event, { col, key: item.key, item }, false),
+      onTouchStart: (event: TouchEvent) => onTouchStart(event, { col, key: item.key, item }, false),
     }
     if (item.kind === 'topic') {
       return (
@@ -526,6 +594,18 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
       </div>
 
       {/* Header: 左=商品 / 右=この資料のコメント */}
+      <Show when={!headerOpen()}>
+        <div class="lf-header-compact">
+          <LeafletVisual image={props.leaflet.image} product={props.product} />
+          <div class="lf-header-compact-text">
+            <strong>{props.leaflet.title || props.product.name}</strong>
+            <span>{props.leaflet.audience || '対象者未設定'}　·　{props.leaflet.comment ? props.leaflet.comment.split('\n')[0] : 'コメント未入力'}</span>
+          </div>
+          <span class="lf-badge" classList={{ 'is-ready': props.leaflet.status === 'ready' }}>{props.leaflet.status === 'ready' ? '配布可' : '下書き'}</span>
+          <button type="button" class="lf-header-toggle" onClick={() => setHeaderOpen(true)}>商品・コメントを編集 ▾</button>
+        </div>
+      </Show>
+      <Show when={headerOpen()}>
       <header class="lf-header">
         <div class="lf-header-product">
           <LeafletVisual image={props.leaflet.image} product={props.product} />
@@ -562,6 +642,9 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
         </div>
       </header>
 
+      <button type="button" class="lf-header-toggle is-close" onClick={() => setHeaderOpen(false)}>たたむ ▴</button>
+      </Show>
+
       {/* Main: 2カラム */}
       <div class="lf-columns">
         <section class="lf-col" ref={leftColRef} classList={{ 'is-drop': target()?.col === 'left' }}>
@@ -592,7 +675,7 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
       </div>
 
       <p class="lf-help">
-        カードをドラッグして左右に移動／Number を 0.6秒長押しで並び替え（Esc・右クリック・カラム外で取り消し）／Alt または「複製して置く」で複製
+        iPad：カードを0.6秒長押し → 持ち上がったら指を動かして左右へ移動・並び替え／マウス：そのままドラッグ（Number長押しでも可）／カラムの外で離すと取り消し
       </p>
 
       <Show when={drag()}>

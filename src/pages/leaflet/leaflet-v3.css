@@ -1,0 +1,144 @@
+/* Leaflet v3 — header 4パターン・サークル調整・Topicアイコン・マーカー。leaflet-layout.css の後に読み込む */
+
+/* ── header デザイン選択 ─────────────────────────────────────────── */
+.lf-header-styles{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px}
+.lf-header-styles>span{margin-right:4px;color:var(--lf-gold);font-size:.46rem;font-weight:800;letter-spacing:.2em}
+.lf-header-styles button{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border:1px solid rgba(120,47,61,.18);border-radius:999px;background:#fffdf8;color:#725f4d;font-size:.56rem;font-weight:700}
+.lf-header-styles button.is-active{border-color:var(--lf-wine);background:#f8eef0;color:var(--lf-wine)}
+.lf-hs-thumb{position:relative;display:inline-block;width:34px;height:22px;border:1px solid rgba(120,47,61,.25);border-radius:5px;background:#fbf4e4;overflow:hidden}
+.lf-hs-thumb b,.lf-hs-thumb em,.lf-hs-thumb u{position:absolute;display:block}
+.lf-hs-thumb b{height:2px;background:var(--lf-wine)}
+.lf-hs-thumb em{border-radius:2px;background:#d9bf86}
+.lf-hs-thumb u{height:8px;background:repeating-linear-gradient(#b9a78f 0 1px,transparent 1px 3px)}
+.lf-hs-thumb.is-classic b{left:3px;top:3px;width:12px}.lf-hs-thumb.is-classic em{left:3px;top:7px;width:12px;height:11px}.lf-hs-thumb.is-classic u{left:19px;top:7px;width:11px}
+.lf-hs-thumb.is-center b{left:10px;top:3px;width:14px}.lf-hs-thumb.is-center em{left:11px;top:7px;width:12px;height:8px}.lf-hs-thumb.is-center u{left:8px;top:16px;width:18px;height:4px}
+.lf-hs-thumb.is-split b{left:3px;top:6px;width:14px}.lf-hs-thumb.is-split em{right:3px;top:3px;width:12px;height:16px;border-radius:50%}.lf-hs-thumb.is-split u{left:3px;top:10px;width:13px}
+.lf-hs-thumb.is-banner em{left:3px;top:3px;width:11px;height:16px;border-radius:6px 6px 2px 2px}.lf-hs-thumb.is-banner b{left:17px;top:5px;width:13px}.lf-hs-thumb.is-banner u{left:17px;top:10px;width:13px}
+
+/* ── header 本体（区切り線なし・カテゴリ表記なし） ─────────────────── */
+.lf-hero{position:relative;display:grid;gap:12px 44px;margin-bottom:26px;padding:clamp(24px,4vw,52px);overflow:hidden;border:1px solid rgba(165,123,50,.18);border-radius:10px 42px 10px 10px;background:linear-gradient(120deg,#fffdf8 0%,#f9f1e1 58%,#f0e2c4 100%);box-shadow:0 18px 48px rgba(67,47,25,.08)}
+.lf-hero::before{content:"";position:absolute;width:360px;height:360px;right:-110px;top:-150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(255,255,255,0) 68%);pointer-events:none}
+.lf-hero::after{content:"";position:absolute;width:220px;height:220px;left:-90px;bottom:-120px;border:1px solid rgba(165,123,50,.18);border-radius:50%;pointer-events:none}
+.lf-hero>*{position:relative;z-index:1;min-width:0}
+.lf-hero-kicker{grid-area:kicker;margin:0;color:var(--lf-gold);font-size:.52rem;font-weight:800;letter-spacing:.3em}
+.lf-hero-titlebox{grid-area:title}
+.lf-hero .lf-hero-title{margin:0;color:var(--lf-wine);font:500 clamp(1.25rem,2.5vw,1.9rem)/1.35 "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.1em}
+.lf-hero .lf-hero-photo{grid-area:media;position:relative;display:grid;place-items:center;width:100%;max-width:380px;padding:0;border-radius:18px}
+.lf-hero-backdrop{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.lf-hero .lf-visual.is-hero{position:relative;background:transparent;filter:drop-shadow(0 18px 22px rgba(80,56,24,.16))}
+.lf-hero-text{grid-area:text;display:grid;gap:14px;align-content:center}
+.lf-hero .lf-comment{margin:0;padding:16px 20px;border:0;border-radius:14px;background:rgba(255,255,255,.74);box-shadow:0 6px 20px rgba(67,47,25,.06);color:#3f332a;font:500 .8rem/1.95 "Yu Mincho","Hiragino Mincho ProN",serif;white-space:pre-wrap}
+.lf-hero textarea.lf-comment{font-family:inherit;font-size:.72rem}
+.lf-hero .lf-story{margin:0;color:var(--lf-sub);font-size:.66rem;line-height:1.95;white-space:pre-wrap}
+.lf-hero .lf-contact{margin:0;color:#8a6a45;font-size:.58rem;font-weight:700;letter-spacing:.04em}
+
+/* 1. クラシック: 左にTitle→画像、右にコメント */
+.lf-hero.is-classic{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);grid-template-rows:auto auto 1fr;grid-template-areas:"kicker text" "title text" "media text"}
+/* 2. センター: すべて中央揃え */
+.lf-hero.is-center{grid-template-columns:minmax(0,1fr);grid-template-areas:"kicker" "title" "media" "text";justify-items:center;text-align:center}
+.lf-hero.is-center .lf-hero-text{width:min(640px,100%)}
+.lf-hero.is-center .lf-hero-photo{max-width:340px}
+/* 3. ビジュアル右: 文字を左、画像を大きく右の円の上に */
+.lf-hero.is-split{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);grid-template-rows:auto auto 1fr;grid-template-areas:"kicker media" "title media" "text media";align-items:start}
+.lf-hero.is-split .lf-hero-title{font-size:clamp(1.5rem,3vw,2.3rem)}
+.lf-hero.is-split .lf-hero-photo{align-self:center;justify-self:center;max-width:420px}
+.lf-hero.is-split .lf-hero-backdrop{inset:6%;border-radius:50%;background:radial-gradient(circle at 50% 45%,#fffdf8 0 55%,rgba(255,253,248,.4) 70%,transparent 71%);box-shadow:0 0 0 1px rgba(165,123,50,.25),0 0 0 14px rgba(255,255,255,.25)}
+/* 4. アーチ: 画像をアーチ型の額に入れて左、文字を右 */
+.lf-hero.is-banner{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);grid-template-rows:auto auto 1fr;grid-template-areas:"media kicker" "media title" "media text";align-items:start}
+.lf-hero.is-banner .lf-hero-photo{max-width:330px;padding:28px 18px 18px;border-radius:999px 999px 20px 20px}
+.lf-hero.is-banner .lf-hero-backdrop{background:linear-gradient(180deg,#fffdf8,#f3e6c9);box-shadow:inset 0 0 0 1px rgba(165,123,50,.3),0 14px 30px rgba(67,47,25,.08)}
+.lf-hero.is-banner .lf-visual.is-hero{aspect-ratio:3/4}
+.lf-hero.is-banner .lf-hero-kicker{align-self:end}
+
+@media (max-width:860px){
+  .lf-hero.is-classic,.lf-hero.is-split,.lf-hero.is-banner{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"kicker" "title" "media" "text"}
+  .lf-hero .lf-hero-photo{justify-self:center}
+}
+
+/* ── カードの下端をそろえる ─────────────────────────────────────── */
+.lf-grid.is-preview{align-items:stretch}
+.lf-card.is-preview{display:flex;flex-direction:column}
+.lf-card.is-preview .lf-copy-row{margin-top:auto;padding-top:8px}
+.lf-card.is-preview.is-main{display:grid}
+.lf-preview .lf-card{user-select:text}
+
+/* ── Topic: 左の線なし・アイコン＋下線付きタイトル ──────────────── */
+.lf-topic,.lf-topic.is-preview{border:1px solid rgba(165,123,50,.24);border-radius:6px 22px 6px 6px;background:linear-gradient(145deg,#fdf8ec,#fffdf8)}
+.lf-topic-head{display:inline-flex;align-items:center;gap:9px;max-width:100%;margin:0 0 10px;padding:0 4px 6px 0;border-bottom:1.5px solid rgba(120,47,61,.55);color:var(--lf-wine);font:600 .88rem "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.05em}
+.lf-topic-head .lf-topic-heading{margin:0;border-bottom:0;font:inherit;color:inherit}
+.lf-topic-head input.lf-topic-heading{min-width:16em}
+.lf-topic.is-section .lf-topic-head{justify-self:start}
+.lf-ticon{flex:0 0 auto;width:20px;height:20px;fill:none;stroke:var(--lf-wine);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.lf-ticon .is-fill{fill:var(--lf-wine);stroke:none}
+.lf-ticon.is-point{width:44px}
+.lf-ticon.is-point rect{fill:var(--lf-wine);stroke:none}
+.lf-ticon.is-point text{fill:#fff;stroke:none;font:700 8.5px/1 sans-serif;letter-spacing:.08em}
+.lf-icon-picker{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.lf-icon-picker button{display:grid;place-items:center;min-width:32px;height:30px;padding:0 6px;border:1px solid rgba(120,47,61,.16);border-radius:8px;background:#fffdf8;color:#8d7c68;font-size:.5rem;font-weight:700}
+.lf-icon-picker button.is-active{border-color:var(--lf-wine);background:#f8eef0}
+.lf-icon-picker .lf-ticon{width:16px;height:16px}.lf-icon-picker .lf-ticon.is-point{width:36px}
+.lf-section-tools .lf-icon-picker{margin:0}
+
+/* ── 主成分サークル: 3つは大きく、バランスよく ───────────────────── */
+.lf-circles[data-count="2"],.lf-circles[data-count="3"]{--size:clamp(190px,25vw,280px)}
+.lf-circles[data-count="3"] .lf-circle{margin-left:calc(var(--size) * -.08)}
+.lf-circles[data-count="3"] .lf-circle:first-child{margin-left:0}
+.lf-circles[data-count="3"] .lf-circle:nth-child(2){transform:translateY(-26%)}
+.lf-circles[data-count="3"]{padding-top:calc(var(--size) * .3)}
+.lf-circles[data-count="3"] .lf-circle:nth-child(1),.lf-circles[data-count="3"] .lf-circle:nth-child(3){background:rgba(255,253,247,.94)}
+.lf-circle{padding:26px}
+.lf-circle-name{display:block;width:88%;margin:0;color:var(--lf-wine);font:600 clamp(.95rem,1.9vw,1.3rem)/1.5 "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.06em;text-align:center;white-space:pre-line}
+.lf-circle-name-input{padding:4px;border:1px dashed rgba(120,47,61,.25);border-radius:10px;outline:0;background:transparent;resize:none;overflow:hidden}
+.lf-circle-name-input:focus{border-style:solid;border-color:var(--lf-wine);background:rgba(255,255,255,.6)}
+.lf-circle .lf-circle-tools{bottom:10%}
+@media (max-width:860px){
+  .lf-circles[data-count="2"],.lf-circles[data-count="3"]{--size:31vw}
+}
+
+/* ── マーカー（オプション） ─────────────────────────────────────── */
+.lf-mark{background:none;color:inherit}
+.lf-mark.is-marker{background:linear-gradient(transparent 58%,#fff07a 58%,#fff07a 92%,transparent 92%);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.lf-mark.is-underline{text-decoration:underline;text-decoration-color:#e9c400;text-decoration-thickness:2.5px;text-underline-offset:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.is-pen [data-mark-target]{cursor:text;user-select:text;border-radius:4px;box-shadow:0 0 0 1px rgba(233,196,0,.45);background-color:rgba(255,240,122,.08)}
+.lf-pen-dot{display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%;background:#f3d800;vertical-align:middle}
+.lf-pen-hint{margin:-6px 0 14px;padding:8px 14px;border-radius:10px;background:#fff8cf;color:#7a6400;font-size:.58rem;font-weight:700}
+.lf-pen{position:fixed;z-index:250;display:flex;gap:4px;padding:5px;transform:translateX(-50%);border-radius:999px;background:#3a2b22;box-shadow:0 10px 26px rgba(0,0,0,.25)}
+.lf-pen button{padding:6px 12px;border-radius:999px;color:#fff8ea;font-size:.58rem;font-weight:700}
+.lf-pen button:hover{background:rgba(255,255,255,.12)}
+.lf-pen button.is-marker{background:linear-gradient(transparent 55%,rgba(255,240,122,.75) 55%)}
+.lf-pen button.is-underline{text-decoration:underline;text-decoration-color:#f3d800;text-decoration-thickness:2px;text-underline-offset:3px}
+
+/* ── v4: header 調整 ───────────────────────────────────────────── */
+/* コメントの白い枠はなし。文字だけで見せる */
+.lf-hero .lf-comment{padding:0;border-radius:0;background:none;box-shadow:none;color:#3f332a;font:500 .86rem/2 "Yu Mincho","Hiragino Mincho ProN",serif}
+.lf-hero textarea.lf-comment{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.45);font-size:.74rem}
+
+/* ビジュアル右: 円が楕円にならないよう、写真の枠を正方形にする */
+.lf-hero.is-split .lf-hero-photo{width:min(100%,360px);aspect-ratio:1;border-radius:50%}
+.lf-hero.is-split .lf-hero-backdrop{inset:0}
+.lf-hero.is-split .lf-visual.is-hero{width:82%;aspect-ratio:1}
+
+/* ワイド: 横長で縦幅を抑えたタイプ（文字左・写真右・小さめ） */
+.lf-hero.is-wide{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto 1fr;grid-template-areas:"kicker media" "title media" "text media";gap:6px 36px;align-items:center;padding:clamp(16px,2.4vw,28px) clamp(20px,3.4vw,44px)}
+.lf-hero.is-wide .lf-hero-title{font-size:clamp(1.3rem,2.4vw,1.8rem)}
+.lf-hero.is-wide .lf-hero-photo{width:clamp(120px,16vw,190px);aspect-ratio:1}
+.lf-hero.is-wide .lf-visual.is-hero{width:100%;aspect-ratio:1}
+.lf-hero.is-wide .lf-hero-text{gap:8px}
+.lf-hero.is-wide .lf-comment{font-size:.8rem;line-height:1.85}
+.lf-hero.is-wide::before{width:240px;height:240px;top:-120px}
+@media (max-width:860px){
+  .lf-hero.is-wide{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kicker media" "title media" "text text"}
+}
+
+/* 二重線（商品名の下／写真の下） */
+.lf-double-rule{display:block;width:min(100%,320px);height:5px;margin-top:12px;border-top:1px solid var(--lf-gold);border-bottom:1px solid var(--lf-gold)}
+.lf-hero.is-center .lf-double-rule{margin-inline:auto}
+.lf-hero-photo.has-rule::after{content:"";position:absolute;left:18%;right:18%;bottom:-10px;height:5px;border-top:1px solid var(--lf-gold);border-bottom:1px solid var(--lf-gold)}
+.lf-hero.is-split .lf-hero-photo.has-rule::after{bottom:4%}
+.lf-header-rule-label{margin:0 2px 0 12px;color:var(--lf-gold);font-size:.46rem;font-weight:800;letter-spacing:.2em}
+.lf-rule-thumb{display:inline-block;width:16px;height:4px;border-top:1px solid var(--lf-gold);border-bottom:1px solid var(--lf-gold)}
+
+/* 保存ボタン */
+.lf-topbar .lf-save{border-color:var(--lf-gold);background:#fbf4e4;color:#8a5c27}
+.lf-topbar .lf-save:hover{background:#f6e8c8}
+.lf-hs-thumb.is-wide{height:15px;margin-block:3.5px}.lf-hs-thumb.is-wide b{left:3px;top:3px;width:16px}.lf-hs-thumb.is-wide u{left:3px;top:6px;width:18px;height:6px}.lf-hs-thumb.is-wide em{right:3px;top:2px;width:9px;height:9px;border-radius:50%}

@@ -1,0 +1,127 @@
+/* Leaflet v2 — レイアウト編集・主成分ビュー・写真ギャラリー。leaflet.css の後に読み込む */
+
+/* Topic: 青をやめ、ゴールドの罫と紙色に合わせる */
+.lf-topic{grid-column:1/-1;border-color:rgba(165,123,50,.28);border-left:3px solid var(--lf-gold);border-radius:4px 18px 4px 4px;background:linear-gradient(145deg,#fbf4e4,#fffdf7)}
+.lf-topic h4{margin:0 0 6px;color:var(--lf-wine);font:600 .84rem "Yu Mincho",serif;letter-spacing:.04em}
+.lf-handle.is-topic{color:var(--lf-gold);border-color:rgba(165,123,50,.45)}
+.lf-add-topic{border-color:rgba(165,123,50,.5);background:rgba(251,244,228,.5);color:var(--lf-wine);font:600 .72rem "Yu Mincho",serif;letter-spacing:.08em}
+.lf-add-topic:hover{background:#fbf4e4}
+.lf-badge.is-leaflet{border-color:var(--lf-gold);background:#fbf4e4;color:#8a5c27}
+
+/* コピーアイコン（アプリ内だけ。印刷・仕上がり確認では消える） */
+.lf-copy{display:inline-grid;place-items:center;width:22px;height:22px;margin-left:6px;vertical-align:middle;border:1px solid rgba(120,47,61,.18);border-radius:6px;background:rgba(255,255,255,.7);color:#9b7b5a;opacity:.55;transition:opacity .15s,background .15s,color .15s}
+.lf-copy svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.4}
+.lf-card:hover .lf-copy,.lf-circle:hover .lf-copy,.lf-copy:focus-visible{opacity:1}
+.lf-copy:hover{background:var(--lf-wine);color:#fff}
+.lf-copy-row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#a8977f;font-size:.5rem}
+.lf-copy-row .lf-copy{margin-left:0}
+.lf-toast{position:fixed;left:50%;bottom:28px;z-index:300;transform:translateX(-50%);padding:9px 18px;border-radius:999px;background:#3a2b22;color:#fff8ea;font-size:.62rem;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.2);animation:lfToast .2s ease-out}
+@keyframes lfToast{from{opacity:0;transform:translate(-50%,8px)}}
+.is-clean .lf-app-only{display:none!important}
+
+/* Gallery タブ */
+.lf-gallery-tabs{display:flex;gap:4px;margin:0 0 20px;border-bottom:1px solid var(--lf-line)}
+.lf-gallery-tabs button{padding:9px 16px;border-bottom:2px solid transparent;color:#9b8a75;font:600 .74rem "Yu Mincho",serif;letter-spacing:.06em}
+.lf-gallery-tabs button.is-active{border-color:var(--lf-wine);color:var(--lf-wine)}
+
+/* 写真ギャラリー */
+.lf-photos-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px}
+.lf-photos-bar button{padding:8px 15px;border-radius:999px;font-size:.62rem;font-weight:800}
+.lf-photos-bar span{color:#9b8a75;font-size:.56rem}
+.lf-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.lf-photo{margin:0;overflow:hidden;border:1px solid rgba(83,60,35,.16);border-radius:10px;background:#fffdf8}
+.lf-photo-img{display:grid;place-items:center;width:100%;aspect-ratio:1;padding:10px;background:repeating-conic-gradient(#f3ece0 0 25%,#fffdf8 0 50%) 0 0/18px 18px}
+.lf-photo-img img{max-width:100%;max-height:100%;object-fit:contain}
+.lf-photo.is-pickable:hover{border-color:var(--lf-wine);box-shadow:0 8px 20px rgba(63,44,24,.12)}
+.lf-photo.is-selected{border:2px solid var(--lf-wine)}
+.lf-photo figcaption{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 9px;color:#725f4d;font-size:.5rem}
+.lf-photo figcaption span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.lf-photo figcaption button{color:var(--lf-wine);font-weight:700}
+.lf-modal-backdrop{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:20px;background:rgba(36,28,20,.42);backdrop-filter:blur(4px)}
+.lf-modal{width:min(820px,100%);max-height:88dvh;overflow-y:auto;padding:20px 22px 24px;border-radius:10px 30px 10px 10px;background:#fffdf7;box-shadow:0 30px 90px rgba(36,28,20,.3)}
+.lf-modal>header{display:flex;justify-content:space-between;align-items:start;margin-bottom:14px}
+.lf-modal>header h2{margin:0;color:var(--lf-wine);font:600 1.1rem "Yu Mincho",serif}
+.lf-modal>header>button{width:32px;height:32px;border:1px solid var(--lf-line);border-radius:50%;color:var(--lf-wine)}
+
+/* header: 小さめTitle → その下に画像 */
+.lf-header-hero{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.lf-hero-title{width:100%;margin:0 0 12px;color:var(--lf-wine);font:500 clamp(1.1rem,2.2vw,1.6rem)/1.3 "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.06em}
+.lf-hero-photo{position:relative;display:block;width:100%;max-width:340px;padding:0;border-radius:14px;text-align:left}
+.lf-hero-change{position:absolute;right:10px;bottom:10px;padding:4px 10px;border-radius:999px;background:rgba(58,43,34,.78);color:#fff;font-size:.5rem;font-weight:700;opacity:0;transition:opacity .15s}
+.lf-hero-photo:hover>.lf-hero-change,.lf-hero-photo:focus-visible>.lf-hero-change{opacity:1}
+.lf-hero-photo:not(:disabled):hover .lf-visual{outline:2px dashed rgba(120,47,61,.4);outline-offset:4px}
+.lf-visual.is-hero{width:100%;aspect-ratio:4/3;border:0;border-radius:14px;background:radial-gradient(circle at 50% 60%,rgba(255,255,255,.9),rgba(255,253,245,.3) 70%)}
+.lf-visual.is-hero img{object-fit:contain}
+.lf-header-hero .lf-meta{margin-top:12px}
+
+/* インライン編集欄 */
+.lf-inline{display:block;width:100%;padding:6px 8px;border:1px dashed rgba(120,47,61,.28);border-radius:6px;outline:0;background:rgba(255,255,255,.55);color:inherit;font:inherit;resize:vertical}
+.lf-inline:focus{border-style:solid;border-color:var(--lf-wine);background:#fffdf8}
+.lf-inline::placeholder{color:#b7a690}
+
+/* セクション */
+.lf-section{position:relative;margin:0 0 6px;padding:14px 0 8px;border-radius:12px;transition:background .15s,box-shadow .15s}
+.lf-preview:not(.is-clean) .lf-section{padding:12px;box-shadow:inset 0 0 0 1px rgba(165,123,50,.18)}
+.lf-preview:not(.is-clean) .lf-section:hover{box-shadow:inset 0 0 0 1px rgba(120,47,61,.35);background:rgba(255,255,255,.25)}
+.lf-section-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px dashed var(--lf-line)}
+.lf-section-kind{color:var(--lf-gold);font-size:.46rem;font-weight:800;letter-spacing:.2em}
+.lf-section-tools select{padding:5px 8px;border:1px solid rgba(120,47,61,.22);border-radius:8px;background:#fffdf8;color:#4a3a2f;font-size:.6rem}
+.lf-look-tabs{display:inline-flex;padding:2px;border:1px solid rgba(120,47,61,.2);border-radius:999px;background:#fffdf8}
+.lf-look-tabs button{padding:4px 12px;border-radius:999px;color:#8d7c68;font-size:.56rem;font-weight:700}
+.lf-look-tabs button.is-active{background:var(--lf-wine);color:#fff}
+.lf-section-move{display:flex;gap:4px;margin-left:auto}
+.lf-section-move button{width:26px;height:26px;border:1px solid var(--lf-line);border-radius:7px;color:#725f4d;font-size:.66rem}
+.lf-section-move button:disabled{opacity:.3}
+.lf-section-title{margin:0 0 12px;color:#4a3a2f;font:600 .95rem "Yu Mincho",serif;letter-spacing:.06em}
+.lf-insert{display:flex;justify-content:center;align-items:center;min-height:30px;margin:2px 0}
+.lf-insert-btn{padding:4px 14px;border:1px dashed rgba(165,123,50,.45);border-radius:999px;color:#a57b32;font-size:.56rem;font-weight:700;opacity:.45;transition:opacity .15s}
+.lf-insert:hover .lf-insert-btn,.lf-insert-btn:focus-visible{opacity:1}
+.lf-insert-menu{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:6px;border:1px solid var(--lf-line);border-radius:999px;background:#fffdf8;box-shadow:0 8px 20px rgba(63,44,24,.1)}
+.lf-insert-menu button{padding:6px 13px;border-radius:999px;color:var(--lf-wine);font-size:.6rem;font-weight:700}
+.lf-insert-menu button:hover{background:#f6ecd9}
+.lf-insert-menu .is-cancel{color:#9b8a75}
+.lf-topbar button.is-on{border-color:var(--lf-gold);background:#fbf4e4}
+.lf-topic.is-section{display:grid;gap:6px}
+.lf-topic-heading{color:var(--lf-wine);font:600 .9rem "Yu Mincho",serif;letter-spacing:.04em}
+.lf-topic-body{color:#493d32;font-size:.66rem;line-height:1.9;white-space:pre-wrap}
+.lf-preview .lf-card.is-preview[draggable=true]{cursor:grab}
+
+/* パターン1: 主要成分ビュー */
+.lf-grid.is-main-look{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px 22px}
+.lf-card.is-main{display:grid;grid-template-columns:auto 1fr;column-gap:16px;padding:16px 18px 16px 0;border:0;border-top:1px solid rgba(120,47,61,.25);border-radius:0;background:transparent;box-shadow:none}
+.lf-card.is-main .lf-card-top{grid-row:1/4;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;margin:0}
+.lf-card.is-main .lf-number{min-width:58px;height:58px;padding:0;border:1px solid rgba(120,47,61,.3);border-radius:50%;background:#fffdf7;color:var(--lf-wine);font:500 1.1rem "Yu Mincho",serif;letter-spacing:.04em}
+.lf-main-tag{padding:2px 7px;border-radius:999px;background:var(--lf-wine);color:#fff;font-size:.42rem;font-weight:800;letter-spacing:.1em;white-space:nowrap}
+.lf-card.is-main h3{margin:4px 0 6px;font-size:.98rem}
+.lf-card.is-main p{-webkit-line-clamp:unset;font-size:.62rem}
+
+/* パターン2: 主成分サークル（最大4。3つなら真ん中が上でセンター） */
+.lf-circles-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 14px}
+.lf-pill-title{width:min(520px,100%);margin:0 auto 26px;padding:9px 22px;border-radius:999px;background:var(--lf-wine);color:#fff;font:600 1rem "Yu Mincho",serif;letter-spacing:.12em;text-align:center}
+.lf-pill-title.lf-inline{border:1px dashed rgba(255,255,255,.6)}
+.lf-pill-title.lf-inline::placeholder{color:rgba(255,255,255,.65)}
+.lf-circles{--size:clamp(150px,19vw,210px);display:flex;flex-wrap:wrap;row-gap:30px;justify-content:center;align-items:flex-end;min-height:calc(var(--size) + 40px);padding:calc(var(--size) * .26) 10px 0;border-radius:20px;transition:background .15s}
+.lf-circles.is-drop{background:rgba(120,47,61,.06);outline:2px dashed rgba(120,47,61,.35)}
+.lf-circle{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;width:var(--size);aspect-ratio:1;margin-left:calc(var(--size) * -.12);padding:22px;border:2px solid var(--lf-wine);border-radius:50%;background:rgba(255,253,247,.88);text-align:center}
+.lf-circle:first-child{margin-left:0}
+.lf-circle strong{color:var(--lf-wine);font:600 clamp(.85rem,1.6vw,1.1rem)/1.45 "Yu Mincho",serif;letter-spacing:.04em}
+.lf-circles[data-count="2"] .lf-circle:nth-child(2),.lf-circles[data-count="3"] .lf-circle:nth-child(2){z-index:1}
+.lf-circles[data-count="3"] .lf-circle:nth-child(2){transform:translateY(-22%)}
+.lf-circles[data-count="4"] .lf-circle:nth-child(2),.lf-circles[data-count="4"] .lf-circle:nth-child(3){transform:translateY(-22%)}
+.lf-circle-label{position:absolute;top:-2px;left:50%;width:auto;max-width:72%;transform:translate(-50%,-50%);padding:3px 12px;border:1.5px solid var(--lf-wine);border-radius:6px;background:#fffdf7;color:var(--lf-wine);font-size:.58rem;font-weight:700;text-align:center;white-space:nowrap}
+.lf-circle-label.lf-inline{border-style:dashed}
+.lf-circle-tools{position:absolute;bottom:14%;display:flex;gap:4px}
+.lf-circle-tools button:last-child{width:22px;height:22px;border:1px solid var(--lf-line);border-radius:6px;color:#9b8a75}
+.lf-circle.is-empty{gap:6px;border-style:dashed;border-color:rgba(120,47,61,.35);background:rgba(255,253,247,.5);color:#9b8a75;font-size:.54rem}
+.lf-circle.is-empty select{max-width:90%;padding:4px 6px;border:1px solid rgba(120,47,61,.25);border-radius:6px;background:#fffdf8;color:var(--lf-wine);font-size:.56rem}
+
+@media (max-width:860px){
+  .lf-circles{--size:clamp(110px,30vw,170px)}
+  .lf-circles[data-count="4"]{flex-wrap:wrap}
+  .lf-hero-photo{max-width:none}
+}
+@media print{
+  .lf-app-only{display:none!important}
+  .lf-section{box-shadow:none!important;padding:8px 0}
+  .lf-pill-title,.lf-main-tag,.lf-card.is-main .lf-number{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}

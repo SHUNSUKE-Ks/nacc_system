@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3d887"/>
+      <stop offset="0.42" stop-color="#b88732"/>
+      <stop offset="0.72" stop-color="#ffe6a1"/>
+      <stop offset="1" stop-color="#89601d"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="92" fill="#393632"/>
+  <rect x="22" y="22" width="468" height="468" rx="74" fill="none" stroke="url(#gold)" stroke-width="10"/>
+  <g filter="url(#shadow)">
+    <rect x="131" y="70" width="250" height="276" rx="8" fill="#eee0b5" stroke="url(#gold)" stroke-width="10"/>
+    <rect x="150" y="89" width="212" height="238" fill="none" stroke="#8a651f" stroke-width="3"/>
+    <text x="165" y="190" fill="#34312d" font-family="Georgia, 'Times New Roman', serif" font-size="112" font-style="italic">N</text>
+    <text x="263" y="128" fill="#6f4e19" font-family="Georgia, 'Times New Roman', serif" font-size="38">a</text>
+    <text x="177" y="292" fill="#34312d" font-family="Georgia, 'Times New Roman', serif" font-size="116">C</text>
+    <text x="259" y="292" fill="#34312d" font-family="Georgia, 'Times New Roman', serif" font-size="116">C</text>
+  </g>
+  <path d="M116 383h280" stroke="url(#gold)" stroke-width="3"/>
+  <text x="256" y="444" text-anchor="middle" fill="url(#gold)" font-family="Georgia, 'Times New Roman', serif" font-size="66" letter-spacing="12">NOTE</text>
+</svg>

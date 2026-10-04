@@ -1,8 +1,9 @@
 import type { Product } from '../types'
+import { NUTRIENTS } from './nutrients'
 
 // ── サプリメント (S01-S26) ────────────────────────────────────────────────────
 
-export const PRODUCTS: Product[] = [
+const BASE_PRODUCTS: Product[] = [
   {
     id: 'S01',
     name: 'R-NMN',
@@ -817,6 +818,56 @@ export const PRODUCTS: Product[] = [
     createdAt: new Date('2026-05-26'),
   },
 ]
+
+const NUTRIENT_ALIASES: Record<string, string[]> = {
+  N01: ['nmn', 'ニコチンアミドモノヌクレオチド'],
+  N03: ['レシチン'],
+  N04: ['γリノレン酸', 'ガンマリノレン酸', '月見草油'],
+  N07: ['coq10', 'co-q10', 'コエンザイムq10', 'ユビキノン'],
+  N09: ['ビタミンc', 'アスコルビン酸'],
+  N10: ['ビタミンd', 'ビタミンd3'],
+  N11: ['ビタミンb', 'ビタミンb群'],
+  'bb-001': ['coq10', 'co-q10', 'コエンザイムq10', 'ユビキノン'],
+  'bb-002': ['lカルニチン', 'カルニチン'],
+  'bb-003': ['αリポ酸', 'アルファリポ酸', 'チオクト酸'],
+  'bb-004': ['リピジュア', 'ポリクオタニウム51', 'ポリクオタニム51'],
+  'bb-006': ['ピクノジェノール', 'フランス海岸松樹皮エキス'],
+  'bb-007': ['プエラリアミリフィカ', 'プエラリアミリフィカ根エキス'],
+  'bb-009': ['ビフィズス菌培養溶解質'],
+  'bb-016': ['オウゴン根エキス', '黄芩根エキス'],
+  'bb-017': ['ツボクサエキス', 'センテラアジアチカエキス'],
+  'bb-019': ['月見草', '月見草油'],
+  'bb-020': ['タイソウエキス', 'ナツメ果実エキス'],
+  'bb-022': ['コンドロイチン', 'コンドロイチン硫酸'],
+}
+
+function normalizeIngredient(value: string): string {
+  return value.normalize('NFKC').toLocaleLowerCase('ja').replace(/[\s・･,，.。()（）\[\]［］\-‐‑–—_/／]/g, '')
+}
+
+function nutrientTerms(id: string, name: string): string[] {
+  const parenthetical = Array.from(name.matchAll(/[（(]([^）)]+)[）)]/g), (match) => match[1])
+  const bare = name.replace(/[（(][^）)]+[）)]/g, '')
+  return [name, bare, ...parenthetical, ...(NUTRIENT_ALIASES[id] ?? [])]
+    .map(normalizeIngredient)
+    .filter((term) => term.length >= 3)
+}
+
+function inferNutrientIds(product: Product): string[] {
+  const ingredients = product.ingredients.map(normalizeIngredient)
+  const supersededIds = new Set(['N07', 'N16', 'N17'])
+  const inferred = NUTRIENTS.filter((nutrient) => {
+    if (supersededIds.has(nutrient.id)) return false
+    const terms = nutrientTerms(nutrient.id, nutrient.name)
+    return ingredients.some((ingredient) => terms.some((term) => ingredient.includes(term) || term.includes(ingredient)))
+  }).map((nutrient) => nutrient.id)
+  return Array.from(new Set([...product.nutrientIds, ...inferred]))
+}
+
+export const PRODUCTS: Product[] = BASE_PRODUCTS.map((product) => ({
+  ...product,
+  nutrientIds: inferNutrientIds(product),
+}))
 
 export const IMAGE_BASE = 'https://image.jimcdn.com/app/cms/image/transf/none/path/s6d4d15d6e7c4e3f7/image/'
 

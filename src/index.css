@@ -58,14 +58,26 @@ body {
 .mode-pill button.active { background: #fff; color: #37352f; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
 
 /* ── Sidebar ── */
-#sidebar { transition: transform .22s ease; }
+#sidebar {
+  position: fixed !important;
+  left: 0;
+  top: 3rem;
+  bottom: 0;
+  z-index: 55;
+  width: 272px !important;
+  transform: translateX(-105%);
+  box-shadow: 8px 0 36px rgba(42, 33, 22, .18);
+  transition: transform .24s cubic-bezier(.22,.8,.28,1);
+}
+#sidebar.sidebar-open { transform: translateX(0); }
 #sidebarBackdrop {
   display: none;
   position: fixed; inset: 0; top: 3rem;   /* 3rem = h-12, scales with font */
-  background: rgba(0,0,0,.35);
+  background: rgba(36,28,20,.28);
+  backdrop-filter: blur(2px);
   z-index: 54;
 }
-/* .show is activated only inside the mobile media query below */
+#sidebarBackdrop.show { display: block; }
 
 /* ── Panels ── */
 #settingsPanel, #galleryPanel { transition: transform .25s ease; }
@@ -98,18 +110,7 @@ body {
 @media screen and (max-width: 767px),
        screen and (max-height: 500px) and (orientation: landscape) {
   /* Sidebar: fixed overlay, transform-based show/hide */
-  #sidebar {
-    position: fixed !important;
-    left: 0; top: 3rem; bottom: 0;
-    z-index: 55;
-    width: 272px !important;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 20px rgba(0,0,0,.18);
-  }
-  #sidebar.sidebar-open {
-    transform: translateX(0);
-  }
-  #sidebarBackdrop.show { display: block; }
+  #sidebar { width: min(86vw, 320px) !important; }
 
   /* Settings & gallery panels: fixed, full-width up to 340px */
   #settingsPanel, #galleryPanel {
@@ -147,6 +148,36 @@ body {
 
 @media (max-width: 1023px) {
   #galleryPanel { width: 260px !important; }
+}
+
+/* ── Product detail PDF / print ── */
+@page { size: A4 portrait; margin: 10mm; }
+@media print {
+  html, body, #root { height: auto !important; min-height: 0 !important; overflow: visible !important; background: #fff !important; }
+  .app-header,
+  #sidebar,
+  #sidebarBackdrop,
+  #settingsPanel,
+  #galleryPanel,
+  .db-filter-row,
+  .db-tab-row,
+  .product-note-back,
+  .product-note-toolbar label,
+  .ingredient-note-card-top button,
+  .ingredient-add-card,
+  .nutrient-picker-backdrop { display: none !important; }
+  #root > div,
+  #root > div > div,
+  main,
+  .product-note-page { display: block !important; height: auto !important; overflow: visible !important; }
+  .product-note-page { background: #fff !important; color: #342a24 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .product-note-content { padding: 0 !important; }
+  .product-note-hero { min-height: 0 !important; padding: 12mm 10mm !important; box-shadow: none !important; break-inside: avoid; }
+  .product-note-summary { margin: 5mm 0 !important; box-shadow: none !important; break-inside: avoid; }
+  .product-note-toolbar { position: static !important; margin: 0 0 5mm !important; box-shadow: none !important; }
+  .ingredient-note-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 4mm !important; }
+  .ingredient-note-card { aspect-ratio: auto !important; min-height: 70mm; padding: 5mm !important; box-shadow: none !important; animation: none !important; break-inside: avoid; page-break-inside: avoid; }
+  .ingredient-note-card > p { display: block !important; overflow: visible !important; -webkit-line-clamp: unset !important; }
 }
 
 /* ── Gallery ────────────────────────────────────────────────────────────────── */

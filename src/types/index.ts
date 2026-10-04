@@ -78,11 +78,11 @@ export type NotebookPage = {
   order: number
 }
 
-export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery'
+export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery' | 'leaflet'
 export type BlogMode = 'memo' | 'view'
 export type FontSize = 's' | 'm' | 'l' | 'xl'
 export type FontSizePx = { s: 13; m: 16; l: 19; xl: 22 }
-export type DbView = 'table' | 'detail' | 'index'
+export type DbView = 'gallery' | 'table' | 'detail' | 'index'
 
 export type ColumnDef = {
   id: string

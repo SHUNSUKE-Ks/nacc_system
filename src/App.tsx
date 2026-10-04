@@ -13,13 +13,18 @@ import PageNotebook from './pages/PageNotebook'
 import SettingsPanel from './components/SettingsPanel'
 import GalleryPanel from './components/GalleryPanel'
 import GalleryPage from './pages/gallery'
+import LeafletPage from './pages/leaflet'
 
 setFontSize(state.fontSize)
 
 const App: Component = () => {
   onMount(() => { initFirestore() })
   return (
-    <Show when={state.page === 'gallery'} fallback={<MainApp />}>
+    <Show when={state.page === 'gallery'} fallback={
+      <Show when={state.page === 'leaflet'} fallback={<MainApp />}>
+        <LeafletPage />
+      </Show>
+    }>
       <GalleryPage />
     </Show>
   )

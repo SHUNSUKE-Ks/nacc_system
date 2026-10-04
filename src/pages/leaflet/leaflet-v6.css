@@ -1,0 +1,44 @@
+/* Leaflet v6 — header画像の微調整・主成分サークルの崩れ修正 */
+
+/* ── header画像: ドラッグで移動・四隅で拡大縮小 ────────────────────── */
+.lf-hero .lf-hero-photo{cursor:default}
+.lf-photo-stage{position:relative;display:block;width:100%;margin:0 auto}
+.lf-hero.is-split .lf-photo-stage{width:82%}
+.lf-hero.is-split .lf-visual.is-hero{width:100%}
+.lf-hero .lf-visual.is-hero{overflow:visible}
+.lf-hero .lf-visual.is-hero img{transform-origin:50% 50%;will-change:transform}
+.lf-photo-frame{position:absolute;inset:0;z-index:3;border:1.5px dashed rgba(120,47,61,.55);border-radius:6px;cursor:move;touch-action:none;opacity:0;transition:opacity .15s}
+.lf-hero-photo:hover .lf-photo-frame,.lf-hero-photo.is-adjusting .lf-photo-frame{opacity:1}
+.lf-photo-handle{position:absolute;width:13px;height:13px;border:1.5px solid var(--lf-wine);border-radius:3px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);touch-action:none}
+.lf-photo-handle.is-tl{left:-7px;top:-7px;cursor:nwse-resize;transform-origin:100% 100%}
+.lf-photo-handle.is-tr{right:-7px;top:-7px;cursor:nesw-resize;transform-origin:0 100%}
+.lf-photo-handle.is-bl{left:-7px;bottom:-7px;cursor:nesw-resize;transform-origin:100% 0}
+.lf-photo-handle.is-br{right:-7px;bottom:-7px;cursor:nwse-resize;transform-origin:0 0}
+.lf-photo-tools{position:absolute;left:50%;bottom:4px;z-index:4;display:flex;align-items:center;gap:3px;padding:3px;transform:translateX(-50%);border-radius:999px;background:rgba(58,43,34,.86);opacity:0;transition:opacity .15s;white-space:nowrap}
+.lf-hero-photo:hover .lf-photo-tools,.lf-photo-tools:focus-within,.lf-hero-photo.is-adjusting .lf-photo-tools{opacity:1}
+.lf-photo-tools button{min-height:0;padding:3px 9px;border-radius:999px;color:#fff8ea;font-size:.5rem;font-weight:700}
+.lf-photo-tools button:hover{background:rgba(255,255,255,.16)}
+.lf-photo-tools span{min-width:34px;color:#fff;font-size:.5rem;font-weight:700;text-align:center}
+.lf-photo-tools .is-change{background:rgba(255,255,255,.14)}
+/* タッチ端末は hover がないので常に表示 */
+@media (hover:none){.lf-photo-frame{opacity:.8}.lf-photo-tools{opacity:1}}
+
+/* ── 主成分サークル: シートの幅に合わせて大きさを決め、1列から崩れない ─── */
+.lf-circles-wrap{container-type:inline-size}
+.lf-circles-wrap .lf-circles{display:flex;flex-direction:column;align-items:center;gap:16px;min-height:0;padding:0}
+.lf-circles-row{--size:min(240px,40cqi);display:flex;flex-wrap:nowrap;justify-content:center;align-items:flex-end;padding-top:calc(var(--size) * .28)}
+.lf-circles-row[data-count="0"]{display:none}
+.lf-circles-row[data-count="1"]{--size:min(250px,56cqi);padding-top:0}
+.lf-circles-row[data-count="2"]{--size:min(260px,46cqi);padding-top:0}
+.lf-circles-row[data-count="3"]{--size:min(270px,33cqi)}
+.lf-circles-row[data-count="4"]{--size:min(230px,26cqi);padding-top:calc(var(--size) * .24)}
+.lf-circles .lf-circles-row .lf-circle{width:var(--size);margin-left:calc(var(--size) * -.08);padding:calc(var(--size) * .12);transform:none;z-index:auto}
+.lf-circles .lf-circles-row .lf-circle:first-child{margin-left:0}
+.lf-circles .lf-circles-row[data-count="3"] .lf-circle:nth-child(2){z-index:1;transform:translateY(-26%)}
+.lf-circles .lf-circles-row[data-count="4"] .lf-circle:nth-child(2),.lf-circles .lf-circles-row[data-count="4"] .lf-circle:nth-child(3){z-index:1;transform:translateY(-22%)}
+.lf-circles-row .lf-circle-name{width:92%;font-size:clamp(.72rem,calc(var(--size) * .075),1.3rem)}
+.lf-circles-row input.lf-circle-label{width:62%;min-width:0}
+.lf-circles-row .lf-circle-tools{bottom:8%}
+.lf-circle-add{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border:1px dashed rgba(120,47,61,.35);border-radius:999px;background:rgba(255,253,247,.6);color:#9b8a75;font-size:.56rem}
+.lf-circle-add select{padding:4px 8px;border:1px solid rgba(120,47,61,.25);border-radius:8px;background:#fffdf8;color:var(--lf-wine);font-size:.58rem}
+.lf-circles.is-drop .lf-circle-add{border-style:solid;border-color:var(--lf-wine);background:#f8eef0}

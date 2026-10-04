@@ -1,11 +1,13 @@
 import { type Component, createMemo, createSignal, For, Show } from 'solid-js'
 import type { Product } from '../types'
 import { productImageUrl } from '../db/products'
-import { state, setState, updateProduct, navigate } from '../store'
+import { state, setState, updateProduct, updateNutrient, navigate } from '../store'
+import { favoriteIds, isFavorite, toggleFavorite } from '../utils/favorites'
+import HelpButton, { HELP_PRODUCT_GALLERY } from '../components/HelpButton'
 
 type Props = { products: Product[] }
 type EditCell = { rowId: string; col: string; x: number; y: number }
-type CategoryFilter = 'all' | 'supplement' | 'cosmetic'
+type CategoryFilter = 'favorite' | 'all' | 'supplement' | 'cosmetic'
 
 // ── Tags Popover (symptoms / effects) ──────────────────────────────────────
 const TagsPopover: Component<{
@@ -522,180 +524,182 @@ const TableView: Component<{
 // ── Detail View ────────────────────────────────────────────────────────────
 const DetailView: Component<{ products: Product[] }> = (props) => {
   const [search, setSearch] = createSignal('')
-  const [selected, setSelected] = createSignal<Product | null>(null)
+  const [editingNutrientId, setEditingNutrientId] = createSignal<string | null>(null)
+  const [draftName, setDraftName] = createSignal('')
+  const [draftDescription, setDraftDescription] = createSignal('')
+  const [addNutrientOpen, setAddNutrientOpen] = createSignal(false)
+  const [nutrientSearch, setNutrientSearch] = createSignal('')
+  const selected = () => props.products.find((product) => product.id === state.selectedProductId) ?? null
 
-  const filtered = () => {
+  const productNutrients = createMemo(() => {
+    const product = selected()
+    if (!product) return []
     const q = search().trim().toLowerCase()
-    if (!q) return props.products
-    return props.products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.symptoms.some((s) => s.includes(q)) ||
-        p.effects.some((e) => e.includes(q))
-    )
+    return state.nutrients.filter((nutrient) => {
+      const linked = product.nutrientIds.includes(nutrient.id) || nutrient.productIds.includes(product.id)
+      if (!linked) return false
+      return !q || `${nutrient.name} ${nutrient.description} ${nutrient.memo}`.toLowerCase().includes(q)
+    })
+  })
+
+  const beginNutrientEdit = (id: string) => {
+    const nutrient = state.nutrients.find((item) => item.id === id)
+    if (!nutrient) return
+    setDraftName(nutrient.name)
+    setDraftDescription(nutrient.description)
+    setEditingNutrientId(id)
   }
 
-  const linkedMemos = (product: Product) =>
-    state.memos.filter((m) =>
-      m.tags.some((t) => product.name.includes(t.name) || t.name.includes(product.name.split(/[・\s]/)[0]))
+  const saveNutrient = (id: string) => {
+    const name = draftName().trim()
+    const description = draftDescription().trim()
+    if (!name || !description) return
+    updateNutrient(id, { name, description })
+    setEditingNutrientId(null)
+  }
+
+  const availableNutrients = createMemo(() => {
+    const linkedIds = new Set(productNutrients().map((nutrient) => nutrient.id))
+    const query = nutrientSearch().trim().toLocaleLowerCase('ja')
+    return state.nutrients.filter((nutrient) =>
+      !linkedIds.has(nutrient.id) &&
+      (!query || `${nutrient.name} ${nutrient.description}`.toLocaleLowerCase('ja').includes(query))
     )
+  })
+
+  const addNutrientToProduct = (nutrientId: string) => {
+    const product = selected()
+    const nutrient = state.nutrients.find((item) => item.id === nutrientId)
+    if (!product || !nutrient) return
+    if (!product.nutrientIds.includes(nutrientId)) {
+      updateProduct(product.id, { nutrientIds: [...product.nutrientIds, nutrientId] })
+    }
+    if (!nutrient.productIds.includes(product.id)) {
+      updateNutrient(nutrient.id, { productIds: [...nutrient.productIds, product.id] })
+    }
+    setAddNutrientOpen(false)
+    setNutrientSearch('')
+  }
 
   return (
-    <div class="flex flex-1 overflow-hidden">
-      {/* List */}
-      <div class="w-60 shrink-0 border-r border-nacc-border flex flex-col overflow-hidden">
-        <div class="p-3 border-b border-nacc-border">
-          <input
-            type="search"
-            placeholder="商品を検索..."
-            class="w-full px-3 py-1.5 text-xs rounded-lg border border-nacc-border bg-white outline-none focus:border-nacc-gold"
-            value={search()}
-            onInput={(e) => setSearch(e.currentTarget.value)}
-          />
-        </div>
-        <div class="flex-1 overflow-y-auto">
-          <For each={filtered()}>
-            {(product) => (
-              <button
-                class="w-full text-left flex items-center gap-3 px-4 py-3 border-b border-[#f0f0f0] transition-colors"
-                classList={{
-                  'bg-[#f5f0e8]':    selected()?.id === product.id,
-                  'hover:bg-[#f9f8f6]': selected()?.id !== product.id,
-                }}
-                onClick={() => setSelected(product)}
-              >
-                <div class="w-9 h-9 rounded-lg overflow-hidden bg-[#e8dfd0] shrink-0 flex items-center justify-center text-base">
-                  <Show when={product.image} fallback={<span>{product.category === 'cosmetic' ? '🌸' : '💊'}</span>}>
-                    <img
-                      src={productImageUrl(product.image)}
-                      alt={product.name}
-                      class="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                    />
-                  </Show>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xs font-semibold text-nacc-gold truncate">{product.name}</p>
-                  <p class="text-xs text-[#999]">{product.id}</p>
-                </div>
-              </button>
-            )}
-          </For>
-        </div>
-      </div>
-
-      {/* Detail panel */}
-      <div class="flex-1 overflow-y-auto bg-nacc-light p-6">
+    <div class="product-note-page flex-1 overflow-y-auto">
         <Show
           when={selected()}
           fallback={
-            <div class="flex flex-col items-center justify-center h-full text-[#ccc] gap-2">
-              <span class="text-5xl">💊</span>
-              <span class="text-sm">商品を選択してください</span>
+            <div class="product-note-empty">
+              <span>商品が選択されていません。</span>
+              <button onClick={() => setState({ dbView: 'gallery' })}>Galleryへ戻る</button>
             </div>
           }
         >
           {(product) => (
-            <div class="max-w-2xl mx-auto slide-in">
-              <Show when={product().image}>
-                <div class="w-full h-44 rounded-xl overflow-hidden mb-5 bg-[#e8dfd0]">
-                  <img
-                    src={productImageUrl(product().image)}
-                    alt={product().name}
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-              </Show>
-
-              <div class="flex items-start justify-between mb-5">
-                <div>
-                  <h1 class="text-xl font-bold text-nacc-dark mb-0.5">{product().name}</h1>
-                  <p class="text-xs text-[#999] mb-2">{product().id}</p>
-                  <Show
-                    when={product().category === 'supplement'}
-                    fallback={
-                      <span class="text-xs font-medium bg-pink-50 text-pink-600 border border-pink-100 rounded-full px-2.5 py-1">
-                        🌸 コスメ
-                      </span>
-                    }
-                  >
-                    <span class="text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2.5 py-1">
-                      💊 サプリ
-                    </span>
-                  </Show>
-                </div>
+            <div class="product-note-content slide-in">
+              <div class="product-note-nav">
+                <button class="product-note-back" onClick={() => setState({ dbView: 'gallery', selectedProductId: null })}>
+                  ← 商品Gallery
+                </button>
+                <button class="product-note-leaflet" onClick={() => navigate('leaflet')}>
+                  リーフレット（配布用）を作る →
+                </button>
               </div>
 
-              <Show when={product().description}>
-                <div class="mb-5 bg-white rounded-xl border border-nacc-border p-4">
-                  <h2 class="text-xs font-semibold text-[#999] uppercase tracking-wider mb-2">商品説明</h2>
-                  <p class="text-sm text-nacc-dark leading-relaxed">{product().description}</p>
+              <header class="product-note-hero">
+                <div class="product-note-heading">
+                  <p>NACC · PRODUCT INGREDIENT NOTES</p>
+                  <h1>{product().name}</h1>
+                  <span>{product().id} · {product().category === 'cosmetic' ? 'COSMETIC' : 'SUPPLEMENT'}</span>
                 </div>
-              </Show>
-
-              <DetailSection title="症状">
-                <TagList items={product().symptoms} color="red" />
-              </DetailSection>
-              <DetailSection title="効果・効能">
-                <TagList items={product().effects} color="green" />
-              </DetailSection>
-              <DetailSection title="主な成分">
-                <TagList items={product().ingredients} color="blue" />
-              </DetailSection>
-              <DetailSection title="関連成分DB">
-                <div class="flex flex-wrap gap-2">
-                  <For each={product().nutrientIds}>
-                    {(nid) => {
-                      const n = state.nutrients.find((x) => x.id === nid)
-                      return n ? (
-                        <span class="text-xs px-2 py-1 rounded-full bg-[#f5f0e8] text-nacc-gold border border-[#e8dfd0] font-medium">
-                          {n.name.split(' ')[0]}
-                        </span>
-                      ) : null
-                    }}
-                  </For>
+                <div class="product-note-visual">
+                  <Show when={product().image && productImageUrl(product().image)} fallback={<strong>{product().name.slice(0, 1)}</strong>}>
+                    <img src={productImageUrl(product().image)} alt={product().name} />
+                  </Show>
                 </div>
-              </DetailSection>
+              </header>
 
-              <Show when={linkedMemos(product()).length > 0}>
-                <div class="mt-6 pt-5 border-t border-nacc-border">
-                  <h2 class="text-xs font-semibold text-[#999] uppercase tracking-wider mb-3">
-                    🔗 リンクされたメモ・記事
-                  </h2>
-                  <div class="flex flex-col gap-2">
-                    <For each={linkedMemos(product())}>
-                      {(memo) => (
-                        <button
-                          class="w-full text-left bg-white border border-nacc-border rounded-lg px-4 py-3 hover:border-nacc-gold transition-colors"
-                          onClick={() => {
-                            setState({ selectedMemoId: memo.id })
-                            navigate('memo')
-                          }}
-                        >
-                          <p class="text-sm font-medium text-nacc-dark">{memo.title}</p>
-                          <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                            <For each={memo.tags}>
-                              {(tag) => (
-                                <span class="text-xs bg-nacc-gold/10 text-nacc-gold rounded px-1.5 py-0.5">
-                                  #{tag.name}
-                                </span>
-                              )}
-                            </For>
-                            <span class="text-xs text-[#bbb] ml-auto">
-                              {new Date(memo.updatedAt).toLocaleDateString('ja-JP')}
-                            </span>
+              <section class="product-note-summary">
+                <div>
+                  <small>PRODUCT STORY</small>
+                  <p>{product().description || '商品説明は未登録です。'}</p>
+                </div>
+                <div class="product-note-stats">
+                  <strong>{productNutrients().length}</strong>
+                  <span>linked dicts</span>
+                </div>
+              </section>
+
+              <section class="product-note-toolbar">
+                <div>
+                  <p>INGREDIENT DICTIONARY</p>
+                  <h2>成分を、探せる知識カードへ。</h2>
+                </div>
+                <label>
+                  <span>⌕</span>
+                  <input value={search()} onInput={(event) => setSearch(event.currentTarget.value)} placeholder="成分名・説明を検索" />
+                </label>
+              </section>
+
+              <section class="ingredient-note-grid">
+                <For each={productNutrients()} fallback={<div class="ingredient-note-empty">この商品に関連づけられた成分はまだありません。</div>}>
+                  {(nutrient, index) => (
+                    <article
+                      class="ingredient-note-card"
+                      classList={{ 'is-editing': editingNutrientId() === nutrient.id }}
+                      style={{ '--note-delay': `${Math.min(index() * 35, 350)}ms` }}
+                    >
+                      <div class="ingredient-note-card-top">
+                        <span>{String(index() + 1).padStart(2, '0')}</span>
+                        <button onClick={() => beginNutrientEdit(nutrient.id)} disabled={editingNutrientId() === nutrient.id}>編集</button>
+                      </div>
+                      <Show when={editingNutrientId() === nutrient.id} fallback={
+                        <>
+                          <h3>{nutrient.name}</h3>
+                          <p>{nutrient.description || '説明は未登録です。'}</p>
+                        </>
+                      }>
+                        <div class="ingredient-note-editor">
+                          <label>Title<input value={draftName()} onInput={(event) => setDraftName(event.currentTarget.value)} /></label>
+                          <label>Card<textarea rows="7" value={draftDescription()} onInput={(event) => setDraftDescription(event.currentTarget.value)} /></label>
+                          <div>
+                            <button onClick={() => setEditingNutrientId(null)}>キャンセル</button>
+                            <button class="primary" onClick={() => saveNutrient(nutrient.id)}>保存</button>
                           </div>
-                        </button>
-                      )}
-                    </For>
-                  </div>
+                        </div>
+                      </Show>
+                      <footer><span># {product().name}</span><small>共有成分DB</small></footer>
+                    </article>
+                  )}
+                </For>
+                <button class="ingredient-add-card" onClick={() => setAddNutrientOpen(true)}>
+                  <span>＋</span>
+                  <strong>成分を追加</strong>
+                  <small>共有成分DBから選択</small>
+                </button>
+              </section>
+
+              <Show when={addNutrientOpen()}>
+                <div class="nutrient-picker-backdrop" onClick={() => setAddNutrientOpen(false)}>
+                  <section class="nutrient-picker" role="dialog" aria-modal="true" aria-label="商品へ成分を追加" onClick={(event) => event.stopPropagation()}>
+                    <header>
+                      <div><small>SHARED INGREDIENT DATABASE</small><h2>成分を追加</h2></div>
+                      <button onClick={() => setAddNutrientOpen(false)} aria-label="閉じる">×</button>
+                    </header>
+                    <label class="nutrient-picker-search"><span>⌕</span><input autofocus value={nutrientSearch()} onInput={(event) => setNutrientSearch(event.currentTarget.value)} placeholder="成分名・説明を検索" /></label>
+                    <div class="nutrient-picker-list">
+                      <For each={availableNutrients()} fallback={<p class="nutrient-picker-empty">追加できる成分がありません。</p>}>
+                        {(nutrient) => (
+                          <button onClick={() => addNutrientToProduct(nutrient.id)}>
+                            <span><strong>{nutrient.name}</strong><small>{nutrient.description || '説明未登録'}</small></span>
+                            <b>＋</b>
+                          </button>
+                        )}
+                      </For>
+                    </div>
+                  </section>
                 </div>
               </Show>
             </div>
           )}
         </Show>
-      </div>
     </div>
   )
 }
@@ -757,41 +761,133 @@ const IndexView: Component<{ products: Product[] }> = (props) => (
   </div>
 )
 
-// ── Shared sub-components ──────────────────────────────────────────────────
-const DetailSection: Component<{ title: string; children: any }> = (props) => (
-  <div class="mb-4">
-    <h2 class="text-xs font-semibold text-[#999] uppercase tracking-wider mb-2">{props.title}</h2>
-    {props.children}
-  </div>
-)
+// ── お気に入りの星（1秒長押しで登録／解除。短く押しても何もしない） ─────────
+const FAVORITE_PRESS_MS = 1000
 
-const COLOR_MAP = {
-  red:   'bg-red-50 text-red-600 border-red-100',
-  green: 'bg-green-50 text-green-700 border-green-100',
-  blue:  'bg-blue-50 text-blue-700 border-blue-100',
+const FavoriteStar: Component<{ productId: string }> = (props) => {
+  const [pressing, setPressing] = createSignal(false)
+  let timer = 0
+
+  const stop = () => { window.clearTimeout(timer); setPressing(false) }
+  const start = (event: PointerEvent) => {
+    event.stopPropagation()
+    event.preventDefault()
+    setPressing(true)
+    timer = window.setTimeout(() => {
+      toggleFavorite(props.productId)
+      navigator.vibrate?.(12)
+      setPressing(false)
+    }, FAVORITE_PRESS_MS)
+  }
+
+  return (
+    <span
+      class="product-favorite-star"
+      classList={{ 'is-on': isFavorite(props.productId), 'is-pressing': pressing() }}
+      role="button"
+      tabindex="0"
+      aria-pressed={isFavorite(props.productId)}
+      aria-label={isFavorite(props.productId) ? 'お気に入り解除（1秒長押し）' : 'お気に入り登録（1秒長押し）'}
+      title="1秒長押しでお気に入り登録／解除"
+      onPointerDown={start}
+      onPointerUp={stop}
+      onPointerLeave={stop}
+      onPointerCancel={stop}
+      onContextMenu={(event) => event.preventDefault()}
+      onClick={(event) => { event.stopPropagation(); event.preventDefault() }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        event.stopPropagation()
+        toggleFavorite(props.productId)
+      }}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" /></svg>
+    </span>
+  )
 }
 
-const TagList: Component<{ items: string[]; color: keyof typeof COLOR_MAP }> = (props) => (
-  <div class="flex flex-wrap gap-1.5">
-    <For each={props.items}>
-      {(item) => (
-        <span class={`text-xs px-2.5 py-1 rounded-full border font-medium ${COLOR_MAP[props.color]}`}>
-          {item}
-        </span>
-      )}
-    </For>
-  </div>
-)
+// ── Product Gallery (default entry) ──────────────────────────────────────
+const ProductGalleryView: Component<{ products: Product[] }> = (props) => {
+  const [search, setSearch] = createSignal('')
+  const filtered = createMemo(() => {
+    const q = search().trim().toLocaleLowerCase('ja')
+    if (!q) return props.products
+    return props.products.filter((product) =>
+      [product.name, product.description, product.volume, ...product.ingredients]
+        .join(' ')
+        .toLocaleLowerCase('ja')
+        .includes(q)
+    )
+  })
+
+  const openProduct = (product: Product) => {
+    setState({ selectedProductId: product.id, dbView: 'detail' })
+  }
+
+  return (
+    <div class="product-gallery-shell flex-1 overflow-y-auto">
+      <div class="product-gallery-hero">
+        <div>
+          <p class="product-gallery-kicker">NACC PRODUCT NOTE</p>
+          <h2>商品から、ノートを開く。</h2>
+          <p>商品を選ぶと、説明・関連成分・メモをひとつの作業画面で確認できます。</p>
+        </div>
+        <label class="product-gallery-search">
+          <span aria-hidden="true">⌕</span>
+          <input
+            type="search"
+            value={search()}
+            onInput={(event) => setSearch(event.currentTarget.value)}
+            placeholder="商品名・説明・成分を検索"
+            aria-label="商品を検索"
+          />
+        </label>
+      </div>
+
+      <div class="product-gallery-count"><strong>{filtered().length}</strong> products</div>
+      <div class="product-gallery-grid">
+        <For each={filtered()} fallback={<div class="product-gallery-empty">{props.products.length === 0 ? 'お気に入りはまだありません。上の「全て」から、カード右上の★を1秒長押しすると登録できます。' : '一致する商品がありません。'}</div>}>
+          {(product) => (
+            <button class="product-gallery-card" onClick={() => openProduct(product)}>
+              <div class="product-gallery-thumb">
+                <Show
+                  when={product.image && productImageUrl(product.image)}
+                  fallback={<span>{product.name.trim().slice(0, 1) || 'N'}</span>}
+                >
+                  <img src={productImageUrl(product.image)} alt="" />
+                </Show>
+                <small>{product.category === 'cosmetic' ? 'COSMETIC' : 'SUPPLEMENT'}</small>
+              </div>
+              <div class="product-gallery-body">
+                <p class="product-gallery-id">{product.id}</p>
+                <h3>{product.name}</h3>
+                <p>{product.description || '商品説明は未登録です。'}</p>
+                <div class="product-gallery-meta">
+                  <span>{product.volume || '容量未登録'}</span>
+                  <span>{product.nutrientIds.length} 成分</span>
+                </div>
+              </div>
+              <FavoriteStar productId={product.id} />
+            </button>
+          )}
+        </For>
+      </div>
+    </div>
+  )
+}
 
 // ── Page Root ──────────────────────────────────────────────────────────────
 const PageDb01: Component<Props> = (props) => {
-  const [categoryFilter, setCategoryFilter] = createSignal<CategoryFilter>('all')
+  // アプリを開いたときの初期画面はお気に入り
+  const [categoryFilter, setCategoryFilter] = createSignal<CategoryFilter>('favorite')
   const [memoPanelOpen, setMemoPanelOpen] = createSignal(false)
   const [memoPanelProduct, setMemoPanelProduct] = createSignal<Product | null>(null)
 
   const filteredProducts = createMemo(() => {
     const f = categoryFilter()
     if (f === 'all') return props.products
+    if (f === 'favorite') return props.products.filter((p) => isFavorite(p.id))
     const cat = f === 'supplement' ? 'supplement' : 'cosmetic'
     return props.products.filter((p) => p.category === cat)
   })
@@ -811,42 +907,18 @@ const PageDb01: Component<Props> = (props) => {
         <MemoPanelOverlay product={memoPanelProduct()} onClose={() => setMemoPanelOpen(false)} />
       </Show>
 
-      {/* Page header */}
-      <div class="db-page-header px-6 pt-4 pb-3 bg-nacc-light flex items-start justify-between shrink-0">
-        <div class="min-w-0">
-          <h1 class="db-page-title text-xl font-bold text-nacc-dark leading-tight">
-            <span class="db-page-title-full">DB01 — </span>商品一覧
-          </h1>
-          <div class="db-page-subtitle text-xs text-gray-500 mt-0.5">
-            NACCサプリメント全商品データベース ·{' '}
-            <span class="font-medium">{props.products.length}件</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <button
-            class="db-hdr-btn flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg transition-colors"
-            classList={{
-              'bg-nacc-dark text-white border-nacc-dark': memoPanelOpen(),
-              'bg-white text-gray-600 border-nacc-border hover:bg-gray-50': !memoPanelOpen(),
-            }}
-            onClick={() => setMemoPanelOpen((v) => !v)}
-          >
-            📝<span class="db-hdr-btn-label ml-1">メモパネル</span>
-          </button>
-          <button
-            class="db-hdr-btn flex items-center gap-1.5 px-3 py-1.5 text-xs border border-nacc-border rounded-lg bg-white hover:bg-gray-50 transition-colors"
-            onClick={() => setState({ settingsPanelOpen: true, galleryPanelOpen: false })}
-          >
-            ⚙<span class="db-hdr-btn-label ml-1">カラム設定</span>
-          </button>
-          <button class="db-hdr-btn flex items-center gap-1.5 px-3 py-1.5 text-xs bg-nacc-dark text-white rounded-lg hover:opacity-90 transition-opacity">
-            +<span class="db-hdr-btn-label ml-1">新規追加</span>
-          </button>
-        </div>
-      </div>
-
       {/* Category filter tabs */}
       <div class="db-filter-row flex items-center gap-2 px-6 py-2 border-b border-nacc-border bg-white shrink-0 overflow-x-auto">
+        <button
+          class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors whitespace-nowrap"
+          classList={{
+            'bg-[#b38247] text-white border-[#b38247]': categoryFilter() === 'favorite',
+            'bg-white text-[#8a5c27] border-[#e5d3b3] hover:border-[#b38247]': categoryFilter() !== 'favorite',
+          }}
+          onClick={() => setCategoryFilter('favorite')}
+        >
+          ★ お気に入り <span class="opacity-70">({favoriteIds().length})</span>
+        </button>
         <button
           class="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full border transition-colors whitespace-nowrap"
           classList={{
@@ -881,6 +953,26 @@ const PageDb01: Component<Props> = (props) => {
 
       {/* View tabs */}
       <div class="db-tab-row flex items-center gap-0 px-6 border-b border-nacc-border shrink-0 bg-white">
+        <Show when={state.dbView === 'detail'}>
+          <button
+            class="gallery-return-orbit"
+            onClick={() => setState({ dbView: 'gallery', selectedProductId: null })}
+            aria-label="商品Galleryへ戻る"
+            title="商品Galleryへ戻る"
+          >
+            ↶
+          </button>
+        </Show>
+        <button
+          class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
+          classList={{
+            'border-nacc-dark text-nacc-dark': state.dbView === 'gallery',
+            'border-transparent text-gray-400 hover:text-gray-600': state.dbView !== 'gallery',
+          }}
+          onClick={() => setState({ dbView: 'gallery' })}
+        >
+          ◇ Gallery
+        </button>
         <button
           class="db-tab-btn flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors"
           classList={{
@@ -911,9 +1003,13 @@ const PageDb01: Component<Props> = (props) => {
         >
           🗂 詳細View
         </button>
+        <HelpButton title="商品Gallery" items={HELP_PRODUCT_GALLERY} class="ml-auto" />
       </div>
 
       {/* Content */}
+      <Show when={state.dbView === 'gallery'}>
+        <ProductGalleryView products={filteredProducts()} />
+      </Show>
       <Show when={state.dbView === 'table'}>
         <TableView
           products={filteredProducts()}

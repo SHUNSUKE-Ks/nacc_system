@@ -2,6 +2,7 @@ import { type Component, For, Show } from 'solid-js'
 import { state, setState, setFontSize, toggleDarkMode, toggleDb01Column, toggleDb02Column, toggleDb03Column, toggleDb10Column } from '../store'
 import type { DbStatus } from '../store'
 import type { FontSize } from '../types'
+import { exportDetailViewPdf } from '../utils/exportDetailPdf'
 
 const DB_STATUS_MAP: Record<DbStatus, { label: string; color: string; dot: string }> = {
   idle:       { label: '未接続',   color: 'text-gray-400',  dot: 'bg-gray-300' },
@@ -48,6 +49,8 @@ const SettingsPanel: Component = () => {
   const dbLabel = () => currentDb()?.label ?? ''
   const columns = () => currentDb()?.cols() ?? []
   const toggleCol = (id: string) => currentDb()?.toggle(id)
+  const canExportDetailPdf = () => state.page === 'db01' && state.dbView === 'detail' && Boolean(state.selectedProductId)
+  const selectedProductName = () => state.products.find((product) => product.id === state.selectedProductId)?.name
 
   return (
     <>
@@ -91,6 +94,22 @@ const SettingsPanel: Component = () => {
               現在のサイズ：{FONT_OPTIONS.find((f) => f.key === state.fontSize)?.desc}
             </div>
           </div>
+
+          <Show when={canExportDetailPdf()}>
+            <div class="p-4 border-b border-nacc-border">
+              <div class="text-xs font-semibold text-gray-500 mb-3">PDF Export</div>
+              <button
+                class="w-full flex items-center justify-between gap-3 rounded-xl border border-red-100 bg-red-50 px-3 py-3 text-left text-red-800 hover:bg-red-100 transition-colors"
+                onClick={() => exportDetailViewPdf(selectedProductName())}
+              >
+                <span>
+                  <strong class="block text-sm">現在の商品ページをPDF保存</strong>
+                  <small class="block mt-1 text-xs text-red-700/70">ヘッダーを除いた詳細Viewのみ</small>
+                </span>
+                <span class="text-lg">PDF</span>
+              </button>
+            </div>
+          </Show>
 
           {/* Column visibility (DB pages only) */}
           <Show when={showColumnSettings()}>

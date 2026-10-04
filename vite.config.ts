@@ -9,19 +9,19 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/*.png'],
+      includeAssets: ['icons/*.png', 'icons/nacc-note.svg'],
       manifest: {
-        name: 'NACC Supplement DB',
-        short_name: 'NACCsup',
-        description: 'NACCサプリメント管理アプリ',
+        name: 'NACC Note',
+        short_name: 'NACC Note',
+        description: 'NACC商品・成分ノート',
         theme_color: '#b38247',
         background_color: '#f7f6f3',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {

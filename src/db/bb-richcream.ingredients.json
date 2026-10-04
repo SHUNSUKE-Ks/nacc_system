@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "product": {
+    "id": "C03",
+    "name": "BB RichCream",
+    "sourceProductName": "BBリッチクリーム",
+    "volume": "50g",
+    "price": 88000,
+    "tag": "BB RichCream"
+  },
+  "source": {
+    "image": "PXL_20260919_030643094.jpg",
+    "capturedAt": "2026-09-19",
+    "priority": "latest",
+    "note": "今回共有された成分表写真を最新版として転記。説明文は旧資料原文であり、広告掲載可を意味しない。"
+  },
+  "cards": [
+    {"id":"bb-001","title":"Co-Q10（ユビキノン）","aliases":["CoQ10","ユビキノン"],"category":"整肌成分","dict":"細胞内のミトコンドリアに存在し、皮膚細胞で不足するとタルミの原因にもなります。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-002","title":"L-カルニチン","aliases":["カルニチン"],"category":"整肌成分","dict":"老化の原因である活性酸素の働きを中和し、シミ・シワを改善すると言われています。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-003","title":"αリポ酸（チオクト酸）","aliases":["α-リポ酸","チオクト酸"],"category":"整肌成分","dict":"活性酸素を除去し、シワなどの老化を予防するとともに、メラニンの生成そのものを抑えるとも言われています。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-004","title":"リピジュア（ポリクオタニウム-51）","aliases":["リピジュア","ポリクオタニウム-51"],"category":"保湿成分","dict":"ヒアルロン酸の倍の保湿力があるとされるヒトの細胞膜を構成し涙にも含まれる「リン脂質」をモデルに開発された成分です。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-005","title":"プロポリス","aliases":[],"category":"天然由来成分","dict":"「天然の抗生物質」とも呼ばれており、ポリフェノールやフラボノイド、各種ビタミン、ミネラルなどを多く含みます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-006","title":"ピクノジェノール","aliases":["フランス海岸松樹皮エキス"],"category":"植物エキス","dict":"酸化したビタミンCを還元し、メラニンの生成を抑える働きやビタミンCの20倍、ビタミンEの50倍の活性酸素を除去する力があるとされています。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-007","title":"プエラリアミリフィカ","aliases":["プエラリアミリフィカ根エキス"],"category":"植物エキス","dict":"タイやミャンマーで自生するマメ科クズ属の植物で、“若返りの薬”として知られています。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-008","title":"DNA-Na","aliases":["デオキシリボ核酸Na"],"category":"整肌成分","dict":"細胞賦活作用に優れ、皮膚の深部に働きかけ、すこやかなターンオーバーと透明感を与えると言われています。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-009","title":"ビフィズス菌培養溶解質","aliases":[],"category":"発酵由来成分","dict":"ビフィズス菌から得られるエキスで、紫外線や加齢により損傷を受けた細胞の自然修復機能を高めます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-010","title":"パルミトイルペンタペプチド-4","aliases":[],"category":"ペプチド","dict":"超微粒子エラスチンとも呼ばれ、線維芽細胞を刺激してコラーゲンやエラスチンの生成を促進するアミノ酸です。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-011","title":"パルミトイルテトラペプチド-7","aliases":[],"category":"ペプチド","dict":"皮膚に浸透しやすく、線維芽細胞を刺激してコラーゲンやエラスチンの生成を促進するアミノ酸です。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-012","title":"パルミトイルオリゴペプチド","aliases":[],"category":"ペプチド","dict":"衰えた線維芽細胞に働きかけて活性化させ、コラーゲンやエラスチンの生成を促し、しわを改善するアミノ酸です。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-013","title":"ハチミツ","aliases":["蜂蜜"],"category":"保湿成分","dict":"ビタミンやミネラルを豊富に含み、保湿力に優れ、肌の新陳代謝を高めます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-014","title":"PCA-Na","aliases":["PCAナトリウム"],"category":"保湿成分","dict":"角質層に多く含まれる天然の保湿因子です。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-015","title":"クレアチン","aliases":[],"category":"整肌成分","dict":"老化を回復させるアミノ酸誘導体で、細胞を活性化し潤いを保ちます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-016","title":"オウゴン根エキス","aliases":["黄芩根エキス"],"category":"植物エキス","dict":"オウゴンの根から抽出されるエキスで、メラニン生成抑制作用や抗炎症作用、抗アレルギー作用があり漢方では解熱、消炎として使われています。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-017","title":"ツボクサエキス","aliases":["センテラアジアチカエキス"],"category":"植物エキス","dict":"アーユルヴェーダの中でも最も重要な若返りのハーブと言われ、新陳代謝の促進、抗酸化作用、美肌作用、血行促進などに効果が期待できます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-018","title":"褐藻エキス","aliases":[],"category":"海藻エキス","dict":"海藻から抽出され、保湿作用・皮膚再生作用・血行促進作用があり、肌にうるおいを与え、乾燥から肌を守り、ハリを与える効果があります。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-019","title":"月見草","aliases":["月見草油"],"category":"植物エキス","dict":"主成分のγ-リノレン酸は褐色脂肪細胞の燃焼を高める働きがあります。アトピーなどのアレルギー症状を緩和する他、抗炎症、ニキビ予防、保湿作用などにも効果的です。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-020","title":"タイソウエキス","aliases":["ナツメ果実エキス"],"category":"植物エキス","dict":"C-AMP含有。ターンオーバーを促進しキメの整った肌へと導きます。また、運動では燃えない脂肪である白色脂肪細胞の脂肪分解を助けます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-021","title":"アテロコラーゲン","aliases":[],"category":"保湿成分","dict":"火傷や皮膚欠損部の皮膚カバーとして医療にも使用されているコラーゲンで、高い保湿効果が期待されます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-022","title":"コンドロイチン","aliases":["コンドロイチン硫酸"],"category":"保湿成分","dict":"「コンドロイチン硫酸」として人間の体内に多く含まれており、潤滑油としての機能や肌の保湿作用など様々な効果が期待できます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-023","title":"加水分解シルク","aliases":[],"category":"保湿成分","dict":"保湿効果・皮膜形成効果があります。また、チロシナーゼ活性抑制作用がありメラニン色素の生成を抑え、美白効果も期待できます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"},
+    {"id":"bb-024","title":"アルゲエキス","aliases":["褐藻・緑藻・紅藻エキス"],"category":"海藻エキス","dict":"褐藻・緑藻・紅藻エキスから成る成分で、メラニン生成を抑え、肌代謝を促進し、明るくクリアな肌へ導きます。","productTags":["BB RichCream"],"sourceStatus":"写真から転記","advertisingStatus":"要確認"}
+  ]
+}

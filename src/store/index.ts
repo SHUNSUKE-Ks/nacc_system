@@ -111,7 +111,7 @@ const [state, setState] = createStore<AppState>({
   blogMode: 'memo',
   fontSize: 'xl',
   darkMode: initDarkMode(),
-  dbView: 'table',
+  dbView: 'gallery',
   selectedProductId: null,
   selectedNutrientId: null,
   selectedBlogId: null,
@@ -206,13 +206,28 @@ export async function initFirestore(): Promise<void> {
       await seedProductsFs(PRODUCTS)
       setState({ products: PRODUCTS })
     } else {
-      setState({ products: fsProducts })
+      const linkedProducts = fsProducts.map((product) => {
+        const bundled = PRODUCTS.find((item) => item.id === product.id)
+        if (!bundled) return product
+        return { ...product, nutrientIds: Array.from(new Set([...product.nutrientIds, ...bundled.nutrientIds])) }
+      })
+      const changedProducts = linkedProducts.filter((product) => {
+        const original = fsProducts.find((item) => item.id === product.id)
+        return original && product.nutrientIds.length !== original.nutrientIds.length
+      })
+      if (changedProducts.length > 0) {
+        await Promise.all(changedProducts.map((product) => updateProductFs(product.id, { nutrientIds: product.nutrientIds })))
+      }
+      setState({ products: linkedProducts })
     }
     if (fsNutrients.length === 0) {
       await seedNutrientsFs(NUTRIENTS)
       setState({ nutrients: NUTRIENTS })
     } else {
-      setState({ nutrients: fsNutrients })
+      const remoteIds = new Set(fsNutrients.map((nutrient) => nutrient.id))
+      const missingBundledNutrients = NUTRIENTS.filter((nutrient) => !remoteIds.has(nutrient.id))
+      if (missingBundledNutrients.length > 0) await seedNutrientsFs(missingBundledNutrients)
+      setState({ nutrients: [...fsNutrients, ...missingBundledNutrients] })
     }
 
     setState({ memos, blogs, trashBlogs, notebooks, dbStatus: 'connected' })

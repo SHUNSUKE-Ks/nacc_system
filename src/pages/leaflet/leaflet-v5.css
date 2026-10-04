@@ -1,0 +1,74 @@
+/* Leaflet v5 — header の高さ・Topic下線・A4ページ区切り・PDFの片隅表記・重複エラー */
+
+/* ── 写真ありの header を低めに ─────────────────────────────────── */
+.lf-hero{padding:clamp(18px,2.8vw,34px) clamp(20px,3.4vw,44px);gap:8px 36px}
+.lf-hero.is-split .lf-hero-photo{width:min(100%,260px)}
+.lf-hero.is-classic .lf-hero-photo{max-width:250px}
+.lf-hero.is-classic .lf-visual.is-hero{aspect-ratio:5/4}
+.lf-hero.is-banner .lf-hero-photo{max-width:230px;padding:22px 14px 14px}
+.lf-hero.is-banner .lf-visual.is-hero{aspect-ratio:1}
+.lf-hero.is-split .lf-hero-title,.lf-hero.is-banner .lf-hero-title{font-size:clamp(1.3rem,2.6vw,2rem)}
+
+/* ── Topic のタイトル下線: 線／二重線／なし ───────────────────────── */
+.lf-topic-head.is-ul-line{border-bottom:1.5px solid rgba(120,47,61,.55)}
+.lf-topic-head.is-ul-double{padding-bottom:7px;border-bottom:4px double rgba(120,47,61,.6)}
+.lf-topic-head.is-ul-none{padding-bottom:0;border-bottom:0}
+.lf-topic-controls{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:8px}
+.lf-topic-controls .lf-icon-picker{margin:0}
+.lf-ul-picker{display:inline-flex;padding:2px;border:1px solid rgba(120,47,61,.18);border-radius:999px;background:#fffdf8}
+.lf-ul-picker button{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;color:#8d7c68;font-size:.52rem;font-weight:700}
+.lf-ul-picker button.is-active{background:var(--lf-wine);color:#fff}
+.lf-ul-thumb{display:inline-block;width:14px;height:5px}
+.lf-ul-thumb.is-line{border-bottom:1.5px solid currentColor}
+.lf-ul-thumb.is-double{border-top:1px solid currentColor;border-bottom:1px solid currentColor}
+.lf-ul-thumb.is-none{border-bottom:1.5px dotted currentColor;opacity:.4}
+
+/* ── PDF（印刷）の片隅表記 ─────────────────────────────────────── */
+.lf-pdf-options{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 14px}
+.lf-pdf-options>span{color:var(--lf-gold);font-size:.46rem;font-weight:800;letter-spacing:.2em}
+.lf-pdf-options .lf-pdf-sep{margin-left:6px}
+.lf-pdf-options label{display:inline-flex;align-items:center;gap:5px;color:#725f4d;font-size:.56rem;font-weight:700}
+.lf-pdf-options button{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;border:1px solid rgba(120,47,61,.18);border-radius:999px;background:#fffdf8;color:#725f4d;font-size:.54rem;font-weight:700}
+.lf-pdf-options button.is-active{border-color:var(--lf-wine);background:#f8eef0;color:var(--lf-wine)}
+.lf-pdf-options small{flex-basis:100%;color:#a8977f;font-size:.5rem}
+.lf-corner-thumb{position:relative;display:inline-block;width:14px;height:18px;border:1px solid rgba(120,47,61,.35);border-radius:2px;background:#fff}
+.lf-corner-thumb::after{content:"";position:absolute;width:6px;height:2px;background:var(--lf-wine)}
+.lf-corner-thumb.is-br::after{right:1.5px;bottom:2px}
+.lf-corner-thumb.is-bl::after{left:1.5px;bottom:2px}
+.lf-corner-thumb.is-tr::after{right:1.5px;top:2px}
+
+/* ── A4 ページ区切り（画面だけの補助線） ───────────────────────── */
+.lf-sheet{position:relative}
+.lf-sheet.is-a4{max-width:none;margin:0 auto;padding:0;border-radius:0;background:#fffdf8;box-shadow:0 0 0 12mm #fffdf8,0 0 0 calc(12mm + 1px) rgba(120,47,61,.12),0 20px 60px 12mm rgba(67,47,25,.12)}
+.lf-preview:has(.lf-sheet.is-a4){padding-top:calc(16px + 12mm);padding-bottom:calc(64px + 12mm)}
+.lf-pages-hint{max-width:760px;margin:0 auto 16px;padding:8px 14px;border-radius:10px;background:#eaf0fe;color:#2b4f9e;font-size:.58rem;font-weight:700;text-align:center}
+.lf-page-break{position:absolute;left:-12mm;right:-12mm;z-index:5;height:0;border-top:2px dashed var(--lf-blue);pointer-events:none}
+.lf-page-break-label{position:absolute;left:12mm;top:-11px;padding:2px 10px;border-radius:999px;background:var(--lf-blue);color:#fff;font-size:.5rem;font-weight:800;white-space:nowrap}
+.lf-page-corner{position:absolute;z-index:5;color:#9b8a75;font:7pt "Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.08em;white-space:nowrap;pointer-events:none}
+.lf-page-break .lf-page-corner{top:-22px}
+.lf-page-break .lf-page-corner.is-br{right:12mm}
+.lf-page-break .lf-page-corner.is-bl{left:calc(12mm + 160px)}
+.lf-page-break .lf-page-corner.is-tr{right:12mm;top:10px}
+.lf-page-corner.is-last{bottom:-9mm}
+.lf-page-corner.is-last.is-br,.lf-page-corner.is-last.is-tr{right:0}
+.lf-page-corner.is-last.is-bl{left:0}
+.lf-sheet.is-a4 .lf-sheet-foot{display:none}
+
+/* ── 重複エラー ─────────────────────────────────────────────────── */
+.lf-toast.is-error{background:#8b1e2d;color:#fff;max-width:min(560px,calc(100vw - 32px));text-align:center;white-space:normal}
+.lf-floating.is-duplicate .lf-floating-inner{border-color:#c0392b!important;opacity:.85}
+.lf-dup-badge{position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);padding:3px 10px;border-radius:999px;background:#8b1e2d;color:#fff;font-size:.5rem;font-weight:800;white-space:nowrap}
+
+/* ── 印刷: 画面の A4 表示と同じ幅・切れ目のルール ─────────────── */
+@media print{
+  .lf-sheet,.lf-sheet.is-a4{width:auto!important;max-width:none;padding:0;box-shadow:none;border-radius:0}
+  .lf-hero,.lf-circles-wrap,.lf-topic{break-inside:avoid}
+  .lf-sheet-foot{display:none}
+}
+
+/* ワイド: 商品写真をほんの少し大きく */
+.lf-hero.is-wide .lf-hero-photo{width:clamp(140px,18.5vw,225px)}
+.lf-topbar .help-button-trigger{width:28px;height:28px;min-height:0}
+.lf-topbar .help-button-trigger{padding:0;border-color:rgba(179,130,71,.45);color:#8a5c27;font:700 .8rem/1 Georgia,serif}
+.lf-topbar .help-button-trigger[aria-expanded="true"]{color:#fff}
+.lf-topbar .help-panel>header button{padding:0;border:0}

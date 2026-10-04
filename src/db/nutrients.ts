@@ -1,6 +1,7 @@
 import type { Nutrient } from '../types'
+import bbRichCream from './bb-richcream.ingredients.json'
 
-export const NUTRIENTS: Nutrient[] = [
+const CORE_NUTRIENTS: Nutrient[] = [
   {
     id: 'N01',
     name: 'NMN (β-ニコチンアミドモノヌクレオチド)',
@@ -226,3 +227,14 @@ export const NUTRIENTS: Nutrient[] = [
     createdAt: new Date('2026-05-25'),
   },
 ]
+
+const BB_RICHCREAM_NUTRIENTS: Nutrient[] = bbRichCream.cards.map((card) => ({
+  id: card.id,
+  name: card.title,
+  description: card.dict,
+  productIds: [bbRichCream.product.id],
+  memo: `カテゴリー: ${card.category} / 出典: ${card.sourceStatus} / 広告表現: ${card.advertisingStatus}`,
+  createdAt: new Date(bbRichCream.source.capturedAt),
+}))
+
+export const NUTRIENTS: Nutrient[] = [...CORE_NUTRIENTS, ...BB_RICHCREAM_NUTRIENTS]

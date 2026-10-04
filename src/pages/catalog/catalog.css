@@ -100,3 +100,23 @@
   .cc-product-memo{padding-left:14px}
 }
 @media print{.cc-top,.cc-filters{position:static}.cc-check{border-width:1px}}
+
+/* 右上: 確認日 */
+.cc-check-date{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border:1px solid var(--cc-line);border-radius:999px;background:#fff;color:var(--cc-sub);font-size:.58rem;font-weight:800;letter-spacing:.06em}
+.cc-check-date input{min-height:30px;padding:0 8px;border:0;border-radius:999px;outline:0;background:#f6f1e7;color:var(--cc-ink);font-size:16px;font-variant-numeric:tabular-nums}
+
+/* 確認中に成分を追加 */
+.cc-add-toggle{display:block;width:calc(100% - 28px);min-height:40px;margin:8px 14px 12px;border:1px dashed #cfc6b5;border-radius:10px;background:#fffdf8;color:#7b5630;font-size:.64rem;font-weight:700}
+.cc-add-toggle:hover{border-style:solid;background:#fbf4e4}
+.cc-add-form{display:grid;gap:10px;margin:8px 14px 14px;padding:14px;border:1px solid #e7d8b8;border-radius:12px;background:#fffaf0}
+.cc-add-form>label{display:grid;gap:4px;color:var(--cc-gold);font-size:.55rem;font-weight:800;letter-spacing:.08em}
+.cc-add-form>label input{min-height:40px;padding:0 12px;border:1px solid #e7d8b8;border-radius:8px;outline:0;background:#fff;color:var(--cc-ink);font-size:16px;font-weight:400;letter-spacing:0}
+.cc-add-form>label input:focus{border-color:var(--cc-gold)}
+.cc-add-form .cc-add-check{display:flex;align-items:center;gap:8px;color:var(--cc-ink);font-size:.64rem;letter-spacing:0}
+.cc-add-check input{width:20px;height:20px;min-height:0;accent-color:var(--cc-ok)}
+.cc-add-note{margin:0;color:var(--cc-sub);font-size:.58rem;line-height:1.7}
+.cc-add-actions{display:flex;justify-content:flex-end;gap:8px}
+.cc-add-actions button{min-height:38px;padding:0 16px;border:1px solid var(--cc-line);border-radius:999px;color:#6b6157;font-size:.64rem;font-weight:700}
+.cc-add-actions .is-primary{border-color:var(--cc-ok);background:var(--cc-ok);color:#fff}
+.cc-add-actions .is-primary:disabled{opacity:.4}
+.cc-item-name small.is-sheet{color:var(--cc-hold);font-weight:700}

@@ -4,7 +4,7 @@ import type { Product } from '../../types'
 import HelpButton, { HELP_CATALOG_CHECK } from '../../components/HelpButton'
 import {
   type CheckItem, type CheckStatus, STATUS_LABELS,
-  cloudOk, formatStamp, itemCheck, itemsOf, productCheck, refreshFromCloud,
+  addItemDuringCheck, checkDate, cloudOk, formatStamp, itemCheck, itemsOf, productCheck, refreshFromCloud, setCheckDate,
   setItemMemo, setItemStatus, setProductMemo, setProductStatus, toggleItemCheck,
 } from './store'
 import './catalog.css'
@@ -28,6 +28,9 @@ const CatalogCheckPage: Component = () => {
   /** 開閉は手で変えたものだけ覚える（既定: 確認済みの商品はたたむ） */
   const [openState, setOpenState] = createSignal<Record<string, boolean>>({})
   const [memoFocus, setMemoFocus] = createSignal<string | null>(null)
+  /** 成分を追加するフォームを開いている商品 */
+  const [addingFor, setAddingFor] = createSignal<string | null>(null)
+  const nutrientNames = createMemo(() => [...new Set(state.nutrients.map((n) => n.name))].sort((a, b) => a.localeCompare(b, 'ja')))
 
   onMount(refreshFromCloud)
 
@@ -136,11 +139,52 @@ const CatalogCheckPage: Component = () => {
         <div class="cc-item-name">
           <strong>{row.item.name}</strong>
           <Show when={row.item.source === 'label'}><small>原材料表記</small></Show>
+          <Show when={row.item.source === 'sheet'}><small class="is-sheet">チェック表のみ</small></Show>
         </div>
         <p class="cc-item-desc">{row.item.description || '—'}</p>
         <StatusPill value={check().status} label={`${row.item.name}のステータス`} onChange={(s) => setItemStatus(row.product.id, row.item.key, s)} />
         <MemoField productId={row.product.id} itemKey={row.item.key} value={check().memo} hold={check().status === 'hold'} />
         <span class="cc-date">{formatStamp(check().updatedAt)}</span>
+      </div>
+    )
+  }
+
+  /** 確認中に見つけた成分を足すフォーム */
+  const AddItemForm: Component<{ product: Product; onDone: () => void }> = (form) => {
+    const [name, setName] = createSignal('')
+    const [description, setDescription] = createSignal('')
+    const [toOriginal, setToOriginal] = createSignal(true)
+    const usesCards = () => itemsOf(form.product).some((i) => i.source === 'card') || !form.product.ingredients.length
+    const existing = () => state.nutrients.find((n) => n.name.trim() === name().trim())
+    const listId = `cc-names-${form.product.id}`
+    const add = () => {
+      if (addItemDuringCheck(form.product, { name: name(), description: description(), toOriginal: toOriginal() })) form.onDone()
+    }
+    return (
+      <div class="cc-add-form">
+        <label>成分名
+          <input ref={(el) => queueMicrotask(() => el.focus())} list={listId} value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder="カタログに載っている成分名" />
+          <datalist id={listId}><For each={nutrientNames()}>{(n) => <option value={n} />}</For></datalist>
+        </label>
+        <Show when={toOriginal() && usesCards() && !existing()}>
+          <label>説明（任意）
+            <input value={description()} onInput={(e) => setDescription(e.currentTarget.value)} placeholder="成分カードの説明（後から商品ノートで直せます）" />
+          </label>
+        </Show>
+        <label class="cc-add-check">
+          <input type="checkbox" checked={toOriginal()} onChange={(e) => setToOriginal(e.currentTarget.checked)} />
+          原本（商品ノート）にも追加する
+        </label>
+        <p class="cc-add-note">
+          {!toOriginal() ? 'このチェック表だけに入れます（商品ノートは変わりません）。'
+            : usesCards() ? (existing() ? `共有成分DBの「${existing()!.name}」をこの商品に結び付けます。` : '新しい成分カードを作って、この商品に追加します。')
+              : 'この商品の原材料表記に追加します。'}
+          追加した行は「確認済み」になります。
+        </p>
+        <div class="cc-add-actions">
+          <button type="button" onClick={form.onDone}>キャンセル</button>
+          <button type="button" class="is-primary" onClick={add} disabled={!name().trim()}>追加する</button>
+        </div>
       </div>
     )
   }
@@ -159,6 +203,10 @@ const CatalogCheckPage: Component = () => {
           <span classList={{ 'is-hold': totals().itemHold > 0 }}>保留 <b>{totals().itemHold}</b></span>
           <span class="cc-cloud" classList={{ 'is-ok': cloudOk() }}>{cloudOk() ? 'クラウドに保存' : 'この端末に保存'}</span>
         </div>
+        <label class="cc-check-date" title="確認した日付（変更できます）">
+          <span>確認日</span>
+          <input type="date" value={checkDate()} onChange={(e) => setCheckDate(e.currentTarget.value)} />
+        </label>
         <HelpButton title="新カタログチェック表" items={HELP_CATALOG_CHECK} />
       </header>
 
@@ -224,6 +272,11 @@ const CatalogCheckPage: Component = () => {
                     <For each={visibleItems(product)} fallback={<p class="cc-empty is-small">{items(product).length ? 'この絞り込みに当てはまる成分はありません。' : 'この商品には成分が登録されていません。'}</p>}>
                       {(item) => <ItemRow product={product} item={item} />}
                     </For>
+                    <Show when={addingFor() === product.id} fallback={
+                      <button type="button" class="cc-add-toggle" onClick={() => setAddingFor(product.id)}>＋ 成分を追加（カタログで見つけた成分）</button>
+                    }>
+                      <AddItemForm product={product} onDone={() => setAddingFor(null)} />
+                    </Show>
                   </div>
                 </Show>
               </section>

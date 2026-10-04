@@ -100,3 +100,20 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .product-favorite-star{cursor:pointer;touch-action:manipulation}
 .product-favorite-star::before{display:none}
 .product-favorite-star:active{transform:scale(.9)}
+
+/* 商品ノート: リーフレットの入口（Ver2.1 は赤） */
+.product-note-leaflet-actions{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.product-note-leaflet-v21{padding:7px 16px;border:1px solid #b3263a;border-radius:999px;background:#c62f43;color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.04em;box-shadow:0 4px 12px rgba(198,47,67,.25)}
+.product-note-leaflet-v21:hover{background:#a92335}
+
+/* 成分を追加: 右上の「＋ 新規」と作成フォーム */
+.nutrient-picker-head-actions{display:inline-flex;align-items:center;gap:8px}
+.nutrient-picker-new{padding:6px 14px;border:1px solid #782f3d;border-radius:999px;background:#782f3d;color:#fff;font-size:.62rem;font-weight:800}
+.nutrient-new-form{display:grid;gap:12px;padding:0 26px 24px}
+.nutrient-new-form label{display:grid;gap:5px;color:#a57b32;font-size:.55rem;font-weight:800;letter-spacing:.12em}
+.nutrient-new-form input,.nutrient-new-form textarea{padding:9px 11px;border:1px solid rgba(120,47,61,.24);border-radius:8px;outline:0;background:#fffdf8;color:#342a24;font:inherit;font-size:.74rem;font-weight:400;letter-spacing:0;line-height:1.7;resize:vertical}
+.nutrient-new-form input:focus,.nutrient-new-form textarea:focus{border-color:#782f3d;box-shadow:0 0 0 3px rgba(120,47,61,.08)}
+.nutrient-new-form>div{display:flex;justify-content:flex-end;gap:8px}
+.nutrient-new-form>div button{padding:7px 14px;border:1px solid rgba(120,47,61,.24);border-radius:999px;color:#725f4d;font-size:.62rem;font-weight:700}
+.nutrient-new-form>div button.primary{border-color:#782f3d;background:#782f3d;color:#fff}
+.nutrient-new-form>div button:disabled{opacity:.4}

@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie'
 import { createSignal } from 'solid-js'
 import { productImageUrl } from '../../db/products'
 import type { Product } from '../../types'
-import type { LeafletImage } from './store'
+import { setDefaultImageResolver, type LeafletImage } from './store'
 
 // 写真ギャラリー
 // - アプリ同梱: src/assets/leaflet-photos/ に置いた画像（背景透過PNGなど）は自動で並ぶ
@@ -95,3 +95,5 @@ export function imageSrc(image: LeafletImage, product: Product): string {
   if (image.kind === 'upload') return uploadedPhotos().find((photo) => photo.id === image.id)?.dataUrl ?? ''
   return product.image ? productImageUrl(product.image) : ''
 }
+
+setDefaultImageResolver(defaultImageFor)

@@ -3,11 +3,12 @@ import { setState, state } from '../../store'
 import type { Product } from '../../types'
 import LeafletEditor from './LeafletEditor'
 import LeafletLayout from './LeafletLayout'
+import LeafletEditorV21 from './LeafletEditorV21'
 import { defaultImageFor } from './photos'
 import HelpButton, { HELP_LEAFLET_GALLERY } from '../../components/HelpButton'
 import {
   type Leaflet,
-  createLeaflet, deleteLeaflet, duplicateLeaflet, leaflets, leafletView, setLeafletView,
+  createLeaflet, deleteLeaflet, duplicateLeaflet, leaflets, leafletView, openLeafletEditor, setLeafletView,
 } from './store'
 import { categoryLabel, formatDate, LeafletVisual, OriginalSafeNote, originalNutrients, PhotoGallery, statusLabel, Toast } from './shared'
 import './leaflet.css'
@@ -16,6 +17,7 @@ import './leaflet-v3.css'
 import './leaflet-v5.css'
 import './leaflet-v6.css'
 import './leaflet-v7.css'
+import './leaflet-v8.css'
 
 // NAVIなしの全画面ページ。原本（商品ノート）とは別の書類ステートとして扱う。
 const LeafletPage: Component = () => {
@@ -42,6 +44,9 @@ const LeafletPage: Component = () => {
           <Switch>
             <Match when={leafletView().view === 'edit' && current()}>
               {(leaflet) => <LeafletEditor leaflet={leaflet()} product={p()} />}
+            </Match>
+            <Match when={leafletView().view === 'edit21' && current()}>
+              {(leaflet) => <LeafletEditorV21 leaflet={leaflet()} product={p()} />}
             </Match>
             <Match when={leafletView().view === 'layout' && current()}>
               {(leaflet) => <LeafletLayout leaflet={leaflet()} product={p()} />}
@@ -74,7 +79,8 @@ const LeafletGallery: Component<{ product: Product; onOpenOriginal: () => void }
 
   const duplicate = (id: string) => {
     const copyId = duplicateLeaflet(id)
-    if (copyId) setLeafletView({ view: 'edit', id: copyId })
+    const copy = leaflets.find((leaflet) => leaflet.id === copyId)
+    if (copy) openLeafletEditor(copy)
   }
 
   const remove = (leaflet: Leaflet) => {
@@ -130,7 +136,10 @@ const LeafletGallery: Component<{ product: Product; onOpenOriginal: () => void }
             {(leaflet) => (
               <article class="lf-leaflet-card">
                 <div class="lf-leaflet-card-head">
-                  <span class="lf-badge" classList={{ 'is-ready': leaflet.status === 'ready' }}>{statusLabel(leaflet)}</span>
+                  <span>
+                    <span class="lf-badge" classList={{ 'is-ready': leaflet.status === 'ready' }}>{statusLabel(leaflet)}</span>
+                    <Show when={leaflet.version === '2.1'}><span class="lf21-badge is-small">Ver2.1</span></Show>
+                  </span>
                   <button class="lf-icon-btn" onClick={() => remove(leaflet)} title="削除">×</button>
                 </div>
                 <h3>{leaflet.name}</h3>
@@ -141,7 +150,7 @@ const LeafletGallery: Component<{ product: Product; onOpenOriginal: () => void }
                   <dt>掲載</dt><dd>カード {leaflet.items.filter((item) => item.kind === 'card' && item.visible).length}枚 · Topic {leaflet.items.filter((item) => item.kind === 'topic').length}件</dd>
                 </dl>
                 <div class="lf-actions">
-                  <button class="lf-primary" onClick={() => setLeafletView({ view: 'edit', id: leaflet.id })}>編集</button>
+                  <button class="lf-primary" onClick={() => openLeafletEditor(leaflet)}>編集</button>
                   <button onClick={() => duplicate(leaflet.id)}>複製</button>
                   <button onClick={() => setLeafletView({ view: 'layout', id: leaflet.id })}>配布用レイアウト</button>
                 </div>

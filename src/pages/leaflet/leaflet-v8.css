@@ -1,0 +1,60 @@
+/* Leaflet v8 — Ver2.1 編集画面・主成分の複数選択・iPadでサークルへ運ぶ */
+
+/* ── Ver2.1 ──────────────────────────────────────────────────────── */
+.lf21-badge{padding:3px 10px;border-radius:999px;background:#c62f43;color:#fff;font-size:.52rem;font-weight:800;letter-spacing:.06em}
+.lf21-badge.is-small{margin-left:6px;padding:2px 8px;font-size:.46rem}
+.lf21-press{display:inline-flex;align-items:center;gap:4px;color:#8d7c68;font-size:.54rem;font-weight:700}
+.lf-topbar .lf21-press button{min-height:0;padding:4px 10px;font-size:.54rem}
+.lf-topbar .lf21-press button.is-active{border-color:var(--lf-wine);background:var(--lf-wine);color:#fff}
+.lf21-hero{margin-bottom:18px}
+.lf21-hero .lf21-kicker{width:min(420px,100%);padding:4px 8px;font-size:.55rem;letter-spacing:.18em}
+.lf21-photo{border:0;background:none;cursor:pointer}
+.lf21-photo-label{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);padding:3px 10px;border-radius:999px;background:rgba(58,43,34,.8);color:#fff;font-size:.48rem;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .15s}
+.lf21-photo:hover .lf21-photo-label{opacity:1}
+@media (hover:none){.lf21-photo-label{opacity:1}}
+.lf21-toolbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px;margin:0 0 14px;padding:12px 16px;border:1px solid var(--lf-line);border-radius:14px;background:rgba(255,253,245,.88)}
+.lf21-toolbar p{margin:0 0 3px;color:var(--lf-gold);font-size:.5rem;font-weight:800;letter-spacing:.2em}
+.lf21-toolbar h2{margin:0;color:#4a3a2f;font:600 .95rem "Yu Mincho",serif}
+.lf21-toolbar h2 small{margin-left:8px;color:#9b8a75;font:500 .56rem sans-serif}
+.lf21-toolbar>span{color:#9b8a75;font-size:.54rem}
+.lf21-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;align-items:stretch}
+.lf21 .lf21-card{display:flex;flex-direction:column;cursor:default}
+.lf21 .lf21-card .lf-copy-row{margin-top:auto;padding-top:8px}
+.lf21 .lf21-card.is-editing{grid-column:span 2}
+.lf21-card-actions{display:inline-flex;align-items:center;gap:6px}
+.lf21-visible{display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;border:1px solid rgba(120,47,61,.22);border-radius:999px;background:#fffdf8;color:var(--lf-wine);font-size:.5rem;font-weight:700;cursor:pointer}
+.lf21-visible input{width:16px;height:16px;margin:0;accent-color:var(--lf-wine);cursor:pointer}
+/* 非表示: 暗くして最後に回す */
+.lf21 .lf-card.is-hidden-card{opacity:1;background:#d9d3c8;filter:grayscale(.35) brightness(.88)}
+.lf21 .lf-card.is-hidden-card h3,.lf21 .lf-card.is-hidden-card p{opacity:.55}
+.lf21 .lf-handle.is-disabled{cursor:default;opacity:.5}
+.lf21 .is-pressing .lf-handle::before{animation-duration:var(--press-ms,.3s)}
+.lf21-edited{margin-top:6px;color:#a57b32;font-size:.48rem;font-weight:700}
+.lf21-editor .lf21-note{margin:0;color:#8d7c68;font-size:.5rem}
+@media (max-width:860px){.lf21 .lf21-card.is-editing{grid-column:1/-1}}
+
+/* 配布用レイアウト: Ver2.1 の header はワイド固定 */
+.lf21-fixed{padding:4px 12px;border-radius:999px;background:#f8eef0;color:var(--lf-wine);font-size:.54rem;font-weight:700}
+
+/* ── 主成分: 複数選択 ──────────────────────────────────────────── */
+.lf-circle-add{position:relative}
+.lf-pick-toggle{min-height:0;padding:5px 12px;border:1px solid rgba(120,47,61,.3);border-radius:999px;background:#fffdf8;color:var(--lf-wine);font-size:.58rem;font-weight:700}
+.lf-pick-panel{position:absolute;left:50%;top:calc(100% + 8px);z-index:30;width:min(360px,calc(100vw - 32px));transform:translateX(-50%);padding:12px;border:1px solid rgba(120,47,61,.2);border-radius:14px;background:#fffdf8;box-shadow:0 18px 44px rgba(63,44,24,.2);text-align:left}
+.lf-pick-list{display:grid;gap:2px;max-height:min(46dvh,320px);overflow-y:auto}
+.lf-pick-list label{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;color:#4a3a2f;font-size:.66rem;cursor:pointer}
+.lf-pick-list label:hover{background:#f8f0e0}
+.lf-pick-list label.is-disabled{opacity:.4;cursor:default}
+.lf-pick-list input{width:18px;height:18px;accent-color:var(--lf-wine)}
+.lf-pick-empty{margin:8px;color:#9b8a75;font-size:.6rem}
+.lf-pick-actions{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--lf-line)}
+.lf-pick-actions span{margin-right:auto;color:#8d7c68;font-size:.56rem}
+.lf-pick-actions button{min-height:0;padding:6px 14px;border:1px solid rgba(120,47,61,.24);border-radius:999px;color:#725f4d;font-size:.58rem;font-weight:700}
+.lf-pick-actions .is-primary{border-color:var(--lf-wine);background:var(--lf-wine);color:#fff}
+.lf-pick-actions .is-primary:disabled{opacity:.4}
+
+/* ── iPad: カードを長押しして主成分サークルへ運ぶ ─────────────────── */
+.lf-preview .lf-card.is-preview{-webkit-touch-callout:none}
+.lf-card.is-carrying{opacity:.45}
+.lf-carry{position:fixed;z-index:260;display:grid;gap:2px;padding:8px 14px;transform:translate(-50%,-130%);border-radius:14px;background:#3a2b22;color:#fff8ea;font:600 .66rem "Yu Mincho",serif;box-shadow:0 14px 30px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap}
+.lf-carry small{color:#d9c7aa;font:600 .46rem sans-serif}
+.lf-carry.is-over{background:var(--lf-wine)}

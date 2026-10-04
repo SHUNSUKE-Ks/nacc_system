@@ -6,7 +6,8 @@ import { navigate, setState, state } from '../../store'
 // リーフレット = 商品原本を参照して作る配布用の表示セット。
 // 原本（products / nutrients）には一切書き込まず、差分だけをここに保存する。
 
-export type LeafletCard = { kind: 'card'; key: string; nutrientId: string; visible: boolean }
+/** title / description はこのリーフレットだけの書き換え（原本の成分カードは変わらない） */
+export type LeafletCard = { kind: 'card'; key: string; nutrientId: string; visible: boolean; title?: string; description?: string }
 export type TopicIcon = 'none' | 'circle' | 'point' | 'check' | 'info' | 'caution' | 'hint' | 'star' | 'arrow'
 export type TopicUnderline = 'line' | 'double' | 'none'
 export type LeafletTopic = { kind: 'topic'; key: string; heading: string; body: string; icon?: TopicIcon; underline?: TopicUnderline }
@@ -59,8 +60,12 @@ export type LeafletImage =
   | { kind: 'asset'; name: string }
   | { kind: 'upload'; id: number }
 
+export type LeafletVersion = '2' | '2.1'
+
 export type Leaflet = {
   id: string
+  /** '2.1' は商品ノートの並びのまま1列で編集する版。未設定は従来の2カラム版 */
+  version?: LeafletVersion
   productId: string
   name: string
   /** header の小さめタイトル（空なら商品名） */
@@ -89,6 +94,7 @@ export type Leaflet = {
 export type LeafletView =
   | { view: 'gallery' }
   | { view: 'edit'; id: string }
+  | { view: 'edit21'; id: string }
   | { view: 'layout'; id: string }
 
 export const MAX_CIRCLES = 4
@@ -194,6 +200,43 @@ export function createLeaflet(product: Product, nutrientIds: string[], image: Le
   ])
   persist()
   return id
+}
+
+/** Ver2.1: 原本のカードを全部入れた状態で作る（非表示はチェックで外す）。header はワイド固定 */
+export function createLeafletV21(product: Product, nutrientIds: string[], image: LeafletImage = { kind: 'product' }): string {
+  const id = createLeaflet(product, nutrientIds, image)
+  setLeaflets((leaflet) => leaflet.id === id, {
+    version: '2.1',
+    headerStyle: 'wide',
+    name: `${product.name} リーフレット Ver2.1`,
+    items: nutrientIds.map((nutrientId) => ({ kind: 'card', key: newKey('c'), nutrientId, visible: true })),
+  })
+  persist()
+  return id
+}
+
+/** 編集画面をリーフレットの版に合わせて開く */
+export function openLeafletEditor(leaflet: Leaflet) {
+  setLeafletView(leaflet.version === '2.1' ? { view: 'edit21', id: leaflet.id } : { view: 'edit', id: leaflet.id })
+}
+
+/** 商品ノートの赤いボタン: その商品の Ver2.1 リーフレットを作って、すぐ編集画面へ */
+export function openLeafletV21(productId: string) {
+  const product = state.products.find((item) => item.id === productId)
+  if (!product) return
+  const nutrientIds = state.nutrients
+    .filter((nutrient) => product.nutrientIds.includes(nutrient.id) || nutrient.productIds.includes(product.id))
+    .map((nutrient) => nutrient.id)
+  const id = createLeafletV21(product, nutrientIds, defaultImage(product))
+  setState({ selectedProductId: productId })
+  setLeafletView({ view: 'edit21', id })
+  navigate('leaflet')
+}
+
+/** photos.ts の defaultImageFor を後から差し込む（循環 import を避ける） */
+let defaultImage: (product: Product) => LeafletImage = () => ({ kind: 'product' })
+export function setDefaultImageResolver(resolver: (product: Product) => LeafletImage) {
+  defaultImage = resolver
 }
 
 /** 既存リーフレットの内容を引き継ぐが、基準は同じ商品原本のまま */

@@ -44,6 +44,25 @@ export type AppState = {
 
 const FONT_SIZE_PX: Record<FontSize, number> = { s: 13, m: 16, l: 19, xl: 22 }
 
+// 画面から新しく作った成分カード。Firestore が使えない状態でも消えないよう端末にも保存する
+const CUSTOM_NUTRIENTS_KEY = 'nacc-custom-nutrients'
+
+function loadCustomNutrients(): Nutrient[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_NUTRIENTS_KEY)
+    if (!raw) return []
+    return (JSON.parse(raw) as Nutrient[]).map((n) => ({ ...n, createdAt: n.createdAt ? new Date(n.createdAt) : undefined }))
+  } catch {
+    return []
+  }
+}
+
+/** 一覧に、まだ入っていない自作カードを足す */
+function withCustomNutrients(list: Nutrient[]): Nutrient[] {
+  const ids = new Set(list.map((n) => n.id))
+  return [...list, ...loadCustomNutrients().filter((n) => !ids.has(n.id))]
+}
+
 function initDarkMode(): boolean {
   const saved = localStorage.getItem('nacc-dark-mode')
   const isDark = saved === 'true'
@@ -121,7 +140,7 @@ const [state, setState] = createStore<AppState>({
   galleryPanelOpen: false,
   blogFilterTags: [],
   products: PRODUCTS,
-  nutrients: NUTRIENTS,
+  nutrients: withCustomNutrients(NUTRIENTS),
   symptoms: SYMPTOMS,
   memos: [],
   blogs: INITIAL_BLOGS,
@@ -222,12 +241,12 @@ export async function initFirestore(): Promise<void> {
     }
     if (fsNutrients.length === 0) {
       await seedNutrientsFs(NUTRIENTS)
-      setState({ nutrients: NUTRIENTS })
+      setState({ nutrients: withCustomNutrients(NUTRIENTS) })
     } else {
       const remoteIds = new Set(fsNutrients.map((nutrient) => nutrient.id))
       const missingBundledNutrients = NUTRIENTS.filter((nutrient) => !remoteIds.has(nutrient.id))
       if (missingBundledNutrients.length > 0) await seedNutrientsFs(missingBundledNutrients)
-      setState({ nutrients: [...fsNutrients, ...missingBundledNutrients] })
+      setState({ nutrients: withCustomNutrients([...fsNutrients, ...missingBundledNutrients]) })
     }
 
     setState({ memos, blogs, trashBlogs, notebooks, dbStatus: 'connected' })
@@ -242,6 +261,28 @@ export async function initFirestore(): Promise<void> {
 export function updateProduct(id: string, patch: Partial<Product>): void {
   setState('products', (prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
   updateProductFs(id, patch).catch(console.warn)
+}
+
+/** 新しい成分カードを作り、商品に結び付ける。作ったカードのIDを返す */
+export function addCustomNutrient(data: { name: string; description: string; productId?: string }): string {
+  const id = `NX-${Date.now().toString(36)}`
+  const nutrient: Nutrient = {
+    id,
+    name: data.name,
+    description: data.description,
+    productIds: data.productId ? [data.productId] : [],
+    memo: '画面から追加',
+    createdAt: new Date(),
+  }
+  setState('nutrients', (prev) => [...prev, nutrient])
+  try {
+    const saved = loadCustomNutrients()
+    localStorage.setItem(CUSTOM_NUTRIENTS_KEY, JSON.stringify([...saved, nutrient]))
+  } catch (e) {
+    console.warn('[nutrient] local save failed', e)
+  }
+  seedNutrientsFs([nutrient]).catch(console.warn)
+  return id
 }
 
 export function updateNutrient(id: string, patch: Partial<Nutrient>): void {

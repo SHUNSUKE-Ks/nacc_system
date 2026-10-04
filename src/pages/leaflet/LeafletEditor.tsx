@@ -6,7 +6,7 @@ import {
   newKey, savedAt, setLeafletItems, setLeafletView, updateLeaflet,
 } from './store'
 import HelpButton, { HELP_LEAFLET_EDITOR } from '../../components/HelpButton'
-import { categoryLabel, CopyButton, LeafletVisual, nutrientById, OriginalSafeNote, originalNutrients, SaveButton, showToast } from './shared'
+import { cardDescription, cardTitle, categoryLabel, CopyButton, LeafletVisual, nutrientById, OriginalSafeNote, originalNutrients, SaveButton, showToast } from './shared'
 
 type Col = 'left' | 'right'
 type DragSource = { col: Col; key: string; item: LeafletItem }
@@ -535,10 +535,10 @@ const LeafletEditor: Component<{ leaflet: Leaflet; product: Product }> = (props)
             </button>
           </Show>
         </div>
-        <h3>{nutrient()?.name ?? '（削除された成分）'}<CopyButton text={nutrient()?.name ?? ''} label="タイトル" /></h3>
-        <p>{nutrient()?.description || '説明は未登録です。'}</p>
-        <Show when={nutrient()?.description}>
-          <div class="lf-copy-row lf-app-only"><CopyButton text={nutrient()?.description ?? ''} label="説明" /><span>説明をコピー</span></div>
+        <h3>{cardTitle(cardProps.card)}<CopyButton text={cardTitle(cardProps.card)} label="タイトル" /></h3>
+        <p>{cardDescription(cardProps.card) || '説明は未登録です。'}</p>
+        <Show when={cardDescription(cardProps.card)}>
+          <div class="lf-copy-row lf-app-only"><CopyButton text={cardDescription(cardProps.card)} label="説明" /><span>説明をコピー</span></div>
         </Show>
       </>
     )

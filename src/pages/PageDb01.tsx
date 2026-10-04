@@ -1,7 +1,8 @@
 import { type Component, createMemo, createSignal, For, Show } from 'solid-js'
 import type { Product } from '../types'
 import { productImageUrl } from '../db/products'
-import { state, setState, updateProduct, updateNutrient, navigate } from '../store'
+import { state, setState, updateProduct, updateNutrient, navigate, addCustomNutrient } from '../store'
+import { openLeafletV21 } from './leaflet/store'
 import { favoriteIds, isFavorite, toggleFavorite } from '../utils/favorites'
 import HelpButton, { HELP_PRODUCT_GALLERY } from '../components/HelpButton'
 
@@ -529,6 +530,24 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
   const [draftDescription, setDraftDescription] = createSignal('')
   const [addNutrientOpen, setAddNutrientOpen] = createSignal(false)
   const [nutrientSearch, setNutrientSearch] = createSignal('')
+  const [creating, setCreating] = createSignal(false)
+  const [newName, setNewName] = createSignal('')
+  const [newDescription, setNewDescription] = createSignal('')
+
+  const closeAddNutrient = () => {
+    setAddNutrientOpen(false)
+    setCreating(false)
+    setNewName('')
+    setNewDescription('')
+  }
+
+  const createNutrient = () => {
+    const product = selected()
+    const name = newName().trim()
+    if (!product || !name) return
+    addCustomNutrient({ name, description: newDescription().trim(), productId: product.id })
+    closeAddNutrient()
+  }
   const selected = () => props.products.find((product) => product.id === state.selectedProductId) ?? null
 
   const productNutrients = createMemo(() => {
@@ -598,9 +617,14 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
                 <button class="product-note-back" onClick={() => setState({ dbView: 'gallery', selectedProductId: null })}>
                   ← 商品Gallery
                 </button>
-                <button class="product-note-leaflet" onClick={() => navigate('leaflet')}>
-                  リーフレット（配布用）を作る →
-                </button>
+                <span class="product-note-leaflet-actions">
+                  <button class="product-note-leaflet" onClick={() => navigate('leaflet')}>
+                    リーフレット（配布用）を作る →
+                  </button>
+                  <button class="product-note-leaflet-v21" onClick={() => openLeafletV21(product().id)} title="この商品ノートの並びのまま、リーフレットの編集画面を開きます">
+                    リーフレット Ver2.1
+                  </button>
+                </span>
               </div>
 
               <header class="product-note-hero">
@@ -677,12 +701,32 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
               </section>
 
               <Show when={addNutrientOpen()}>
-                <div class="nutrient-picker-backdrop" onClick={() => setAddNutrientOpen(false)}>
+                <div class="nutrient-picker-backdrop" onClick={closeAddNutrient}>
                   <section class="nutrient-picker" role="dialog" aria-modal="true" aria-label="商品へ成分を追加" onClick={(event) => event.stopPropagation()}>
                     <header>
-                      <div><small>SHARED INGREDIENT DATABASE</small><h2>成分を追加</h2></div>
-                      <button onClick={() => setAddNutrientOpen(false)} aria-label="閉じる">×</button>
+                      <div><small>SHARED INGREDIENT DATABASE</small><h2>{creating() ? '新しい成分カード' : '成分を追加'}</h2></div>
+                      <span class="nutrient-picker-head-actions">
+                        <Show when={!creating()}>
+                          <button class="nutrient-picker-new" onClick={() => setCreating(true)}>＋ 新規</button>
+                        </Show>
+                        <button onClick={closeAddNutrient} aria-label="閉じる">×</button>
+                      </span>
                     </header>
+                    <Show when={creating()}>
+                      <div class="nutrient-new-form">
+                        <label>成分名
+                          <input ref={(el) => queueMicrotask(() => el.focus())} value={newName()} onInput={(e) => setNewName(e.currentTarget.value)} placeholder="例: プラセンタ" />
+                        </label>
+                        <label>説明
+                          <textarea rows="5" value={newDescription()} onInput={(e) => setNewDescription(e.currentTarget.value)} placeholder="カードに載せる説明文" />
+                        </label>
+                        <div>
+                          <button onClick={() => setCreating(false)}>一覧に戻る</button>
+                          <button class="primary" onClick={createNutrient} disabled={!newName().trim()}>作成してこの商品に追加</button>
+                        </div>
+                      </div>
+                    </Show>
+                    <Show when={!creating()}>
                     <label class="nutrient-picker-search"><span>⌕</span><input autofocus value={nutrientSearch()} onInput={(event) => setNutrientSearch(event.currentTarget.value)} placeholder="成分名・説明を検索" /></label>
                     <div class="nutrient-picker-list">
                       <For each={availableNutrients()} fallback={<p class="nutrient-picker-empty">追加できる成分がありません。</p>}>
@@ -694,6 +738,7 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
                         )}
                       </For>
                     </div>
+                    </Show>
                   </section>
                 </div>
               </Show>

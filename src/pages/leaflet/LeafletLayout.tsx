@@ -1,10 +1,11 @@
+import { Portal } from 'solid-js/web'
 import { type Component, createEffect, createMemo, createSignal, For, Match, on, onCleanup, Show, Switch } from 'solid-js'
 import type { Product } from '../../types'
 import {
   type GalleryLook, type ImageAdjust, type HeaderRule, type HeaderStyle, type PageCorner, type PageMark, type TopicUnderline, type Leaflet, type LeafletCard, type LeafletSection, type LeafletTopic, type SectionType,
-  MAX_CIRCLES, imageKeyOf, newSection, setLeafletItems, setLeafletMarks, setLeafletSections, setLeafletView, updateLeaflet,
+  MAX_CIRCLES, imageKeyOf, newSection, openLeafletEditor, setLeafletItems, setLeafletMarks, setLeafletSections, setLeafletView, updateLeaflet,
 } from './store'
-import { CopyButton, formatDate, LeafletVisual, nutrientById, OriginalSafeNote, PhotoGallery, SaveButton } from './shared'
+import { cardDescription, cardTitle, CopyButton, formatDate, LeafletVisual, OriginalSafeNote, PhotoGallery, SaveButton } from './shared'
 import { IconPicker, TopicIconSvg } from './icons'
 import HelpButton, { HELP_LEAFLET_LAYOUT } from '../../components/HelpButton'
 import { applyMark, MarkedText, MarkerPen, type PenAction } from './marks'
@@ -78,6 +79,93 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
   const [pickerOpen, setPickerOpen] = createSignal(false)
   const [insertAt, setInsertAt] = createSignal<number | null>(null)
   const [dropSectionId, setDropSectionId] = createSignal<string | null>(null)
+  /** iPad用: 長押しで持ち上げたカード（主成分サークルへ運ぶ） */
+  const [cardDrag, setCardDrag] = createSignal<{ key: string; label: string; x: number; y: number } | null>(null)
+  let cardPress: { key: string; label: string; startX: number; startY: number; x: number; y: number; timer: number } | null = null
+  let cardTouchEl: HTMLElement | null = null
+  let carryFrame = 0
+
+  /** 運んでいる間、画面の上下の端に近づいたらページをスクロール（離れたサークルへ届くように） */
+  function carryScroll() {
+    carryFrame = 0
+    const d = cardDrag()
+    if (!d) return
+    const scroller = document.querySelector('.lf-page') as HTMLElement | null
+    if (!scroller) return
+    const top = 90
+    const bottom = window.innerHeight - 70
+    const speed = d.y < top ? -(top - d.y) / 3 : d.y > bottom ? (d.y - bottom) / 3 : 0
+    if (!speed) return
+    scroller.scrollTop += speed
+    updateCarryTarget(d.x, d.y)
+    carryFrame = requestAnimationFrame(carryScroll)
+  }
+
+  function updateCarryTarget(x: number, y: number) {
+    const zone = document.elementFromPoint(x, y)?.closest('[data-circles-id]') as HTMLElement | null
+    setDropSectionId(zone?.dataset.circlesId ?? null)
+  }
+
+  function onCardTouchStart(event: TouchEvent, card: LeafletCard) {
+    if (asText() || cardDrag() || cardPress || event.touches.length !== 1) return
+    if ((event.target as HTMLElement).closest('button, input, textarea, select, label')) return
+    const touch = event.touches[0]
+    cardTouchEl = event.currentTarget as HTMLElement
+    const press = { key: card.key, label: cardTitle(card), startX: touch.clientX, startY: touch.clientY, x: touch.clientX, y: touch.clientY, timer: 0 }
+    press.timer = window.setTimeout(() => {
+      setCardDrag({ key: press.key, label: press.label, x: press.x, y: press.y })
+      cardPress = null
+    }, 400)
+    cardPress = press
+    cardTouchEl.addEventListener('touchmove', onCardTouchMove, { passive: false })
+    cardTouchEl.addEventListener('touchend', onCardTouchEnd)
+    cardTouchEl.addEventListener('touchcancel', endCardDrag)
+  }
+
+  function onCardTouchMove(event: TouchEvent) {
+    const touch = event.touches[0]
+    if (!touch) return
+    if (cardPress) {
+      cardPress.x = touch.clientX
+      cardPress.y = touch.clientY
+      // 長押しの前に動いたらスクロール
+      if (Math.hypot(touch.clientX - cardPress.startX, touch.clientY - cardPress.startY) > 8) endCardDrag()
+      return
+    }
+    const d = cardDrag()
+    if (!d) return
+    if (event.cancelable) event.preventDefault()
+    setCardDrag({ ...d, x: touch.clientX, y: touch.clientY })
+    updateCarryTarget(touch.clientX, touch.clientY)
+    if (!carryFrame) carryFrame = requestAnimationFrame(carryScroll)
+  }
+
+  function onCardTouchEnd(event: TouchEvent) {
+    const d = cardDrag()
+    const sectionId = dropSectionId()
+    if (d && event.cancelable) event.preventDefault()
+    if (d && sectionId) {
+      const section = sections().find((item) => item.id === sectionId)
+      if (section) addToCircles(section, d.key)
+    }
+    endCardDrag()
+  }
+
+  function endCardDrag() {
+    cancelAnimationFrame(carryFrame)
+    carryFrame = 0
+    if (cardPress) window.clearTimeout(cardPress.timer)
+    cardPress = null
+    setCardDrag(null)
+    setDropSectionId(null)
+    if (cardTouchEl) {
+      cardTouchEl.removeEventListener('touchmove', onCardTouchMove)
+      cardTouchEl.removeEventListener('touchend', onCardTouchEnd)
+      cardTouchEl.removeEventListener('touchcancel', endCardDrag)
+      cardTouchEl = null
+    }
+  }
+  onCleanup(endCardDrag)
 
   const sections = () => props.leaflet.sections
   const visibleItems = () => props.leaflet.items.filter((item) => item.kind === 'topic' || item.visible)
@@ -290,23 +378,23 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
             {(item) => (
               <Show when={item.kind === 'card' ? (item as LeafletCard) : null} fallback={<TopicItem topic={item as LeafletTopic} />}>
                 {(card) => {
-                  const nutrient = () => nutrientById(card().nutrientId)
                   return (
                     <article
                       class="lf-card is-preview"
-                      classList={{ 'is-main': sec.section.look === 'main' }}
                       draggable={!asText()}
                       onDragStart={(e) => { e.dataTransfer?.setData(CARD_MIME, card().key); e.dataTransfer!.effectAllowed = 'copy' }}
+                      onTouchStart={(e) => onCardTouchStart(e, card())}
+                      classList={{ 'is-main': sec.section.look === 'main', 'is-carrying': cardDrag()?.key === card().key }}
                     >
                       <div class="lf-card-top">
                         <span class="lf-number">{pad(cardNumber().get(card().key))}</span>
                         <Show when={sec.section.look === 'main'}><span class="lf-main-tag">主要成分</span></Show>
                         <Show when={!asText()}><MoveButtons itemKey={card().key} /></Show>
                       </div>
-                      <h3>{nutrient()?.name}<CopyButton text={nutrient()?.name ?? ''} label="タイトル" /></h3>
-                      <MarkedText text={nutrient()?.description ?? ''} marks={marksOf(`card:${card().key}:desc`)} targetId={`card:${card().key}:desc`} />
-                      <Show when={nutrient()?.description}>
-                        <div class="lf-copy-row lf-app-only"><CopyButton text={nutrient()?.description ?? ''} label="説明" /><span>説明をコピー</span></div>
+                      <h3>{cardTitle(card())}<CopyButton text={cardTitle(card())} label="タイトル" /></h3>
+                      <MarkedText text={cardDescription(card())} marks={marksOf(`card:${card().key}:desc`)} targetId={`card:${card().key}:desc`} />
+                      <Show when={cardDescription(card())}>
+                        <div class="lf-copy-row lf-app-only"><CopyButton text={cardDescription(card())} label="説明" /><span>説明をコピー</span></div>
                       </Show>
                     </article>
                   )
@@ -322,7 +410,18 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
   const CirclesSection: Component<{ section: LeafletSection }> = (sec) => {
     const members = () => sec.section.cardKeys.map(cardByKey).filter((card): card is LeafletCard => !!card)
     const addable = () => cards().filter((card) => !sec.section.cardKeys.includes(card.key))
-    const nameOf = (card: LeafletCard) => sec.section.names[card.key] || nutrientById(card.nutrientId)?.name || ''
+    const nameOf = (card: LeafletCard) => sec.section.names[card.key] || cardTitle(card)
+    // 複数選択: チェックを入れてまとめて追加（空き枠の数まで）
+    const [pickOpen, setPickOpen] = createSignal(false)
+    const [picked, setPicked] = createSignal<string[]>([])
+    const remaining = () => MAX_CIRCLES - members().length
+    const togglePick = (key: string) => setPicked((prev) => prev.includes(key) ? prev.filter((item) => item !== key) : prev.length < remaining() ? [...prev, key] : prev)
+    const addPicked = () => {
+      const keys = picked().filter((key) => !sec.section.cardKeys.includes(key)).slice(0, remaining())
+      if (keys.length) patchSection(sec.section.id, { cardKeys: [...sec.section.cardKeys, ...keys] })
+      setPicked([])
+      setPickOpen(false)
+    }
     return (
       <div class="lf-circles-wrap">
         <Show when={!clean() || members().length}>
@@ -339,6 +438,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
         <div
           class="lf-circles"
           data-count={members().length}
+          data-circles-id={sec.section.id}
           classList={{ 'is-drop': dropSectionId() === sec.section.id }}
           onDragOver={(e) => {
             if (!e.dataTransfer?.types.includes(CARD_MIME) || members().length >= MAX_CIRCLES) return
@@ -373,7 +473,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
                   />
                 </Show>
                 <span class="lf-circle-tools lf-app-only">
-                  <CopyButton text={nutrientById(card.nutrientId)?.name ?? ''} label="タイトル" />
+                  <CopyButton text={cardTitle(card)} label="タイトル" />
                   <button type="button" onClick={() => removeFromCircles(sec.section, card.key)} title="サークルから外す">×</button>
                 </span>
               </div>
@@ -382,12 +482,35 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
           </div>
           <Show when={members().length < MAX_CIRCLES}>
             <div class="lf-circle-add lf-app-only">
-              <span>カードをここへドロップ　または</span>
-              <select value="" onChange={(e) => { addToCircles(sec.section, e.currentTarget.value); e.currentTarget.value = '' }}>
-                <option value="">＋ 成分を選ぶ</option>
-                <For each={addable()}>{(card) => <option value={card.key}>{nutrientById(card.nutrientId)?.name}</option>}</For>
-              </select>
-              <small>あと{MAX_CIRCLES - members().length}つ（最大{MAX_CIRCLES}）</small>
+              <span>カードを長押しでここへ運ぶ　または</span>
+              <button type="button" class="lf-pick-toggle" onClick={() => { setPicked([]); setPickOpen(!pickOpen()) }} aria-expanded={pickOpen()}>
+                ＋ 成分を選ぶ（複数可）
+              </button>
+              <small>あと{remaining()}つ（最大{MAX_CIRCLES}）</small>
+              <Show when={pickOpen()}>
+                <div class="lf-pick-panel" role="dialog" aria-label="主成分を選ぶ">
+                  <div class="lf-pick-list">
+                    <For each={addable()} fallback={<p class="lf-pick-empty">入れられるカードがありません</p>}>
+                      {(card) => (
+                        <label classList={{ 'is-disabled': !picked().includes(card.key) && picked().length >= remaining() }}>
+                          <input
+                            type="checkbox"
+                            checked={picked().includes(card.key)}
+                            disabled={!picked().includes(card.key) && picked().length >= remaining()}
+                            onChange={() => togglePick(card.key)}
+                          />
+                          {cardTitle(card)}
+                        </label>
+                      )}
+                    </For>
+                  </div>
+                  <div class="lf-pick-actions">
+                    <span>{picked().length} / {remaining()} 選択</span>
+                    <button type="button" onClick={() => setPickOpen(false)}>閉じる</button>
+                    <button type="button" class="is-primary" onClick={addPicked} disabled={!picked().length}>追加する</button>
+                  </div>
+                </div>
+              </Show>
             </div>
           </Show>
         </div>
@@ -536,7 +659,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
         <button class="lf-back" onClick={() => setLeafletView({ view: 'gallery' })}>← リーフレットGallery</button>
         <OriginalSafeNote />
         <HelpButton title="配布用レイアウト" items={HELP_LEAFLET_LAYOUT} />
-        <button onClick={() => setLeafletView({ view: 'edit', id: props.leaflet.id })}>2カラム編集（掲載カード）</button>
+        <button onClick={() => openLeafletEditor(props.leaflet)}>{props.leaflet.version === '2.1' ? 'カード編集（Ver2.1）' : '2カラム編集（掲載カード）'}</button>
         <button
           classList={{ 'is-on': penOn() }}
           onClick={() => setPenOn(!penOn())}
@@ -564,7 +687,10 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
       <div class="lf-sheet" ref={sheetRef} classList={{ 'is-a4': showPages() }} style={showPages() ? { width: `${PAGE_W_MM}mm` } : undefined}>
         <div class="lf-header-styles lf-app-only" role="radiogroup" aria-label="headerのデザイン">
           <span>HEADER</span>
-          <For each={HEADER_STYLES}>
+          <Show when={props.leaflet.version === '2.1'}>
+            <span class="lf21-fixed">ワイド（Ver2.1は固定）</span>
+          </Show>
+          <For each={props.leaflet.version === '2.1' ? [] : HEADER_STYLES}>
             {(style) => (
               <button
                 type="button"
@@ -691,6 +817,17 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product }> = (props)
       </div>
 
       <MarkerPen enabled={penOn() && !clean()} onApply={applyPen} />
+
+      <Show when={cardDrag()}>
+        {(d) => (
+          <Portal>
+            <div class="lf-carry" classList={{ 'is-over': !!dropSectionId() }} style={{ left: `${d().x}px`, top: `${d().y}px` }}>
+              ◎ {d().label}
+              <small>{dropSectionId() ? 'ここで離すと主成分に追加' : '主成分サークルの上で離してください'}</small>
+            </div>
+          </Portal>
+        )}
+      </Show>
 
       <Show when={pickerOpen()}>
         <div class="lf-modal-backdrop" onClick={() => setPickerOpen(false)}>

@@ -13,6 +13,12 @@ export function originalNutrients(product: Product): Nutrient[] {
 
 export const nutrientById = (id: string) => state.nutrients.find((nutrient) => nutrient.id === id)
 
+/** カードのタイトル・説明。リーフレットで書き換えていればそちらを使う */
+export const cardTitle = (card: { nutrientId: string; title?: string }) =>
+  card.title || nutrientById(card.nutrientId)?.name || '（削除された成分）'
+export const cardDescription = (card: { nutrientId: string; description?: string }) =>
+  card.description ?? nutrientById(card.nutrientId)?.description ?? ''
+
 export const categoryLabel = (product: Product) => (product.category === 'cosmetic' ? 'COSMETIC' : 'SUPPLEMENT')
 
 export const formatDate = (iso: string) => {

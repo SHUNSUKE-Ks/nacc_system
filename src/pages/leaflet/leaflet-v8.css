@@ -63,7 +63,7 @@
 .lf-page:has(> .lf-editor.lf21){overflow-y:auto}
 .lf-editor.lf21{display:block;height:auto;padding-bottom:64px}
 .lf-editor.lf21>.lf-topbar{position:sticky;top:0;margin-bottom:18px}
-.lf-editor.lf21>.lf-hero{max-height:none;overflow:visible}
+.lf-editor.lf21>.lf-hero{max-height:none;overflow:hidden}
 
 /* 主成分サークル: 丸の中の説明（DICT） */
 .lf-circle-desc{display:block;width:84%;margin:4px 0 0;color:#5a4a3e;font-size:clamp(.5rem,calc(var(--size) * .046),.72rem);line-height:1.55;text-align:center;white-space:pre-line;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5}
@@ -71,3 +71,19 @@
 .lf-circle-desc-input:focus{border-style:solid;border-color:var(--lf-wine);background:rgba(255,255,255,.7)}
 .lf-circles-row .lf-circle-name{font-size:clamp(.68rem,calc(var(--size) * .068),1.15rem)}
 .lf-circles-row .lf-circle-name-input{min-height:0}
+
+/* ── iPad・タッチ端末: 指で押しやすい大きさ（html.is-touch は index.tsx で付ける） ── */
+html.is-touch .lf21 .lf-handle{min-width:46px;height:38px;font-size:.62rem}
+html.is-touch .lf21 .lf-chip{min-height:36px;padding:0 14px}
+html.is-touch .lf21-visible{min-height:36px;padding:0 12px 0 9px;gap:6px}
+html.is-touch .lf21-visible input{width:22px;height:22px}
+html.is-touch .lf21 .lf-copy{width:36px;height:36px;opacity:.85}
+html.is-touch .lf21 .lf-copy svg{width:15px;height:15px}
+html.is-touch .lf-topbar button,html.is-touch .lf-topbar .lf-back{min-height:38px}
+html.is-touch .lf-topbar .help-button-trigger{width:38px;height:38px}
+html.is-touch .lf-topbar .lf21-press button{min-height:36px;padding:0 13px}
+html.is-touch .lf21-editor button{min-height:38px;padding:0 16px}
+html.is-touch .lf-move button{width:38px;height:38px}
+html.is-touch .lf-pick-toggle,html.is-touch .lf-pick-actions button{min-height:38px}
+html.is-touch .lf-pick-list label{min-height:44px}
+html.is-touch .lf-section-move button{width:36px;height:36px}

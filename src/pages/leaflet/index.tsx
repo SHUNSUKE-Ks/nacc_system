@@ -19,6 +19,11 @@ import './leaflet-v6.css'
 import './leaflet-v7.css'
 import './leaflet-v8.css'
 
+// タッチ端末（iPadなど）では、ボタン類を指で押しやすい大きさにする
+if (typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0)) {
+  document.documentElement.classList.add('is-touch')
+}
+
 // NAVIなしの全画面ページ。原本（商品ノート）とは別の書類ステートとして扱う。
 const LeafletPage: Component = () => {
   const product = () => state.products.find((item) => item.id === state.selectedProductId) ?? null

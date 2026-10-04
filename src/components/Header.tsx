@@ -4,6 +4,7 @@ import type { Page } from '../types'
 import { exportDetailViewPdf } from '../utils/exportDetailPdf'
 import { openLeafletGallery } from '../pages/leaflet/store'
 import QuickMemo from './QuickMemo'
+import CloudAccount from './CloudAccount'
 
 const PAGE_LABELS: Record<Page, string> = {
   memo:     '📝 メモ',
@@ -141,6 +142,7 @@ const Header: Component = () => {
 
       {/* Right: search (desktop) + gallery + settings */}
       <div class="ml-auto flex items-center gap-1.5">
+        <CloudAccount />
         <QuickMemo />
         <button
           class="app-header-leaflet flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-nacc-border hover:bg-[#f8eef0] active:scale-95 text-[#782f3d] text-xs font-bold transition-all"

@@ -1,7 +1,8 @@
-import { createSignal } from 'solid-js'
+import { createEffect, createRoot, createSignal, on } from 'solid-js'
 import { createStore, reconcile } from 'solid-js/store'
 import type { Product } from '../../types'
 import { navigate, setState, state } from '../../store'
+import { deleteLeafletFs, fetchLeafletsFs, saveLeafletFs } from '../../db/firebase'
 
 // リーフレット = 商品原本を参照して作る配布用の表示セット。
 // 原本（products / nutrients）には一切書き込まず、差分だけをここに保存する。
@@ -214,7 +215,76 @@ function persist() {
   } catch (e) {
     console.warn('[leaflet] save failed', e)
   }
+  queueCloudSave()
 }
+
+// ── クラウド（Firestore）との同期 ───────────────────────────────────────────
+// 端末への保存は今まで通り。Firestore に読み書きできるときだけ、変わったリーフレットを送る。
+let cloudReady = false
+let cloudTimer = 0
+const syncedAt = new Map<string, string>()
+const [cloudState, setCloudState] = createSignal<'off' | 'syncing' | 'synced' | 'error'>('off')
+export { cloudState }
+
+function toDoc(leaflet: Leaflet) {
+  return { id: leaflet.id, productId: leaflet.productId, updatedAt: leaflet.updatedAt, json: JSON.stringify(leaflet) }
+}
+
+function queueCloudSave() {
+  if (!cloudReady) return
+  window.clearTimeout(cloudTimer)
+  cloudTimer = window.setTimeout(flushCloud, 1200)
+}
+
+async function flushCloud() {
+  const changed = leaflets.filter((leaflet) => syncedAt.get(leaflet.id) !== leaflet.updatedAt)
+  if (!changed.length) return
+  setCloudState('syncing')
+  try {
+    for (const leaflet of changed) {
+      const snapshot = JSON.parse(JSON.stringify(leaflet)) as Leaflet
+      await saveLeafletFs(toDoc(snapshot))
+      syncedAt.set(snapshot.id, snapshot.updatedAt)
+    }
+    setCloudState('synced')
+  } catch (e) {
+    console.warn('[leaflet] cloud save failed', e)
+    setCloudState('error')
+  }
+}
+
+/** Firestore のリーフレットと端末のリーフレットを、新しい方に合わせて1つにする */
+export async function syncLeafletsWithCloud() {
+  setCloudState('syncing')
+  try {
+    const remote = await fetchLeafletsFs()
+    const merged = new Map(leaflets.map((leaflet) => [leaflet.id, JSON.parse(JSON.stringify(leaflet)) as Leaflet]))
+    for (const item of remote) {
+      let parsed: Leaflet
+      try { parsed = normalize(JSON.parse(item.json) as Partial<Leaflet>) } catch { continue }
+      const local = merged.get(parsed.id)
+      if (!local || parsed.updatedAt > local.updatedAt) merged.set(parsed.id, parsed)
+      syncedAt.set(parsed.id, parsed.updatedAt)
+    }
+    setLeaflets(reconcile([...merged.values()], { key: 'id' }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(leaflets))
+    cloudReady = true
+    await flushCloud()
+    setCloudState('synced')
+  } catch (e) {
+    console.warn('[leaflet] cloud sync failed', e)
+    cloudReady = false
+    setCloudState('error')
+  }
+}
+
+// Firestore につながったら同期を始める（ログインして権限が通ったとき）
+createRoot(() => {
+  createEffect(on(() => state.dbStatus, (status) => {
+    if (status === 'connected') void syncLeafletsWithCloud()
+    else if (status === 'error') { cloudReady = false; setCloudState('off') }
+  }))
+})
 
 /** 掲載内容は空で始め、左（原本）から右へ運んで作る */
 export function createLeaflet(product: Product, nutrientIds: string[], image: LeafletImage = { kind: 'product' }): string {
@@ -337,6 +407,8 @@ export function setLeafletMarks(id: string, targetId: string, marks: TextMark[])
 export function deleteLeaflet(id: string) {
   setLeaflets((prev) => prev.filter((leaflet) => leaflet.id !== id))
   persist()
+  if (cloudReady) deleteLeafletFs(id).catch((e) => console.warn('[leaflet] cloud delete failed', e))
+  syncedAt.delete(id)
 }
 
 /** 要件定義 6.3 の保存形式（カードのみ）で書き出す */

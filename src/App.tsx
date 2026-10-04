@@ -1,5 +1,6 @@
 import { type Component, Show, onMount } from 'solid-js'
 import { state, setState, setFontSize, initFirestore } from './store'
+import { watchAuth } from './db/firebase'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import PageDb01 from './pages/PageDb01'
@@ -18,7 +19,14 @@ import LeafletPage from './pages/leaflet'
 setFontSize(state.fontSize)
 
 const App: Component = () => {
-  onMount(() => { initFirestore() })
+  onMount(() => {
+    initFirestore()
+    // Googleログインしたら、その権限で Firestore を読み直す
+    watchAuth((user) => {
+      setState({ cloudUser: user ? { email: user.email ?? '', name: user.displayName ?? '' } : null })
+      if (user) initFirestore()
+    })
+  })
   return (
     <Show when={state.page === 'gallery'} fallback={
       <Show when={state.page === 'leaflet'} fallback={<MainApp />}>

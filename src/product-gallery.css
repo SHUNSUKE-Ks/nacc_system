@@ -137,3 +137,21 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .distribution-card .distribution-thumb img{object-fit:contain;padding:10px}
 .distribution-actions{display:inline-flex;gap:6px}
 .distribution-actions button{min-height:0;padding:3px 10px;border:1px solid rgba(179,130,71,.4);border-radius:999px;background:#fffaf1;color:#855626;font-size:.55rem;font-weight:700}
+
+/* header: ログイン・クラウド保存の状態 */
+.cloud-account{position:relative}
+.cloud-account-trigger{position:relative;display:flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid #e8dfcf;border-radius:8px;background:#fff;color:#6b6157;font-size:.7rem;font-weight:700}
+.cloud-account-trigger svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+.cloud-dot{position:absolute;left:5px;top:5px;width:7px;height:7px;border-radius:50%;background:#c9b9a3}
+.cloud-account-trigger.is-ok{border-color:#9fcaa8;color:#2f6a3a}.cloud-account-trigger.is-ok .cloud-dot{background:#3a9a52}
+.cloud-account-trigger.is-denied{border-color:#e5a8a8;color:#a12d2d}.cloud-account-trigger.is-denied .cloud-dot{background:#d43c3c}
+.cloud-account-trigger.is-connecting .cloud-dot{background:#e0b33a}
+.cloud-account-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:80;display:grid;gap:9px;width:min(330px,calc(100vw - 24px));padding:14px;border:1px solid rgba(179,130,71,.3);border-radius:12px;background:#fffdf8;box-shadow:0 18px 44px rgba(66,46,22,.18);text-align:left}
+.cloud-account-panel strong{color:#855626;font-size:.8rem}
+.cloud-account-panel p{margin:0;color:#4a3a2f;font-size:.7rem;line-height:1.7}
+.cloud-user small{display:block;color:#8d7c68;font-size:.62rem}
+.cloud-ok{color:#2f6a3a!important}
+.cloud-ng{padding:8px 10px;border-radius:8px;background:#fdeeee;color:#8b1e2d!important}
+.cloud-login,.cloud-logout{min-height:40px;border-radius:999px;font-size:.72rem;font-weight:800}
+.cloud-login{background:#855626;color:#fff}.cloud-login:disabled{opacity:.6}
+.cloud-logout{border:1px solid #e8dfcf;color:#6b6157}

@@ -13,6 +13,15 @@ import {
   orderBy,
   Timestamp,
 } from 'firebase/firestore'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  type User,
+} from 'firebase/auth'
 import type { Memo, Blog, Notebook, Product, Nutrient } from '../types'
 
 const firebaseConfig = {
@@ -26,6 +35,48 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const firestore = getFirestore(app)
+export const auth = getAuth(app)
+
+// ── Googleログイン（Firestore のルールで、登録したメールアドレスだけが読み書きできる） ──
+export function watchAuth(callback: (user: User | null) => void): () => void {
+  return onAuthStateChanged(auth, callback)
+}
+
+export async function signInWithGoogle(): Promise<void> {
+  const provider = new GoogleAuthProvider()
+  provider.setCustomParameters({ prompt: 'select_account' })
+  try {
+    await signInWithPopup(auth, provider)
+  } catch (e) {
+    const code = (e as { code?: string }).code
+    // ポップアップが使えない環境では、画面ごと移動してログインする
+    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+      await signInWithRedirect(auth, provider)
+      return
+    }
+    throw e
+  }
+}
+
+export function signOutGoogle(): Promise<void> {
+  return signOut(auth)
+}
+
+// ── Leaflets（リーフレット）: 形が変わっても困らないよう JSON 文字列で丸ごと保存 ──
+export type LeafletDoc = { id: string; productId: string; updatedAt: string; json: string }
+
+export async function fetchLeafletsFs(): Promise<LeafletDoc[]> {
+  const snap = await getDocs(collection(firestore, 'leaflets'))
+  return snap.docs.map((d) => d.data() as LeafletDoc)
+}
+
+export async function saveLeafletFs(data: LeafletDoc): Promise<void> {
+  await setDoc(doc(firestore, 'leaflets', data.id), data)
+}
+
+export async function deleteLeafletFs(id: string): Promise<void> {
+  await deleteDoc(doc(firestore, 'leaflets', id))
+}
 
 function fromFs(data: Record<string, unknown>): Record<string, unknown> {
   const out = { ...data }

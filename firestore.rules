@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// NACC Note の Firestore ルール
+// Googleでログインし、下のリストにあるメールアドレスの人だけが読み書きできる。
+// 先方（クライアント）を追加するときは、ALLOWED にメールアドレスを足して
+//   firebase deploy --only firestore:rules --project naccdb2026
+// を実行する。
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'storyfromshiori@gmail.com'
+        ];
+    }
+
+    match /{document=**} {
+      allow read, write: if allowed();
+    }
+  }
+}

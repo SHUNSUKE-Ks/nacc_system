@@ -40,6 +40,10 @@ export type AppState = {
   db03Columns: ColumnDef[]
   db10Columns: ColumnDef[]
   dbStatus: DbStatus
+  /** Googleログイン中のユーザー（未ログインは null） */
+  cloudUser: { email: string; name: string } | null
+  /** Firestore に断られたときの理由（権限なしなど） */
+  dbError: string
 }
 
 const FONT_SIZE_PX: Record<FontSize, number> = { s: 13, m: 16, l: 19, xl: 22 }
@@ -82,6 +86,18 @@ function saveNutrientEdit(id: string, patch: Partial<Nutrient>) {
     localStorage.setItem(NUTRIENT_EDITS_KEY, JSON.stringify(edits))
   } catch (e) {
     console.warn('[nutrient] local edit save failed', e)
+  }
+}
+
+/** 端末だけにあった自作カード・修正をクラウドへ（つながった時に一度だけ） */
+async function pushLocalNutrientsToCloud(remoteIds: Set<string>) {
+  try {
+    const custom = loadCustomNutrients().filter((n) => !remoteIds.has(n.id))
+    if (custom.length) await seedNutrientsFs(custom.map((n) => ({ ...n, ...loadNutrientEdits()[n.id] })))
+    const edits = loadNutrientEdits()
+    await Promise.all(Object.entries(edits).filter(([id]) => remoteIds.has(id)).map(([id, patch]) => updateNutrientFs(id, patch)))
+  } catch (e) {
+    console.warn('[Firestore] local push failed', e)
   }
 }
 
@@ -181,6 +197,8 @@ const [state, setState] = createStore<AppState>({
   db03Columns: DB03_COLUMNS_DEFAULT,
   db10Columns: DB10_COLUMNS_DEFAULT,
   dbStatus: 'idle',
+  cloudUser: null,
+  dbError: '',
 })
 
 export { state, setState }
@@ -279,10 +297,13 @@ export async function initFirestore(): Promise<void> {
       setState({ nutrients: withCustomNutrients([...fsNutrients, ...missingBundledNutrients]) })
     }
 
-    setState({ memos, blogs, trashBlogs, notebooks, dbStatus: 'connected' })
+    setState({ memos, blogs, trashBlogs, notebooks, dbStatus: 'connected', dbError: '' })
+    // つながらない間に端末へ保存していた成分カードの追加・修正を、クラウドへ送る
+    await pushLocalNutrientsToCloud(new Set((await fetchNutrients()).map((n) => n.id)))
   } catch (e) {
     console.error('[Firestore] init failed:', e)
-    setState({ dbStatus: 'error' })
+    const code = (e as { code?: string }).code ?? ''
+    setState({ dbStatus: 'error', dbError: code === 'permission-denied' ? 'permission-denied' : code || 'unknown' })
   }
 }
 

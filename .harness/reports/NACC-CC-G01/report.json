@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "2.0",
+  "reportId": "rpt_20261004_001",
+  "goalId": "NACC-CC-G01",
+  "projectId": "NACCSYSTEM",
+  "title": "NACC リーフレット・カタログチェック表・クラウド保存の復旧",
+  "phase": "実装・本番反映",
+  "kind": "implementation",
+  "date": "2026-10-04",
+  "startedAt": "2026-10-04T10:40:00+09:00",
+  "completedAt": "2026-10-04T16:00:00+09:00",
+  "agentId": "claude-code",
+  "modelProfileId": "claude-code",
+  "summary": "原本を壊さないリーフレット（2カラム版・Ver2.1・配布用レイアウト）、新カタログチェック表、Firestoreの読み書き復旧とiPad対応を本番へ反映",
+  "tags": ["NACC", "リーフレット", "カタログチェック", "Firestore", "iPad", "PWA"],
+  "outcomes": [
+    "リーフレット: 原本参照＋差分保存、2カラム版とVer2.1、配布用レイアウト（header4型・セクション・主成分サークル・PDF補助）",
+    "原本との同期案内とリーフレットからの成分追加・原本修正",
+    "新カタログチェック表: 未確認/確認済み/保留、最終更新、商品確認済み、確認日、確認中の成分追加",
+    "Firestore: 期限切れルールを解消（現在はログインなしルールを利用者が反映）、リーフレットとチェック表を同期",
+    "iPad: タッチでの長押しドラッグ、ボタンの大きさ、入力時の自動拡大防止"
+  ],
+  "deliverables": [
+    "C:/Users/enjoy/OneDrive/ドキュメント/ChatGPT/00_CreatorCompass/00_InBox/Nacc_Flyer_Design/nacc_system/src/pages/leaflet/",
+    "C:/Users/enjoy/OneDrive/ドキュメント/ChatGPT/00_CreatorCompass/00_InBox/Nacc_Flyer_Design/nacc_system/src/pages/catalog/",
+    "C:/Users/enjoy/OneDrive/ドキュメント/ChatGPT/00_CreatorCompass/00_InBox/Nacc_Flyer_Design/nacc_system/src/components/",
+    "C:/Users/enjoy/OneDrive/ドキュメント/ChatGPT/00_CreatorCompass/00_InBox/Nacc_Flyer_Design/nacc_system/firestore.rules",
+    "C:/Users/enjoy/OneDrive/ドキュメント/ChatGPT/00_CreatorCompass/00_InBox/Nacc_Flyer_Design/nacc_system/firestore.open.rules",
+    "https://nacc-system.vercel.app"
+  ],
+  "verification": [
+    "毎回 tsc -b と npm run build が通過",
+    "iPad横・縦・iPad Proの画面幅で横はみ出しなし・小さすぎるボタンなし・長押し並び替え・スクロール到達を確認",
+    "TouchEvent合成で左右受け渡し・並び替え・スクロール判定・主成分サークルへの運び込みを確認",
+    "本番でクラウド接続（54商品読み込み）とチェック表のクラウド保存を確認",
+    "実機iPadでは未確認"
+  ],
+  "nextActions": [
+    "別窓口の未コミット変更（チェック表の原文編集・header折りたたみ等）を検証してコミット",
+    "チェック表にサプリ/コスメ別の達成率の図を追加",
+    "必要なら写真のクラウド共有（Storage）とデータの守りの見直し"
+  ],
+  "blockedEncountered": [
+    "ログインなしのFirestoreルールの反映は権限チェックで止められたため、利用者自身が実行"
+  ],
+  "reflection": {
+    "reusable": true,
+    "skillCandidate": false,
+    "templateCandidate": false,
+    "note": "iOS Safariのドラッグは touch イベントで扱い、リスナーを触れた要素に付ける。差分同期は記録単位で更新日時の新しい方を残す"
+  },
+  "bodyFile": "report_body.md"
+}

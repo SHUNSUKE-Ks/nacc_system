@@ -11,6 +11,7 @@ import PageBlog from './pages/PageBlog'
 import PageMemo from './pages/PageMemo'
 import PageTrash from './pages/PageTrash'
 import PageNotebook from './pages/PageNotebook'
+import PagePhotos from './pages/PagePhotos'
 import SettingsPanel from './components/SettingsPanel'
 import GalleryPanel from './components/GalleryPanel'
 import GalleryPage from './pages/gallery'
@@ -75,8 +76,12 @@ const MainApp: Component = () => (
         <Show when={state.page === 'trash'}>
           <PageTrash />
         </Show>
+        {/* 旧ブログ・旧ノートブック画面はメニューから外した（メモへ統合）。直接開いたときのために残す */}
         <Show when={state.page === 'notebook'}>
           <PageNotebook />
+        </Show>
+        <Show when={state.page === 'photos'}>
+          <PagePhotos />
         </Show>
       </main>
       <SettingsPanel />

@@ -1,14 +1,13 @@
 import { type Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
 import { setState, state } from '../../store'
 import type { Product } from '../../types'
-import LeafletEditor from './LeafletEditor'
 import LeafletLayout from './LeafletLayout'
 import LeafletEditorV21 from './LeafletEditorV21'
 import { defaultImageFor } from './photos'
 import HelpButton, { HELP_LEAFLET_GALLERY } from '../../components/HelpButton'
 import {
   type Leaflet,
-  createLeaflet, deleteLeaflet, duplicateLeaflet, leaflets, leafletView, openLeaflet, openLeafletEditor, setLeafletView,
+  createLeafletV21, deleteLeaflet, duplicateLeaflet, leaflets, leafletView, openLeaflet, openLeafletEditor, setLeafletView,
 } from './store'
 import { categoryLabel, formatDate, LeafletVisual, OriginalSafeNote, originalNutrients, PhotoGallery, statusLabel, Toast } from './shared'
 import './leaflet.css'
@@ -43,15 +42,13 @@ const LeafletPage: Component = () => {
       <Show when={product()} fallback={
         <div class="lf-empty-page">
           <p>商品が選択されていません。</p>
-          <button onClick={() => setState({ page: 'db01', dbView: 'gallery' })}>商品Galleryへ戻る</button>
+          <button onClick={() => setState({ page: 'db01', dbView: 'gallery' })}>商品一覧へ戻る</button>
         </div>
       }>
         {(p) => (
           <Switch>
-            <Match when={leafletView().view === 'edit' && current()}>
-              {(leaflet) => <LeafletEditor leaflet={leaflet()} product={p()} />}
-            </Match>
-            <Match when={leafletView().view === 'edit21' && current()}>
+            {/* 編集は Ver2.1 に一本化（旧2カラム編集は廃止。旧形式のリーフレットも Ver2.1 で開く） */}
+            <Match when={(leafletView().view === 'edit' || leafletView().view === 'edit21') && current()}>
               {(leaflet) => <LeafletEditorV21 leaflet={leaflet()} product={p()} />}
             </Match>
             <Match when={leafletView().view === 'layout' && current()}>
@@ -91,7 +88,7 @@ const DraftsView: Component = () => {
         <p>全商品の下書きをまとめて表示しています。「配布可」にしたものは、商品ページの「配布用」タブに移ります。</p>
       </header>
       <div class="lf-leaflet-grid">
-        <For each={drafts()} fallback={<p class="lf-empty">編集中のリーフレットはありません。商品ノートの「リーフレット Ver2.1」などから作れます。</p>}>
+        <For each={drafts()} fallback={<p class="lf-empty">編集中のリーフレットはありません。商品ノートの「＋ リーフレットを作る」から作れます。</p>}>
           {(leaflet) => (
             <article class="lf-leaflet-card lf-draft-card">
               <div class="lf-draft-head">
@@ -129,8 +126,8 @@ const LeafletGallery: Component<{ product: Product; onOpenOriginal: () => void }
   )
 
   const create = () => {
-    const id = createLeaflet(props.product, originalNutrients(props.product).map((nutrient) => nutrient.id), defaultImageFor(props.product))
-    setLeafletView({ view: 'edit', id })
+    const id = createLeafletV21(props.product, originalNutrients(props.product).map((nutrient) => nutrient.id), defaultImageFor(props.product))
+    setLeafletView({ view: 'edit21', id })
   }
 
   const duplicate = (id: string) => {

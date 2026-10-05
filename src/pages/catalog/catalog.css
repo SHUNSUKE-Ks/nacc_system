@@ -130,3 +130,17 @@
 .cc-add-actions .is-primary{border-color:var(--cc-ok);background:var(--cc-ok);color:#fff}
 .cc-add-actions .is-primary:disabled{opacity:.4}
 .cc-item-name small.is-sheet{color:var(--cc-hold);font-weight:700}
+
+/* header: 説明（押すと編集）・チェックのリセット */
+.cc-title .cc-title-desc{margin:2px 0 0;color:var(--cc-sub);font-size:.62rem;font-weight:400;letter-spacing:0}
+.cc-reset{display:inline-flex;align-items:center;gap:5px;min-height:36px;padding:0 12px;border:1px solid #e5c9c9;border-radius:8px;background:#fff;color:#9b3a3a;font-size:.62rem;font-weight:700}
+.cc-reset:hover{background:#fbefef}
+.cc-reset svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cc-dialog-backdrop{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px;background:rgba(36,28,20,.4)}
+.cc-dialog{width:min(440px,100%);padding:20px 22px;border-radius:14px;background:#fffdf8;box-shadow:0 24px 60px rgba(36,28,20,.3)}
+.cc-dialog h2{margin:0 0 8px;color:var(--cc-wine);font-size:.9rem}
+.cc-dialog p{margin:0 0 8px;font-size:.7rem;line-height:1.8}
+.cc-dialog .cc-dialog-note{color:var(--cc-sub);font-size:.62rem}
+.cc-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.cc-dialog-actions button{min-height:40px;padding:0 18px;border:1px solid var(--cc-line);border-radius:999px;background:#fff;font-size:.68rem;font-weight:700}
+.cc-dialog-actions .is-danger{border-color:#9b3a3a;background:#9b3a3a;color:#fff}

@@ -4,7 +4,7 @@ import type { Product } from '../../types'
 import HelpButton, { HELP_CATALOG_CHECK } from '../../components/HelpButton'
 import {
   type CheckItem, type CheckStatus, STATUS_LABELS,
-  addItemDuringCheck, checkDate, cloudOk, formatStamp, itemCheck, itemsOf, productCheck, refreshFromCloud, setCheckDate,
+  addItemDuringCheck, catalogDescription, catalogTitle, checkDate, cloudOk, resetAllChecks, setCatalogText, formatStamp, itemCheck, itemsOf, productCheck, refreshFromCloud, setCheckDate,
   setItemMemo, setItemStatus, setProductMemo, setProductStatus, toggleItemCheck,
 } from './store'
 import './catalog.css'
@@ -26,6 +26,7 @@ const CatalogCheckPage: Component = () => {
   const [category, setCategory] = createSignal<Category>('all')
   const [query, setQuery] = createSignal('')
   const [headerClosed, setHeaderClosed] = createSignal(false)
+  const [resetOpen, setResetOpen] = createSignal(false)
   let previousScroll = 0
   let reopenAt = 0
   const onCatalogScroll = (event: Event & { currentTarget: HTMLDivElement }) => {
@@ -227,7 +228,8 @@ const CatalogCheckPage: Component = () => {
         <button type="button" class="cc-header-open" aria-expanded={!headerClosed()} onClick={openHeader}>headerOpen...</button>
         <div class="cc-title">
           <p>NACC · NEW CATALOG CHECK</p>
-          <h1>新カタログチェック表</h1>
+          <h1><OriginalText value={catalogTitle()} label="チェック表のタイトル" onSave={(title) => setCatalogText({ title })} /></h1>
+          <p class="cc-title-desc"><OriginalText value={catalogDescription()} label="チェック表の説明" onSave={(description) => setCatalogText({ description })} /></p>
         </div>
         <div class="cc-progress">
           <span>商品 <b>{totals().productsChecked}</b> / {products().length} 確認済み</span>
@@ -239,8 +241,26 @@ const CatalogCheckPage: Component = () => {
           <span>確認日</span>
           <input type="date" value={checkDate()} onChange={(e) => setCheckDate(e.currentTarget.value)} />
         </label>
+        <button type="button" class="cc-reset" onClick={() => setResetOpen(true)} title="すべてのチェックを未確認に戻す">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
+          チェックをリセット
+        </button>
         <HelpButton title="新カタログチェック表" items={HELP_CATALOG_CHECK} viewport />
       </header>
+
+      <Show when={resetOpen()}>
+        <div class="cc-dialog-backdrop" onClick={() => setResetOpen(false)}>
+          <section class="cc-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cc-reset-title" onClick={(e) => e.stopPropagation()}>
+            <h2 id="cc-reset-title">チェックをリセットしますか？</h2>
+            <p>商品 {totals().productsChecked}件・成分 {totals().itemChecked}件の「確認済み」と、保留 {totals().itemHold}件を、すべて「未確認」に戻します。</p>
+            <p class="cc-dialog-note">メモ・確認日・確認中に足した成分は残ります。商品ノート（原本）は変わりません。元に戻すボタンはありません。</p>
+            <div class="cc-dialog-actions">
+              <button type="button" ref={(el) => queueMicrotask(() => el.focus())} onClick={() => setResetOpen(false)}>やめる</button>
+              <button type="button" class="is-danger" onClick={() => { resetAllChecks(); setResetOpen(false) }}>リセットする</button>
+            </div>
+          </section>
+        </div>
+      </Show>
 
       <div class="cc-filters">
         <div class="cc-chips" role="radiogroup" aria-label="ステータスで絞り込み">

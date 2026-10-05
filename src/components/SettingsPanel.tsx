@@ -3,6 +3,7 @@ import { state, setState, setFontSize, toggleDarkMode, toggleDb01Column, toggleD
 import type { DbStatus } from '../store'
 import type { FontSize } from '../types'
 import { exportDetailViewPdf } from '../utils/exportDetailPdf'
+import CloudAccount from './CloudAccount'
 
 const DB_STATUS_MAP: Record<DbStatus, { label: string; color: string; dot: string }> = {
   idle:       { label: '未接続',   color: 'text-gray-400',  dot: 'bg-gray-300' },
@@ -71,6 +72,11 @@ const SettingsPanel: Component = () => {
         </div>
 
         <div class="flex-1 overflow-y-auto">
+          {/* ログイン・クラウド保存（header から移した） */}
+          <div class="p-4 border-b border-nacc-border">
+            <CloudAccount inline />
+          </div>
+
           {/* Font size */}
           <div class="p-4 border-b border-nacc-border">
             <div class="text-xs font-semibold text-gray-500 mb-3">🔤 文字サイズ</div>

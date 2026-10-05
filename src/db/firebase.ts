@@ -116,6 +116,10 @@ export async function updateMemoFs(id: string, patch: Partial<Omit<Memo, 'id'>>)
   await updateDoc(doc(firestore, 'memos', id), stripUndefined(patch as Record<string, unknown>))
 }
 
+export async function restoreMemoFs(id: string): Promise<void> {
+  await updateDoc(doc(firestore, 'memos', id), { deletedAt: deleteField() })
+}
+
 export async function deleteMemoFs(id: string): Promise<void> {
   await deleteDoc(doc(firestore, 'memos', id))
 }
@@ -189,6 +193,26 @@ export async function fetchNotebooks(): Promise<Notebook[]> {
   const q = query(collection(firestore, 'notebooks'), orderBy('updatedAt', 'desc'))
   const snap = await getDocs(q)
   return snap.docs.map((d) => ({ id: d.id, ...fromFs(d.data()) } as Notebook))
+}
+
+/**
+ * IDを手元で先に決める（Firestore の返事を待たない）。
+ * オフラインや接続設定が無いときでも、作った直後に画面で開けるようにするため
+ */
+export function newDocId(col: 'memos' | 'notebooks'): string {
+  try {
+    return doc(collection(firestore, col)).id
+  } catch {
+    return `local-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+  }
+}
+
+export async function setMemoFs(id: string, memo: Omit<Memo, 'id'>): Promise<void> {
+  await setDoc(doc(firestore, 'memos', id), stripUndefined(memo as Record<string, unknown>))
+}
+
+export async function setNotebookFs(id: string, notebook: Omit<Notebook, 'id'>): Promise<void> {
+  await setDoc(doc(firestore, 'notebooks', id), stripUndefined(notebook as Record<string, unknown>))
 }
 
 export async function addNotebookFs(notebook: Omit<Notebook, 'id'>): Promise<string> {

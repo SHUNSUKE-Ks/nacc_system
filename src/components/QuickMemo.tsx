@@ -1,16 +1,19 @@
 import { type Component, createSignal, For, onCleanup, Show } from 'solid-js'
+import { Portal } from 'solid-js/web'
 import type { Tag } from '../types'
-import { addMemo, navigate, state } from '../store'
+import { addMemo, openNotebook, state } from '../store'
 
-// header の「メモ」: どの画面からでもすぐ追記できる。
+// クイックメモ: どの画面からでもすぐ追記できる（サイドバーの一番上）。
 // 商品ページを開いているときは、その商品をタグに自動で入れる。
-const QuickMemo: Component = () => {
+// 書いたメモは「未分類」に入る。
+const QuickMemo: Component<{ variant?: 'sidebar' }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [title, setTitle] = createSignal('')
   const [body, setBody] = createSignal('')
   const [tags, setTags] = createSignal<Tag[]>([])
   const [saved, setSaved] = createSignal(false)
   let rootRef!: HTMLDivElement
+  let panelRef: HTMLElement | undefined
   let bodyRef!: HTMLTextAreaElement
 
   const openProduct = () =>
@@ -41,27 +44,42 @@ const QuickMemo: Component = () => {
   }
 
   const onOutside = (event: PointerEvent) => {
-    if (open() && !rootRef.contains(event.target as Node)) setOpen(false)
+    if (open() && !rootRef.contains(event.target as Node) && !panelRef?.contains(event.target as Node)) setOpen(false)
   }
   document.addEventListener('pointerdown', onOutside)
   onCleanup(() => document.removeEventListener('pointerdown', onOutside))
 
   return (
-    <div class="quick-memo" ref={rootRef}>
-      <button
-        class="app-header-memo flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-nacc-border hover:bg-[#fbf4e4] active:scale-95 text-[#8a5c27] text-xs font-bold transition-all"
-        onClick={() => (open() ? setOpen(false) : show())}
-        title="新しいメモをすぐ追記"
-        aria-expanded={open()}
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 4h10l4 4v12H5zM15 4v4h4M8.5 12.5h7M8.5 16h4.5" />
-        </svg>
-        <span class="hidden sm:inline">メモ</span>
-      </button>
+    <div class="quick-memo" classList={{ 'flex-1': props.variant === 'sidebar' }} ref={rootRef}>
+      <Show when={props.variant === 'sidebar'} fallback={
+        <button
+          class="app-header-memo flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-nacc-border hover:bg-[#fbf4e4] active:scale-95 text-[#8a5c27] text-xs font-bold transition-all"
+          onClick={() => (open() ? setOpen(false) : show())}
+          title="新しいメモをすぐ追記"
+          aria-expanded={open()}
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 4h10l4 4v12H5zM15 4v4h4M8.5 12.5h7M8.5 16h4.5" />
+          </svg>
+          <span class="hidden sm:inline">メモ</span>
+        </button>
+      }>
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 bg-nacc-gold text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          onClick={() => (open() ? setOpen(false) : show())}
+          title="新しいメモをすぐ書く（未分類に入ります）"
+          aria-expanded={open()}
+        >
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          クイックメモ
+        </button>
+      </Show>
 
       <Show when={open()}>
-        <section class="quick-memo-panel" role="dialog" aria-label="メモを追記">
+        <Portal mount={props.variant === 'sidebar' ? document.body : rootRef}>
+        <section ref={panelRef} class="quick-memo-panel" classList={{ 'is-floating': props.variant === 'sidebar' }} role="dialog" aria-label="メモを追記">
           <header>
             <strong>メモを追記</strong>
             <button type="button" onClick={() => setOpen(false)} aria-label="閉じる">×</button>
@@ -90,11 +108,12 @@ const QuickMemo: Component = () => {
             </For>
           </div>
           <footer>
-            <button type="button" class="is-link" onClick={() => { setOpen(false); navigate('memo') }}>メモ一覧を開く</button>
+            <button type="button" class="is-link" onClick={() => { setOpen(false); openNotebook('none') }}>メモ一覧を開く</button>
             <Show when={saved()}><span class="quick-memo-saved">保存しました</span></Show>
             <button type="button" class="is-primary" onClick={() => void save()} disabled={!body().trim() && !title().trim()}>保存</button>
           </footer>
         </section>
+        </Portal>
       </Show>
     </div>
   )

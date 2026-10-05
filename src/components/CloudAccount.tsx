@@ -3,10 +3,10 @@ import { state } from '../store'
 import { signInWithGoogle, signOutGoogle } from '../db/firebase'
 import { cloudState } from '../pages/leaflet/store'
 
-// header のログイン・クラウド保存の状態。
+// ログイン・クラウド保存の状態（設定パネルの一番上に置く）。
 // ログインして、そのメールアドレスが Firestore のルールに登録されていれば、
 // 成分カードの修正・リーフレットがクラウドに保存され、ほかの端末と共有される。
-const CloudAccount: Component = () => {
+const CloudAccount: Component<{ inline?: boolean }> = (props) => {
   const [open, setOpen] = createSignal(false)
   const [busy, setBusy] = createSignal(false)
   const [message, setMessage] = createSignal('')
@@ -45,6 +45,7 @@ const CloudAccount: Component = () => {
 
   return (
     <div class="cloud-account" ref={rootRef}>
+      <Show when={!props.inline}>
       <button type="button" class={`cloud-account-trigger is-${status()}`} onClick={() => setOpen(!open())} aria-expanded={open()} title={label()}>
         <span class="cloud-dot" aria-hidden="true" />
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z" /></svg>
@@ -52,8 +53,9 @@ const CloudAccount: Component = () => {
           <span class="hidden sm:inline">{state.cloudUser ? label() : 'ログイン'}</span>
         </Show>
       </button>
-      <Show when={open()}>
-        <section class="cloud-account-panel" role="dialog" aria-label="クラウド保存">
+      </Show>
+      <Show when={open() || props.inline}>
+        <section class="cloud-account-panel" classList={{ 'is-inline': props.inline }} role={props.inline ? 'region' : 'dialog'} aria-label="クラウド保存">
           <strong>クラウド保存</strong>
           <Show when={state.cloudUser} fallback={
             <Show when={status() === 'ok'} fallback={

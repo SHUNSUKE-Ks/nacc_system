@@ -1,17 +1,19 @@
 import { type Component, For, Show } from 'solid-js'
-import { state, restoreBlog, deleteBlogPermanent, emptyTrash } from '../store'
+import { state, restoreBlog, deleteBlogPermanent, emptyTrash, restoreMemo, deleteMemoPermanent } from '../store'
 
-const PageTrash: Component = () => (
+const PageTrash: Component = () => {
+  const hasAny = () => state.trashBlogs.length + state.trashMemos.length > 0
+  return (
   <div class="flex flex-col h-full overflow-hidden">
     <div class="flex items-center justify-between px-6 py-4 border-b border-nacc-border shrink-0">
       <div>
         <h1 class="text-lg font-bold text-nacc-dark">ごみ箱</h1>
-        <p class="text-xs text-[#999]">削除した記事は30日後に完全削除されます</p>
+        <p class="text-xs text-[#999]">ごみ箱へ入れたメモ。「完全削除」を押すまで消えません</p>
       </div>
-      <Show when={state.trashBlogs.length > 0}>
+      <Show when={hasAny()}>
         <button
           class="text-xs text-red-400 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
-          onClick={emptyTrash}
+          onClick={() => confirm('ごみ箱の中身をすべて完全に削除します。元に戻せません。よろしいですか？') && emptyTrash()}
         >
           すべて完全削除
         </button>
@@ -20,7 +22,7 @@ const PageTrash: Component = () => (
 
     <div class="flex-1 overflow-y-auto p-6">
       <Show
-        when={state.trashBlogs.length > 0}
+        when={hasAny()}
         fallback={
           <div class="flex flex-col items-center justify-center h-full text-[#ccc] gap-3">
             <span class="text-5xl">🗑️</span>
@@ -29,6 +31,33 @@ const PageTrash: Component = () => (
         }
       >
         <div class="max-w-2xl mx-auto flex flex-col gap-3">
+          <For each={state.trashMemos}>
+            {(memo) => (
+              <div class="bg-white border border-nacc-border rounded-xl p-4 flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-nacc-dark truncate">{memo.title || '無題'}</p>
+                  <p class="text-xs text-[#999] mt-1">
+                    メモ · {state.notebooks.find((n) => n.id === memo.notebookId)?.title ?? '未分類'} · 削除日:{' '}
+                    {memo.deletedAt ? new Date(memo.deletedAt).toLocaleDateString('ja-JP') : '不明'}
+                  </p>
+                </div>
+                <div class="flex flex-col gap-1.5 shrink-0">
+                  <button
+                    class="text-xs px-3 py-1.5 rounded-lg border border-nacc-border text-nacc-dark hover:bg-[#f9f8f6] transition-colors"
+                    onClick={() => restoreMemo(memo.id!)}
+                  >
+                    復元
+                  </button>
+                  <button
+                    class="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-400 hover:bg-red-50 transition-colors"
+                    onClick={() => confirm(`「${memo.title || '無題'}」を完全に削除します。元に戻せません。`) && deleteMemoPermanent(memo.id!)}
+                  >
+                    完全削除
+                  </button>
+                </div>
+              </div>
+            )}
+          </For>
           <For each={state.trashBlogs}>
             {(blog) => (
               <div class="bg-white border border-nacc-border rounded-xl p-4 flex items-start justify-between gap-4">
@@ -59,7 +88,7 @@ const PageTrash: Component = () => (
                   </button>
                   <button
                     class="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-400 hover:bg-red-50 transition-colors"
-                    onClick={() => deleteBlogPermanent(blog.id!)}
+                    onClick={() => confirm(`「${blog.title || '無題'}」を完全に削除します。元に戻せません。`) && deleteBlogPermanent(blog.id!)}
                   >
                     完全削除
                   </button>
@@ -71,6 +100,7 @@ const PageTrash: Component = () => (
       </Show>
     </div>
   </div>
-)
+  )
+}
 
 export default PageTrash

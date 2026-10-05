@@ -1,8 +1,12 @@
 import { type Component, createSignal, For, Show } from 'solid-js'
-import type { Tag } from '../types'
+import type { PhotoRef, Tag } from '../types'
 import { PRODUCTS } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
-import { state, setState, addMemo, updateMemo, deleteMemo } from '../store'
+import { state, setState, addMemo, updateMemo, trashMemo } from '../store'
+import PhotoBrowser from '../components/PhotoBrowser'
+import { photoName, photoSrc } from './leaflet/photos'
+
+const refKey = (ref: PhotoRef) => (ref.kind === 'product' ? `p:${ref.productId}` : ref.kind === 'asset' ? `a:${ref.name}` : `u:${ref.id}`)
 
 let saveTimer: ReturnType<typeof setTimeout>
 
@@ -21,7 +25,24 @@ const PageMemo: Component = () => {
   const [tagPickerSelected, setTagPickerSelected] = createSignal<Tag[]>([])
   const [tagPickerSearch, setTagPickerSearch] = createSignal('')
 
+  const [photoPickerOpen, setPhotoPickerOpen] = createSignal(false)
+
   const selected = () => state.memos.find((m) => m.id === selectedId())
+
+  // 見ているノートブック（子ノートブックのメモも親で見える）
+  const currentBook = () => state.notebooks.find((n) => n.id === state.memoNotebookId)
+  const listTitle = () => (state.memoNotebookId === 'all' ? 'すべてのメモ' : state.memoNotebookId === 'none' ? '未分類のメモ' : currentBook()?.title ?? 'メモ')
+  const visibleMemos = () => {
+    const id = state.memoNotebookId
+    if (id === 'all') return state.memos
+    if (id === 'none') return state.memos.filter((m) => !m.notebookId || !state.notebooks.some((n) => n.id === m.notebookId))
+    const ids = new Set([id, ...state.notebooks.filter((n) => n.parentId === id).map((n) => n.id!)])
+    return state.memos.filter((m) => m.notebookId && ids.has(m.notebookId))
+  }
+  const bookOptions = () => {
+    const tops = state.notebooks.filter((n) => !n.parentId)
+    return tops.flatMap((top) => [{ id: top.id!, label: top.title }, ...state.notebooks.filter((n) => n.parentId === top.id).map((c) => ({ id: c.id!, label: `　└ ${c.title}` }))])
+  }
 
   function patchLocal(id: string, patch: Parameters<typeof updateMemo>[1]) {
     setState('memos', (prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)))
@@ -38,7 +59,8 @@ const PageMemo: Component = () => {
 
   async function addNewMemo() {
     const now = new Date()
-    const data = { title: '新しいメモ', body: '', tags: [], createdAt: now, updatedAt: now }
+    const nb = state.memoNotebookId
+    const data = { title: '新しいメモ', body: '', tags: [], createdAt: now, updatedAt: now, ...(nb !== 'all' && nb !== 'none' ? { notebookId: nb } : {}) }
     const id = await addMemo(data)
     setSelectedId(id)
     if (isMobile()) setMobilePanel('editor')
@@ -71,6 +93,25 @@ const PageMemo: Component = () => {
     setTagPickerSearch('')
   }
 
+  function moveToNotebook(notebookId: string) {
+    const id = selectedId()
+    if (!id) return
+    // 空文字は「未分類」（Firestore では undefined を送れないため）
+    const patch = { notebookId, updatedAt: new Date() }
+    patchLocal(id, patch)
+    updateMemo(id, patch)
+  }
+
+  function togglePhoto(ref: PhotoRef) {
+    const id = selectedId()
+    const memo = selected()
+    if (!id || !memo) return
+    const list = memo.images ?? []
+    const images = list.some((item) => refKey(item) === refKey(ref)) ? list.filter((item) => refKey(item) !== refKey(ref)) : [...list, ref]
+    patchLocal(id, { images })
+    updateMemo(id, { images, updatedAt: new Date() })
+  }
+
   function closeTagPicker() {
     setTagPickerOpen(false)
     setTagPickerSelected([])
@@ -80,7 +121,7 @@ const PageMemo: Component = () => {
   const List = () => (
     <div class="w-64 shrink-0 border-r border-nacc-border bg-white flex flex-col overflow-hidden">
       <div class="flex items-center justify-between px-3 py-2 border-b border-nacc-border">
-        <span class="text-sm font-semibold text-nacc-dark">メモ</span>
+        <span class="text-sm font-semibold text-nacc-dark truncate">{listTitle()} <small class="text-[#999] font-normal">{visibleMemos().length}</small></span>
         <button
           class="text-xs px-2 py-1 rounded bg-nacc-gold text-white font-semibold hover:opacity-80"
           onClick={addNewMemo}
@@ -89,7 +130,7 @@ const PageMemo: Component = () => {
         </button>
       </div>
       <Show
-        when={state.memos.length > 0}
+        when={visibleMemos().length > 0}
         fallback={
           <div class="flex-1 flex flex-col items-center justify-center text-[#ccc] gap-2 text-xs">
             <span class="text-3xl">📝</span>
@@ -98,7 +139,7 @@ const PageMemo: Component = () => {
         }
       >
         <div class="flex-1 overflow-y-auto">
-          <For each={state.memos}>
+          <For each={visibleMemos()}>
             {(memo) => (
               <button
                 class="blog-list-item w-full text-left px-4 py-3 border-b border-[#f0f0f0]"
@@ -160,6 +201,14 @@ const PageMemo: Component = () => {
                 onInput={(e) => handleTextInput('title', e.currentTarget.value)}
               />
 
+              <label class="memo-book-select">
+                <span>ノートブック</span>
+                <select value={memo().notebookId ?? ''} onChange={(e) => moveToNotebook(e.currentTarget.value)} aria-label="このメモを入れるノートブック">
+                  <option value="">未分類</option>
+                  <For each={bookOptions()}>{(opt) => <option value={opt.id}>{opt.label}</option>}</For>
+                </select>
+              </label>
+
               <div class="flex flex-wrap gap-1.5 items-center">
                 <For each={memo().tags}>
                   {(tag) => (
@@ -195,12 +244,27 @@ const PageMemo: Component = () => {
                 onInput={(e) => handleTextInput('body', e.currentTarget.value)}
               />
 
+              <div class="memo-photos">
+                <For each={memo().images ?? []}>
+                  {(ref) => (
+                    <figure>
+                      <Show when={photoSrc(ref)} fallback={<span class="memo-photo-missing">この端末にない写真</span>}>
+                        <img src={photoSrc(ref)} alt={photoName(ref)} />
+                      </Show>
+                      <button type="button" onClick={() => togglePhoto(ref)} aria-label={`${photoName(ref)}を外す`}>×</button>
+                    </figure>
+                  )}
+                </For>
+                <button type="button" class="memo-photo-add" onClick={() => setPhotoPickerOpen(true)}>＋ 写真を貼る</button>
+              </div>
+
               <div class="flex items-center justify-between text-xs text-gray-400">
                 <button
                   class="text-red-400 hover:text-red-600"
-                  onClick={() => { deleteMemo(memo().id!); setSelectedId(null) }}
+                  onClick={() => { trashMemo(memo().id!); setSelectedId(null) }}
+                  title="ごみ箱へ移します（ごみ箱から戻せます）"
                 >
-                  🗑️ 削除
+                  🗑️ ごみ箱へ
                 </button>
                 <span>自動保存 — {new Date(memo().updatedAt).toLocaleDateString('ja-JP')}</span>
               </div>
@@ -218,6 +282,19 @@ const PageMemo: Component = () => {
       </Show>
       <Show when={!isMobile() || mobilePanel() === 'editor'}>
         <Editor />
+      </Show>
+
+      {/* ── 写真を貼る ── */}
+      <Show when={photoPickerOpen() && selected()}>
+        <div class="fixed inset-0 z-60 bg-black/30" onClick={() => setPhotoPickerOpen(false)} />
+        <section class="memo-photo-sheet" role="dialog" aria-modal="true" aria-label="写真を貼る">
+          <header>
+            <strong>写真を貼る</strong>
+            <span>押すと貼る／もう一度押すと外す</span>
+            <button type="button" onClick={() => setPhotoPickerOpen(false)}>完了</button>
+          </header>
+          <PhotoBrowser pick={{ selected: selected()?.images ?? [], onToggle: togglePhoto }} />
+        </section>
       </Show>
 
       {/* ── Tag picker bottom sheet ── */}

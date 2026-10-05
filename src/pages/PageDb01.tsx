@@ -616,14 +616,14 @@ const DetailView: Component<{ products: Product[] }> = (props) => {
             <div class="product-note-content slide-in">
               <div class="product-note-nav">
                 <button class="product-note-back" onClick={() => setState({ dbView: 'gallery', selectedProductId: null })}>
-                  ← 商品Gallery
+                  ← 商品一覧
                 </button>
                 <span class="product-note-leaflet-actions">
-                  <button class="product-note-leaflet" onClick={() => navigate('leaflet')}>
-                    リーフレット（配布用）を作る →
+                  <button class="product-note-leaflet" onClick={() => navigate('leaflet')} title="この商品のリーフレットの一覧を開きます">
+                    この商品のリーフレット →
                   </button>
-                  <button class="product-note-leaflet-v21" onClick={() => openLeafletV21(product().id)} title="この商品ノートの並びのまま、リーフレットの編集画面を開きます">
-                    リーフレット Ver2.1
+                  <button class="product-note-leaflet-v21" onClick={() => openLeafletV21(product().id)} title="この商品ノートの並びのまま、リーフレットを作って編集画面を開きます">
+                    ＋ リーフレットを作る
                   </button>
                 </span>
               </div>
@@ -904,7 +904,7 @@ const ProductGalleryView: Component<{ products: Product[] }> = (props) => {
 
 // ── 表示形式（基本は Gallery。目次・テーブルは機能として残し、アイコンから切り替える） ──
 const VIEW_FORMATS: { id: 'gallery' | 'index' | 'table'; label: string; icon: string }[] = [
-  { id: 'gallery', label: 'Gallery', icon: '◇' },
+  { id: 'gallery', label: 'カード', icon: '◇' },
   { id: 'index', label: '目次', icon: '☰' },
   { id: 'table', label: 'テーブル', icon: '▦' },
 ]
@@ -1075,8 +1075,8 @@ const PageDb01: Component<Props> = (props) => {
           <button
             class="gallery-return-orbit"
             onClick={() => setState({ dbView: 'gallery', selectedProductId: null })}
-            aria-label="商品Galleryへ戻る"
-            title="商品Galleryへ戻る"
+            aria-label="商品一覧へ戻る"
+            title="商品一覧へ戻る"
           >
             ↶
           </button>
@@ -1105,7 +1105,7 @@ const PageDb01: Component<Props> = (props) => {
           <Show when={docTab() === 'original'}>
             <ViewFormatMenu />
           </Show>
-          <HelpButton title="商品Gallery" items={HELP_PRODUCT_GALLERY} />
+          <HelpButton title="商品一覧" items={HELP_PRODUCT_GALLERY} />
         </span>
       </div>
 

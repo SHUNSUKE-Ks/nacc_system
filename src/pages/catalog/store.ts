@@ -94,7 +94,7 @@ export function addItemDuringCheck(product: Product, data: { name: string; descr
 // ── チェック表全体の情報（確認日） ───────────────────────────────────────
 const META_ID = '__meta'
 const META_KEY = 'nacc-catalog-meta-v1'
-type CatalogMeta = { checkDate: string; updatedAt: string }
+type CatalogMeta = { checkDate: string; updatedAt: string; title?: string; description?: string }
 /** 確認日の初期値 */
 const DEFAULT_CHECK_DATE = '2026-10-04'
 
@@ -109,8 +109,22 @@ function loadMeta(): CatalogMeta {
 const [meta, setMetaSignal] = createSignal<CatalogMeta>(loadMeta())
 export const checkDate = () => meta().checkDate
 
+export const DEFAULT_CATALOG_TITLE = '新カタログチェック表'
+export const DEFAULT_CATALOG_DESCRIPTION = '新しいカタログの商品と成分を、1つずつ確認します。'
+export const catalogTitle = () => meta().title || DEFAULT_CATALOG_TITLE
+export const catalogDescription = () => meta().description ?? DEFAULT_CATALOG_DESCRIPTION
+
 export function setCheckDate(date: string) {
-  const next = { checkDate: date || DEFAULT_CHECK_DATE, updatedAt: new Date().toISOString() }
+  saveMeta({ checkDate: date || DEFAULT_CHECK_DATE })
+}
+
+/** チェック表のタイトルと説明（headerの文字。押すと編集できる） */
+export function setCatalogText(patch: { title?: string; description?: string }) {
+  saveMeta(patch)
+}
+
+function saveMeta(patch: Partial<CatalogMeta>) {
+  const next = { ...meta(), ...patch, updatedAt: new Date().toISOString() }
   setMetaSignal(next)
   try { localStorage.setItem(META_KEY, JSON.stringify(next)) } catch { /* 端末に保存できなくても続ける */ }
   if (cloudReady) saveCatalogCheckFs({ productId: META_ID, updatedAt: next.updatedAt, json: JSON.stringify(next) }).catch((e) => console.warn('[catalog] meta save failed', e))
@@ -236,6 +250,21 @@ export function setProductStatus(productId: string, status: CheckStatus) {
   ensure(productId)
   setChecks((c) => c.productId === productId, { status, updatedAt: now() })
   persist(productId)
+}
+
+/**
+ * チェックをすべて未確認に戻す（メモ・確認中に足した成分は残す）。
+ * 端末とクラウドの両方に「今」の時刻で書くので、ほかの端末でもリセット後の状態がそろう
+ */
+export function resetAllChecks() {
+  const at = now()
+  setChecks(reconcile(checks.map((c) => ({
+    ...JSON.parse(JSON.stringify(c)) as ProductCheck,
+    status: 'unchecked' as CheckStatus,
+    updatedAt: at,
+    items: Object.fromEntries(Object.entries(c.items).map(([key, item]) => [key, { ...item, status: 'unchecked' as CheckStatus, updatedAt: at }])),
+  })), { key: 'productId' }))
+  for (const c of checks) persist(c.productId)
 }
 
 export function setProductMemo(productId: string, memo: string) {

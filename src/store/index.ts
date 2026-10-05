@@ -4,9 +4,9 @@ import { PRODUCTS } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
 import { SYMPTOMS } from '../db/symptoms'
 import {
-  fetchMemos, addMemoFs, updateMemoFs, deleteMemoFs,
+  fetchMemos, updateMemoFs, deleteMemoFs, restoreMemoFs, newDocId, setMemoFs, setNotebookFs,
   fetchBlogs, addBlogFs, updateBlogFs, restoreBlogFs, deleteBlogFs,
-  fetchNotebooks, addNotebookFs, updateNotebookFs, deleteNotebookFs,
+  fetchNotebooks, updateNotebookFs, deleteNotebookFs,
   fetchProducts, updateProductFs, seedProductsFs,
   fetchNutrients, updateNutrientFs, seedNutrientsFs,
 } from '../db/firebase'
@@ -32,6 +32,9 @@ export type AppState = {
   nutrients: Nutrient[]
   symptoms: Symptom[]
   memos: Memo[]
+  trashMemos: Memo[]
+  /** メモ画面で見ているノートブック（'all' = すべて、'none' = 未分類） */
+  memoNotebookId: string
   blogs: Blog[]
   trashBlogs: Blog[]
   notebooks: Notebook[]
@@ -147,29 +150,6 @@ export const DB10_COLUMNS_DEFAULT: ColumnDef[] = [
   { id: 'memo',        label: 'メモ',      visible: true, locked: false },
 ]
 
-const INITIAL_BLOGS: Blog[] = [
-  {
-    id: 'sample-blog-1',
-    title: 'CoQ10（コエンザイムQ10）について',
-    body: 'コエンザイムQ10は心臓や筋肉のエネルギー代謝に関わる栄養素です。',
-    coverType: 'none',
-    categoryTags: [],
-    mode: 'memo',
-    createdAt: new Date('2026-05-01'),
-    updatedAt: new Date('2026-05-01'),
-  },
-  {
-    id: 'sample-blog-2',
-    title: 'マルチビタミン — 毎日の健康サポート',
-    body: '',
-    coverType: 'none',
-    categoryTags: [],
-    mode: 'memo',
-    createdAt: new Date('2026-05-15'),
-    updatedAt: new Date('2026-05-15'),
-  },
-]
-
 const [state, setState] = createStore<AppState>({
   page: 'db01',
   galleryReturnPage: 'db01',
@@ -189,7 +169,9 @@ const [state, setState] = createStore<AppState>({
   nutrients: withCustomNutrients(NUTRIENTS),
   symptoms: SYMPTOMS,
   memos: [],
-  blogs: INITIAL_BLOGS,
+  trashMemos: [],
+  memoNotebookId: 'all',
+  blogs: [],
   trashBlogs: [],
   notebooks: [],
   db01Columns: DB01_COLUMNS_DEFAULT,
@@ -297,7 +279,13 @@ export async function initFirestore(): Promise<void> {
       setState({ nutrients: withCustomNutrients([...fsNutrients, ...missingBundledNutrients]) })
     }
 
-    setState({ memos, blogs, trashBlogs, notebooks, dbStatus: 'connected', dbError: '' })
+    setState({
+      memos: memos.filter((m) => !m.deletedAt),
+      trashMemos: memos.filter((m) => !!m.deletedAt),
+      blogs, trashBlogs, notebooks, dbStatus: 'connected', dbError: '',
+    })
+    // 旧「ブログ記事」と旧ノートブックのページを、ノートブックの中のメモへ移す（元は消さない）
+    await migrateLegacyToMemos(allBlogs, notebooks)
     // つながらない間に端末へ保存していた成分カードの追加・修正を、クラウドへ送る
     await pushLocalNutrientsToCloud(new Set((await fetchNutrients()).map((n) => n.id)))
   } catch (e) {
@@ -367,16 +355,12 @@ export function deleteSymptom(id: string): void {
 
 // ── Memo CRUD ─────────────────────────────────────────────────────────────────
 
+/** IDを先に決めて一覧へすぐ入れる。クラウドへの保存は待たない（オフラインでも止まらない） */
 export async function addMemo(data: Omit<Memo, 'id'>): Promise<string> {
-  const tempId = 'local-' + Date.now()
-  setState('memos', (prev) => [{ ...data, id: tempId }, ...prev])
-  try {
-    const id = await addMemoFs(data)
-    setState('memos', (prev) => prev.map((m) => (m.id === tempId ? { ...m, id } : m)))
-    return id
-  } catch {
-    return tempId
-  }
+  const id = newDocId('memos')
+  setState('memos', (prev) => [{ ...data, id }, ...prev])
+  setMemoFs(id, data).catch(console.warn)
+  return id
 }
 
 export function updateMemo(id: string, patch: Partial<Omit<Memo, 'id'>>): void {
@@ -384,9 +368,85 @@ export function updateMemo(id: string, patch: Partial<Omit<Memo, 'id'>>): void {
   updateMemoFs(id, patch).catch(console.warn)
 }
 
-export function deleteMemo(id: string): void {
+/** メモはすぐ消さず、ごみ箱へ入れる */
+export function trashMemo(id: string): void {
+  const memo = state.memos.find((m) => m.id === id)
+  if (!memo) return
+  const deletedAt = new Date()
   setState('memos', (prev) => prev.filter((m) => m.id !== id))
+  setState('trashMemos', (prev) => [{ ...memo, deletedAt }, ...prev])
+  updateMemoFs(id, { deletedAt }).catch(console.warn)
+}
+
+export function restoreMemo(id: string): void {
+  const memo = state.trashMemos.find((m) => m.id === id)
+  if (!memo) return
+  const { deletedAt: _d, ...restored } = memo
+  setState('trashMemos', (prev) => prev.filter((m) => m.id !== id))
+  setState('memos', (prev) => [{ ...restored }, ...prev])
+  restoreMemoFs(id).catch(console.warn)
+}
+
+export function deleteMemoPermanent(id: string): void {
+  setState('trashMemos', (prev) => prev.filter((m) => m.id !== id))
   deleteMemoFs(id).catch(console.warn)
+}
+
+/** サイドバーのノートブックを押したとき: そのノートブックのメモ一覧を開く */
+export function openNotebook(id: string): void {
+  setState({ memoNotebookId: id })
+  navigate('memo')
+}
+
+/** そのノートブック（子ノートブックを含む）に入っているメモの数 */
+export function memoCount(notebookId: string): number {
+  const ids = new Set([notebookId, ...state.notebooks.filter((n) => n.parentId === notebookId).map((n) => n.id!)])
+  return state.memos.filter((m) => m.notebookId && ids.has(m.notebookId)).length
+}
+
+/**
+ * 旧「ブログ記事」と旧ノートブックのページをメモへ移す。
+ * 元のデータは消さず、移したメモに元IDを残して二重に移さない。
+ * クラウドにつながって一覧を読めたときだけ動く（読めないまま移すと重複するため）
+ */
+let migrationRunning = false
+let migrationDone = false
+async function migrateLegacyToMemos(allBlogs: Blog[], notebooks: Notebook[]): Promise<void> {
+  // initFirestore は起動時とログイン時に重ねて呼ばれるので、同時に2回移さない
+  if (migrationRunning || migrationDone) return
+  migrationRunning = true
+  try {
+    // 画面の一覧ではなく、クラウドの最新を見て「もう移したか」を決める
+    const fresh = await fetchMemos()
+    const movedBlogs = new Set(fresh.map((m) => m.fromBlogId).filter(Boolean))
+    const movedPages = new Set(fresh.map((m) => m.fromPageId).filter(Boolean))
+    const blogs = allBlogs.filter((b) => b.id && !b.id.startsWith('sample-') && !movedBlogs.has(b.id))
+    if (blogs.length) {
+      const blogBook = state.notebooks.find((n) => n.title === 'ブログ記事' && !n.parentId)
+      const blogBookId = blogBook?.id ?? await addNotebook({ title: 'ブログ記事', pages: [], createdAt: new Date(), updatedAt: new Date() })
+      for (const blog of blogs) {
+        await addMemo({
+          title: blog.title, body: blog.body, tags: blog.categoryTags ?? [], notebookId: blogBookId,
+          fromBlogId: blog.id, createdAt: blog.createdAt, updatedAt: blog.updatedAt,
+          ...(blog.deletedAt ? { deletedAt: blog.deletedAt } : {}),
+        })
+      }
+      // ごみ箱にあった記事は、移したあともごみ箱に置く
+      setState('trashMemos', (prev) => [...prev, ...state.memos.filter((m) => m.deletedAt)])
+      setState('memos', (prev) => prev.filter((m) => !m.deletedAt))
+    }
+    for (const nb of notebooks) {
+      for (const page of nb.pages ?? []) {
+        if (movedPages.has(page.id)) continue
+        await addMemo({ title: page.title, body: page.body, tags: [], notebookId: nb.id, fromPageId: page.id, createdAt: nb.createdAt, updatedAt: nb.updatedAt })
+      }
+    }
+    migrationDone = true
+  } catch (e) {
+    console.warn('[memo] legacy migration failed', e)
+  } finally {
+    migrationRunning = false
+  }
 }
 
 // ── Blog CRUD ─────────────────────────────────────────────────────────────────
@@ -433,22 +493,18 @@ export function deleteBlogPermanent(id: string): void {
 
 export function emptyTrash(): void {
   const ids = state.trashBlogs.map((b) => b.id!)
-  setState({ trashBlogs: [] })
-  Promise.all(ids.map(deleteBlogFs)).catch(console.warn)
+  const memoIds = state.trashMemos.map((m) => m.id!)
+  setState({ trashBlogs: [], trashMemos: [] })
+  Promise.all([...ids.map(deleteBlogFs), ...memoIds.map(deleteMemoFs)]).catch(console.warn)
 }
 
 // ── Notebook CRUD ─────────────────────────────────────────────────────────────
 
 export async function addNotebook(data: Omit<Notebook, 'id'>): Promise<string> {
-  const tempId = 'local-' + Date.now()
-  setState('notebooks', (prev) => [{ ...data, id: tempId }, ...prev])
-  try {
-    const id = await addNotebookFs(data)
-    setState('notebooks', (prev) => prev.map((n) => (n.id === tempId ? { ...n, id } : n)))
-    return id
-  } catch {
-    return tempId
-  }
+  const id = newDocId('notebooks')
+  setState('notebooks', (prev) => [{ ...data, id }, ...prev])
+  setNotebookFs(id, data).catch(console.warn)
+  return id
 }
 
 export function updateNotebook(id: string, patch: Partial<Omit<Notebook, 'id'>>): void {
@@ -459,4 +515,11 @@ export function updateNotebook(id: string, patch: Partial<Omit<Notebook, 'id'>>)
 export async function deleteNotebook(id: string): Promise<void> {
   await deleteNotebookFs(id)
   setState('notebooks', (prev) => prev.filter((n) => n.id !== id))
+}
+
+/** ノートブックを作る（parentId を渡すと、その中に1段入れ子で作る） */
+export async function createNotebook(title: string, parentId?: string): Promise<string> {
+  const now = new Date()
+  const id = await addNotebook({ title, pages: [], createdAt: now, updatedAt: now, ...(parentId ? { parentId } : {}) })
+  return id
 }

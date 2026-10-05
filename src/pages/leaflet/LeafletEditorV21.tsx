@@ -14,28 +14,19 @@ import { cardDescription, cardTitle, CopyButton, LeafletVisual, nutrientById, Or
 // 商品ノートと同じ1列のGalleryのまま編集する。左右の受け渡しはなく、
 // 「表示」のチェックを外したカードは暗くなって最後に回り、配布用レイアウトには出ない。
 
-const PRESS_KEY = 'nacc-leaflet-press-ms'
-const PRESS_OPTIONS = [300, 600] as const
+/** 並び替えの長押し時間（0.3秒で固定） */
+const PRESS_MS = 300
 const MOVE_TOLERANCE = 8
 const PLACEHOLDER_KEY = '__placeholder'
 
 type DragState = { key: string; x: number; y: number; dx: number; dy: number; w: number; h: number }
 type Pending = { key: string; el: HTMLElement; startX: number; startY: number; x: number; y: number; mouse: boolean; timer: number }
 
-function loadPressMs(): number {
-  try {
-    const value = Number(localStorage.getItem(PRESS_KEY))
-    return PRESS_OPTIONS.includes(value as 300 | 600) ? value : 300
-  } catch {
-    return 300
-  }
-}
-
 const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (props) => {
   let rootRef!: HTMLDivElement
   let gridRef!: HTMLDivElement
 
-  const [pressMs, setPressMsSignal] = createSignal(loadPressMs())
+  const pressMs = () => PRESS_MS
   const [drag, setDrag] = createSignal<DragState | null>(null)
   const [target, setTarget] = createSignal<number | null>(null)
   const [pressingKey, setPressingKey] = createSignal<string | null>(null)
@@ -48,11 +39,6 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
   let pending: Pending | null = null
   let touchEl: HTMLElement | null = null
   let scrollFrame = 0
-
-  const setPressMs = (ms: number) => {
-    setPressMsSignal(ms)
-    try { localStorage.setItem(PRESS_KEY, String(ms)) } catch { /* 端末に保存できなくても動作は続ける */ }
-  }
 
   const cards = () => props.leaflet.items.filter((item): item is LeafletCard => item.kind === 'card')
   const others = () => props.leaflet.items.filter((item) => item.kind !== 'card')
@@ -314,16 +300,6 @@ const LeafletEditorV21: Component<{ leaflet: Leaflet; product: Product }> = (pro
         <HelpButton title="リーフレット Ver2.1" items={HELP_LEAFLET_V21} />
         <span class="lf-saved">{savedLabel()}</span>
         <SaveButton />
-        <span class="lf21-press" role="radiogroup" aria-label="並び替えの長押し時間">
-          長押し
-          <For each={[...PRESS_OPTIONS]}>
-            {(ms) => (
-              <button type="button" role="radio" aria-checked={pressMs() === ms} classList={{ 'is-active': pressMs() === ms }} onClick={() => setPressMs(ms)}>
-                {ms / 1000}秒
-              </button>
-            )}
-          </For>
-        </span>
         <button
           class="lf21-status"
           classList={{ 'is-ready': props.leaflet.status === 'ready' }}

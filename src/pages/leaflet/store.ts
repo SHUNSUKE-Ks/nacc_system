@@ -332,9 +332,9 @@ export function createLeafletV21(product: Product, nutrientIds: string[], image:
   return id
 }
 
-/** 編集画面をリーフレットの版に合わせて開く */
+/** 編集画面を開く（Ver2.1 に一本化。旧2カラム版のリーフレットも Ver2.1 の画面で開く） */
 export function openLeafletEditor(leaflet: Leaflet) {
-  setLeafletView(leaflet.version === '2.1' ? { view: 'edit21', id: leaflet.id } : { view: 'edit', id: leaflet.id })
+  setLeafletView({ view: 'edit21', id: leaflet.id })
 }
 
 /** 商品ノートの赤いボタン: その商品の Ver2.1 リーフレットを作って、すぐ編集画面へ */

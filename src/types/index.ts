@@ -34,11 +34,26 @@ export type Symptom = {
   createdAt?: Date
 }
 
+/** 写真ギャラリーの1枚を指す（商品の写真・アプリ同梱の画像・端末から追加した画像） */
+export type PhotoRef =
+  | { kind: 'product'; productId: string }
+  | { kind: 'asset'; name: string }
+  | { kind: 'upload'; id: number }
+
 export type Memo = {
   id?: string
   title: string
   body: string
   tags: Tag[]
+  /** 入れ先のノートブック（未設定は「未分類」） */
+  notebookId?: string
+  /** 写真ギャラリーから貼った画像 */
+  images?: PhotoRef[]
+  /** ごみ箱に入れた日時 */
+  deletedAt?: Date
+  /** 旧ブログ記事・旧ノートブックのページから移したときの元ID（二重に移さないため） */
+  fromBlogId?: string
+  fromPageId?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -66,6 +81,9 @@ export type GalleryPhoto = {
 export type Notebook = {
   id?: string
   title: string
+  /** 親ノートブック（1段だけ入れ子にできる） */
+  parentId?: string
+  /** 旧形式のページ。メモへ移したあとも消さずに残す */
   pages: NotebookPage[]
   createdAt: Date
   updatedAt: Date
@@ -78,7 +96,7 @@ export type NotebookPage = {
   order: number
 }
 
-export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery' | 'leaflet' | 'catalog'
+export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery' | 'leaflet' | 'catalog' | 'photos'
 export type BlogMode = 'memo' | 'view'
 export type FontSize = 's' | 'm' | 'l' | 'xl'
 export type FontSizePx = { s: 13; m: 16; l: 19; xl: 22 }

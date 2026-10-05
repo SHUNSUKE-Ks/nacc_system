@@ -675,7 +675,7 @@ const LeafletLayout: Component<{ leaflet: Leaflet; product: Product; initialClea
         <button class="lf-back" onClick={() => setLeafletView({ view: 'gallery' })}>← リーフレットGallery</button>
         <OriginalSafeNote />
         <HelpButton title="配布用レイアウト" items={HELP_LEAFLET_LAYOUT} />
-        <button onClick={() => openLeafletEditor(props.leaflet)}>{props.leaflet.version === '2.1' ? 'カード編集（Ver2.1）' : '2カラム編集（掲載カード）'}</button>
+        <button onClick={() => openLeafletEditor(props.leaflet)}>カード編集</button>
         <button
           classList={{ 'is-on': penOn() }}
           onClick={() => setPenOn(!penOn())}

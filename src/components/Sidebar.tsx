@@ -16,6 +16,7 @@ const ICONS = {
   products: 'M3 7.5 12 3l9 4.5v9L12 21l-9-4.5zM3 7.5l9 4.5 9-4.5M12 12v9',
   photos: 'M4 5h16v14H4zM4 16l4.5-4.5 3.5 3.5 2.5-2.5L20 18',
   catalog: 'M9 5h11M9 12h11M9 19h11M3.5 5.5l1.5 1.5 2.5-3M3.5 12.5l1.5 1.5 2.5-3M4 19h2',
+  survey: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M8.5 12l1.5 1.5 3-3M8.5 17h7',
   leaflet: 'M4 5.5 9 4l6 2 5-1.5v14L15 20l-6-2-5 1.5zM9 4v14M15 6v14',
   docs: 'M6 2h8l4 4v16H6zM14 2v5h5M9 13h6M9 17h4',
   notebook: 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6zM6 3v18M9.5 8h6M9.5 12h6',
@@ -28,11 +29,12 @@ const ICONS = {
 
 type NavItem = { id: string; label: string; icon: string; active: () => boolean; onClick: () => void }
 
-// 上から: 商品・写真・カタログ・リーフレット・資料PDF（DB02/03/10 は一時非表示）
+// 上から: 商品・写真・カタログ・アンケート・リーフレット・資料PDF（DB02/03/10 は一時非表示）
 const MAIN_NAV: NavItem[] = [
   { id: 'db01', label: '商品一覧', icon: ICONS.products, active: () => state.page === 'db01', onClick: () => navigate('db01') },
   { id: 'photos', label: '写真', icon: ICONS.photos, active: () => state.page === 'photos', onClick: () => navigate('photos') },
   { id: 'catalog', label: 'カタログ', icon: ICONS.catalog, active: () => state.page === 'catalog', onClick: () => navigate('catalog') },
+  { id: 'survey', label: 'アンケート', icon: ICONS.survey, active: () => state.page === 'survey', onClick: () => navigate('survey') },
   { id: 'leaflet', label: 'リーフレット', icon: ICONS.leaflet, active: () => state.page === 'leaflet', onClick: () => { setState({ sidebarOpen: false }); openLeafletGallery() } },
   { id: 'docs', label: '資料PDF', icon: ICONS.docs, active: () => state.galleryPanelOpen, onClick: () => setState({ galleryPanelOpen: !state.galleryPanelOpen, settingsPanelOpen: false, sidebarOpen: false }) },
 ]

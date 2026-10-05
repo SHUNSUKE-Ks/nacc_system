@@ -239,3 +239,16 @@ export async function fetchCatalogChecksFs(): Promise<CatalogCheckDoc[]> {
 export async function saveCatalogCheckFs(data: CatalogCheckDoc): Promise<void> {
   await setDoc(doc(firestore, 'catalogChecks', data.productId), data)
 }
+
+// ── Survey（病名・症状／美容の悩み アンケート）: 回答を1件の JSON 文字列で保存 ──
+export type SurveyDoc = { id: string; updatedAt: string; json: string }
+
+export async function fetchSurveyFs(id: string): Promise<SurveyDoc | null> {
+  const snap = await getDocs(collection(firestore, 'surveys'))
+  const found = snap.docs.find((d) => d.id === id)
+  return found ? (found.data() as SurveyDoc) : null
+}
+
+export async function saveSurveyFs(data: SurveyDoc): Promise<void> {
+  await setDoc(doc(firestore, 'surveys', data.id), data)
+}

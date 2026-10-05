@@ -16,6 +16,7 @@ const PAGE_LABELS: Record<Page, string> = {
   leaflet:  'リーフレット',
   catalog:  'カタログ',
   photos:   '写真',
+  survey:   'アンケート',
 }
 
 const Header: Component = () => {

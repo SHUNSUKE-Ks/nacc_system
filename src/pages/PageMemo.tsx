@@ -181,11 +181,32 @@ const PageMemo: Component = () => {
 
   const Editor = () => (
     <div class="flex-1 flex flex-col overflow-hidden">
-      <Show when={isMobile()}>
-        <button class="mobile-back" onClick={() => setMobilePanel('list')}>
-          ← メモ一覧
-        </button>
-      </Show>
+      {/* 上の帯: 左に一覧へ戻る（携帯）、右上に写真を貼る・ごみ箱 */}
+      <div class="memo-topbar">
+        <Show when={isMobile()}>
+          <button class="memo-back" onClick={() => setMobilePanel('list')}>← メモ一覧</button>
+        </Show>
+        <Show when={selected()}>
+          {(memo) => (
+            <span class="memo-topbar-actions">
+              <button type="button" class="memo-top-btn" onClick={() => setPhotoPickerOpen(true)} title="写真ページから写真を貼る">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM4 16l4.5-4.5 3.5 3.5 2.5-2.5L20 18" /></svg>
+                写真を貼る
+              </button>
+              <button
+                type="button"
+                class="memo-top-btn is-trash"
+                onClick={() => { trashMemo(memo().id!); setSelectedId(null); if (isMobile()) setMobilePanel('list') }}
+                title="ごみ箱へ移します（ごみ箱から戻せます）"
+                aria-label="このメモをごみ箱へ"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13M9 7V4h6v3" /></svg>
+                <span class="hidden sm:inline">ごみ箱へ</span>
+              </button>
+            </span>
+          )}
+        </Show>
+      </div>
       <Show
         when={selected()}
         fallback={
@@ -196,7 +217,7 @@ const PageMemo: Component = () => {
       >
         {(memo) => (
           <div class="flex flex-col h-full overflow-hidden">
-            <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
+            <div class="flex-1 overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-3">
               <input
                 type="text"
                 class="text-xl font-bold text-nacc-dark border-none outline-none bg-transparent w-full"
@@ -248,6 +269,7 @@ const PageMemo: Component = () => {
                 onInput={(e) => handleTextInput('body', e.currentTarget.value)}
               />
 
+              <Show when={(memo().images ?? []).length > 0}>
               <div class="memo-photos">
                 <For each={memo().images ?? []}>
                   {(ref) => (
@@ -259,17 +281,10 @@ const PageMemo: Component = () => {
                     </figure>
                   )}
                 </For>
-                <button type="button" class="memo-photo-add" onClick={() => setPhotoPickerOpen(true)}>＋ 写真を貼る</button>
               </div>
+              </Show>
 
-              <div class="flex items-center justify-between text-xs text-gray-400">
-                <button
-                  class="text-red-400 hover:text-red-600"
-                  onClick={() => { trashMemo(memo().id!); setSelectedId(null) }}
-                  title="ごみ箱へ移します（ごみ箱から戻せます）"
-                >
-                  🗑️ ごみ箱へ
-                </button>
+              <div class="flex items-center justify-end text-xs text-gray-400">
                 <span>自動保存 — {new Date(memo().updatedAt).toLocaleDateString('ja-JP')}</span>
               </div>
             </div>

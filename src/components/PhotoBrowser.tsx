@@ -1,4 +1,4 @@
-import { type Component, createSignal, For, Show } from 'solid-js'
+import { type Accessor, type Component, createSignal, For, type Setter, Show } from 'solid-js'
 import type { PhotoRef } from '../types'
 import {
   LOOSE_GROUP, PRODUCT_GROUP, addPhotoFiles, addPhotoGroup, deletePhoto, photoGroups, productGroupPhotos, uploadsIn,
@@ -13,8 +13,12 @@ const refKey = (ref: PhotoRef) => (ref.kind === 'product' ? `p:${ref.productId}`
 const PhotoBrowser: Component<{
   pick?: { selected: PhotoRef[]; onToggle: (ref: PhotoRef) => void }
   onOpen?: (tile: { src: string; name: string }) => void
+  /** 選択中のグループを外（写真ページの見出し）と共有するとき */
+  group?: [Accessor<string>, Setter<string>]
+  /** 追加ボタンを外に置くとき（写真ページ） */
+  hideUpload?: boolean
 }> = (props) => {
-  const [group, setGroup] = createSignal(PRODUCT_GROUP)
+  const [group, setGroup] = props.group ?? createSignal(PRODUCT_GROUP)
   const [busy, setBusy] = createSignal(false)
   const [naming, setNaming] = createSignal(false)
   const [newName, setNewName] = createSignal('')
@@ -85,6 +89,7 @@ const PhotoBrowser: Component<{
         </Show>
       </div>
 
+      <Show when={!props.hideUpload}>
       <div class="photo-bar">
         <Show when={canUpload()} fallback={
           <span>{group() === PRODUCT_GROUP ? '商品の写真とアプリに入っている画像です（自動で並びます）。' : 'グループを決めずに追加した写真です。'}</span>
@@ -96,6 +101,7 @@ const PhotoBrowser: Component<{
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => upload(e.currentTarget.files)} />
         </Show>
       </div>
+      </Show>
 
       <div class="photo-grid">
         <For each={tiles()} fallback={<p class="photo-empty">まだ写真がありません。</p>}>

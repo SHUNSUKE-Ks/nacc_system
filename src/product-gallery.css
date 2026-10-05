@@ -210,3 +210,53 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .cloud-account-panel.is-inline{position:static;width:auto;box-shadow:none}
 /* 画面の左寄りに置いた？は、吹き出しを右へ開く */
 @media (min-width:641px){.help-left .help-panel{left:0;right:auto}}
+.photo-page-title{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:2px 0 4px}
+.photo-page-title h1{margin:0}
+.photo-page-title .photo-upload{margin-left:auto}
+@media (max-width:480px){.photo-page-title .photo-upload{min-height:34px;padding:0 12px}.photo-upload-group{display:none}}
+
+/* ── アンケート ── */
+.survey-page{max-width:1000px;margin:0 auto;padding:20px clamp(16px,3vw,32px) 48px}
+.survey-head p{margin:0;color:#b38247;font-size:.55rem;font-weight:800;letter-spacing:.2em}
+.survey-title{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:2px 0 4px}
+.survey-title h1{margin:0;color:#37352f;font-size:1.2rem;font-weight:700}
+.survey-cloud{margin-left:auto;padding:2px 9px;border-radius:999px;background:#f1ece2;color:#8d7c68;font-size:.58rem}
+.survey-cloud.is-ok{background:#e8f3ea;color:#2f7a45}
+.survey-head>span{color:#8d7c68;font-size:.66rem;line-height:1.8}
+.survey-tabs{display:flex;gap:6px;margin:14px 0 8px;border-bottom:1px solid #e8dfcf}
+.survey-tabs button{display:flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-bottom:2px solid transparent;color:#8d7c68;font-size:.72rem;font-weight:700}
+.survey-tabs button span{padding:1px 7px;border-radius:999px;background:#f3ede2;font-size:.55rem}
+.survey-tabs button.is-active{border-color:#855626;color:#37352f}
+.survey-filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:10px}
+.survey-chips{display:flex;flex-wrap:wrap;gap:6px}
+.survey-chips button{min-height:32px;padding:0 12px;border:1px solid #e8dfcf;border-radius:999px;background:#fff;color:#6b6157;font-size:.6rem;font-weight:700}
+.survey-chips button.is-active{border-color:#37352f;background:#37352f;color:#fff}
+.survey-only-open{display:inline-flex;align-items:center;gap:6px;color:#6b6157;font-size:.62rem}
+.survey-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.survey-item{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;padding:12px 14px;border:1px solid #e8dfcf;border-radius:12px;background:#fff}
+.survey-item.is-answered{background:#fffbf3;border-color:#e2cfa8}
+.survey-item-main small{color:#b4a38e;font-size:.52rem}
+.survey-item-main strong{display:block;color:#37352f;font-size:.8rem}
+.survey-yomi{color:#a89a88;font-size:.52rem}
+.survey-item-main p{margin:4px 0 0;color:#5a5048;font-size:.62rem;line-height:1.7}
+.survey-item-main p b{margin-right:6px;color:#8d7c68;font-size:.55rem}
+.survey-item-main .survey-desc{color:#8d7c68}
+.survey-answer{display:grid;gap:6px;justify-items:end}
+.survey-marks{display:flex;gap:4px}
+.survey-marks button{display:grid;place-items:center;width:40px;height:40px;border:1px solid #e8dfcf;border-radius:10px;background:#fff;color:#8d7c68;font-size:.9rem;font-weight:700}
+.survey-marks button.is-active.is-great{border-color:#855626;background:#855626;color:#fff}
+.survey-marks button.is-active.is-good{border-color:#b38247;background:#b38247;color:#fff}
+.survey-marks button.is-active.is-maybe{border-color:#c9b48f;background:#efe4cc;color:#6b5330}
+.survey-marks button.is-active.is-no{border-color:#9a9a9a;background:#ececec;color:#555}
+.survey-memo{width:176px;min-height:34px;padding:0 10px;border:1px solid #e8dfcf;border-radius:8px;outline:0;font-size:16px}
+.survey-empty,.survey-note{color:#aaa;font-size:.6rem;text-align:center;padding:16px 0}
+@media (max-width:640px){.survey-item{grid-template-columns:1fr}.survey-answer{justify-items:stretch}.survey-marks button{flex:1;width:auto}.survey-memo{width:100%}}
+
+/* メモ: 上の帯（右上に写真を貼る・ごみ箱） */
+.memo-topbar{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 20px 0}
+.memo-back{color:#b38247;font-size:.75rem;font-weight:600}
+.memo-topbar-actions{display:flex;gap:6px;margin-left:auto}
+.memo-top-btn{display:inline-flex;align-items:center;gap:5px;min-height:36px;padding:0 12px;border:1px solid #e8dfcf;border-radius:999px;background:#fff;color:#855626;font-size:.66rem;font-weight:700}
+.memo-top-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.memo-top-btn.is-trash{color:#c55}
+.memo-top-btn.is-trash:hover{background:#fbefef}

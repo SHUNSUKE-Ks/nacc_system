@@ -2,6 +2,16 @@
 .cc-page{--cc-ink:#37352f;--cc-sub:#8d7c68;--cc-line:#e8dfcf;--cc-gold:#b38247;--cc-ok:#2f7a45;--cc-hold:#b7791f;--cc-wine:#782f3d;
   height:100dvh;overflow-y:auto;background:#faf7f1;color:var(--cc-ink)}
 .cc-page button{cursor:pointer}
+.cc-header-open{display:none}
+.cc-original-text{display:block;min-height:1.7em;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text;border-radius:4px}
+.cc-original-text:focus{outline:2px solid var(--cc-gold);outline-offset:3px;background:#fffaf0}
+.cc-product-description{margin:6px 0;color:#5a5048;font-size:.65rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+@media (max-width:1024px), (pointer:coarse){
+  .cc-top.is-collapsed{gap:6px;padding-top:4px;padding-bottom:4px;flex-wrap:nowrap}
+  .cc-top.is-collapsed>:not(.cc-back):not(.cc-header-open){display:none}
+  .cc-top.is-collapsed .cc-header-open{display:block;min-height:36px;padding:0 8px;color:var(--cc-sub);font-size:12px}
+  .cc-item-desc{display:block!important;overflow:visible!important;-webkit-line-clamp:unset!important;white-space:pre-wrap;overflow-wrap:anywhere}
+}
 
 .cc-top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:12px clamp(14px,3vw,36px);border-bottom:1px solid var(--cc-line);background:rgba(255,253,248,.96);backdrop-filter:blur(10px)}
 .cc-back{min-height:36px;padding:0 12px;border-radius:8px;color:#7b5630;font-size:.68rem;font-weight:700}

@@ -1,5 +1,5 @@
 import { type Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
-import { navigate, state } from '../../store'
+import { navigate, state, updateProduct, updateNutrient } from '../../store'
 import type { Product } from '../../types'
 import HelpButton, { HELP_CATALOG_CHECK } from '../../components/HelpButton'
 import {
@@ -25,6 +25,33 @@ const CatalogCheckPage: Component = () => {
   const [filter, setFilter] = createSignal<Filter>('all')
   const [category, setCategory] = createSignal<Category>('all')
   const [query, setQuery] = createSignal('')
+  const [headerClosed, setHeaderClosed] = createSignal(false)
+  let previousScroll = 0
+  let reopenAt = 0
+  const onCatalogScroll = (event: Event & { currentTarget: HTMLDivElement }) => {
+    const top = event.currentTarget.scrollTop
+    if (window.matchMedia('(max-width: 1024px), (pointer: coarse)').matches && top > previousScroll && top > reopenAt + 24) setHeaderClosed(true)
+    previousScroll = top
+  }
+  const openHeader = () => {
+    reopenAt = previousScroll
+    setHeaderClosed(false)
+  }
+  const OriginalText: Component<{ value: string; label: string; onSave: (value: string) => void }> = (text) => (
+    <span
+      class="cc-original-text"
+      contentEditable
+      role="textbox"
+      aria-label={`${text.label}の原文を編集`}
+      aria-multiline="true"
+      title="クリックして原文を編集（欄を離れると保存）"
+      onBlur={(event) => {
+        const value = event.currentTarget.innerText.trim()
+        if (value !== text.value && (value || !text.label.includes('タイトル'))) text.onSave(value)
+        else event.currentTarget.textContent = text.value
+      }}
+    >{text.value}</span>
+  )
   /** 開閉は手で変えたものだけ覚える（既定: 確認済みの商品はたたむ） */
   const [openState, setOpenState] = createSignal<Record<string, boolean>>({})
   const [memoFocus, setMemoFocus] = createSignal<string | null>(null)
@@ -137,11 +164,15 @@ const CatalogCheckPage: Component = () => {
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10.5l3.2 3.2L15 6.5" /></svg>
         </button>
         <div class="cc-item-name">
-          <strong>{row.item.name}</strong>
+          <strong><Show when={row.item.source === 'card'} fallback={row.item.name}>
+            <OriginalText value={row.item.name} label="成分タイトル" onSave={(name) => updateNutrient(row.item.key.slice(2), { name })} />
+          </Show></strong>
           <Show when={row.item.source === 'label'}><small>原材料表記</small></Show>
           <Show when={row.item.source === 'sheet'}><small class="is-sheet">チェック表のみ</small></Show>
         </div>
-        <p class="cc-item-desc">{row.item.description || '—'}</p>
+        <p class="cc-item-desc"><Show when={row.item.source === 'card'} fallback={row.item.description || '—'}>
+          <OriginalText value={row.item.description} label="成分説明" onSave={(description) => updateNutrient(row.item.key.slice(2), { description })} />
+        </Show></p>
         <StatusPill value={check().status} label={`${row.item.name}のステータス`} onChange={(s) => setItemStatus(row.product.id, row.item.key, s)} />
         <MemoField productId={row.product.id} itemKey={row.item.key} value={check().memo} hold={check().status === 'hold'} />
         <span class="cc-date">{formatStamp(check().updatedAt)}</span>
@@ -190,9 +221,10 @@ const CatalogCheckPage: Component = () => {
   }
 
   return (
-    <div class="cc-page" data-state="CATALOG_CHECK">
-      <header class="cc-top">
+    <div class="cc-page" data-state="CATALOG_CHECK" onScroll={onCatalogScroll}>
+      <header class="cc-top" classList={{ 'is-collapsed': headerClosed() }}>
         <button type="button" class="cc-back" onClick={() => navigate('db01')}>← 商品ページ</button>
+        <button type="button" class="cc-header-open" aria-expanded={!headerClosed()} onClick={openHeader}>headerOpen...</button>
         <div class="cc-title">
           <p>NACC · NEW CATALOG CHECK</p>
           <h1>新カタログチェック表</h1>
@@ -207,7 +239,7 @@ const CatalogCheckPage: Component = () => {
           <span>確認日</span>
           <input type="date" value={checkDate()} onChange={(e) => setCheckDate(e.currentTarget.value)} />
         </label>
-        <HelpButton title="新カタログチェック表" items={HELP_CATALOG_CHECK} />
+        <HelpButton title="新カタログチェック表" items={HELP_CATALOG_CHECK} viewport />
       </header>
 
       <div class="cc-filters">
@@ -242,7 +274,8 @@ const CatalogCheckPage: Component = () => {
                     {isOpen(product) ? '▾' : '▸'}
                   </button>
                   <div class="cc-product-name">
-                    <strong classList={{ 'is-done': done() }}>{product.name}</strong>
+                    <strong classList={{ 'is-done': done() }}><OriginalText value={product.name} label="商品タイトル" onSave={(name) => updateProduct(product.id, { name })} /></strong>
+                    <p class="cc-product-description"><OriginalText value={product.description} label="商品説明" onSave={(description) => updateProduct(product.id, { description })} /></p>
                     <small>{product.id} · {product.category === 'cosmetic' ? 'コスメ' : 'サプリ'} · 成分 {checkedCount(product)} / {items(product).length} 確認済み</small>
                     <span class="cc-bar" aria-hidden="true"><i style={{ width: `${items(product).length ? (checkedCount(product) / items(product).length) * 100 : 0}%` }} /></span>
                   </div>

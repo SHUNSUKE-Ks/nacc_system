@@ -1,14 +1,16 @@
 import { type Component, createSignal, For, onCleanup, Show } from 'solid-js'
+import { Portal } from 'solid-js/web'
 
 // 画面ごとの「？」ヘルプ。クライアント向けに、その画面でできることを短く並べる
 export type HelpItem = { title: string; text: string }
 
-const HelpButton: Component<{ title: string; items: HelpItem[]; class?: string }> = (props) => {
+const HelpButton: Component<{ title: string; items: HelpItem[]; class?: string; viewport?: boolean }> = (props) => {
   const [open, setOpen] = createSignal(false)
   let rootRef!: HTMLDivElement
+  let panelRef: HTMLElement | undefined
 
   const onOutside = (event: PointerEvent) => {
-    if (open() && !rootRef.contains(event.target as Node)) setOpen(false)
+    if (open() && !rootRef.contains(event.target as Node) && !panelRef?.contains(event.target as Node)) setOpen(false)
   }
   const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
   document.addEventListener('pointerdown', onOutside)
@@ -31,7 +33,8 @@ const HelpButton: Component<{ title: string; items: HelpItem[]; class?: string }
         ?
       </button>
       <Show when={open()}>
-        <section class="help-panel" role="dialog" aria-label={`${props.title}の使い方`}>
+        <Portal mount={props.viewport ? document.body : rootRef}>
+        <section ref={panelRef} class={`help-panel ${props.viewport ? 'help-panel-viewport' : ''}`} role="dialog" aria-label={`${props.title}の使い方`}>
           <header>
             <span>HOW TO USE</span>
             <strong>{props.title}</strong>
@@ -48,6 +51,7 @@ const HelpButton: Component<{ title: string; items: HelpItem[]; class?: string }
             </For>
           </ol>
         </section>
+        </Portal>
       </Show>
     </div>
   )

@@ -93,7 +93,8 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .help-panel li::before{content:counter(help);position:absolute;left:0;top:1px;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#f3e6cc;color:#855626;font-size:.6rem;font-weight:800}
 .help-panel li b{color:#37352f;font-size:.72rem}
 .help-panel li span{color:#6b6157;font-size:.68rem;line-height:1.7}
-@media (max-width:640px){.help-panel{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto}}
+.help-panel-viewport{position:fixed;right:12px;top:72px;max-height:calc(100dvh - 96px)}
+@media (max-width:640px){.help-panel{position:fixed;left:12px;right:12px;top:auto;bottom:max(12px,env(safe-area-inset-bottom));width:auto}.help-panel-viewport{max-height:calc(100dvh - 96px - env(safe-area-inset-bottom))}}
 @media print{.help-button{display:none!important}}
 
 /* お気に入りはクリックで切り替え（長押しゲージは使わない） */

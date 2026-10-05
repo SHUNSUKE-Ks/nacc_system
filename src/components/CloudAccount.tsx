@@ -48,7 +48,9 @@ const CloudAccount: Component = () => {
       <button type="button" class={`cloud-account-trigger is-${status()}`} onClick={() => setOpen(!open())} aria-expanded={open()} title={label()}>
         <span class="cloud-dot" aria-hidden="true" />
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z" /></svg>
-        <span class="hidden sm:inline">{state.cloudUser || status() === 'ok' ? label() : 'ログイン'}</span>
+        <Show when={status() !== 'ok'}>
+          <span class="hidden sm:inline">{state.cloudUser ? label() : 'ログイン'}</span>
+        </Show>
       </button>
       <Show when={open()}>
         <section class="cloud-account-panel" role="dialog" aria-label="クラウド保存">

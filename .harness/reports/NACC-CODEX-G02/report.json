@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2.0",
+  "reportId": "rpt_20261004_codex_002",
+  "goalId": "NACC-CODEX-G02",
+  "projectId": "NACCSYSTEM",
+  "title": "携帯カタログの表示・原文編集と本番反映",
+  "date": "2026-10-04",
+  "agentId": "codex",
+  "phase": "実装・本番反映済み／実機未確認",
+  "kind": "implementation",
+  "summary": "NACCヘッダー、カタログ導線、Portalヘルプ、携帯Header開閉、説明全文、blur保存の原文編集を実装・公開",
+  "verification": ["npm run build成功", "Vercel本番READY", "iPhone・iPad実機未確認", "原文編集とクラウド保存の操作未確認"],
+  "nextActions": ["携帯実機でHeader再開閉と編集後再読み込みを確認する（候補・未指示）"],
+  "bodyFile": "report_body.md"
+}

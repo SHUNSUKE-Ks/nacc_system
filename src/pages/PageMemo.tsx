@@ -4,6 +4,7 @@ import { PRODUCTS } from '../db/products'
 import { NUTRIENTS } from '../db/nutrients'
 import { state, setState, addMemo, updateMemo, trashMemo } from '../store'
 import PhotoBrowser from '../components/PhotoBrowser'
+import HelpButton, { HELP_MEMO } from '../components/HelpButton'
 import { photoName, photoSrc } from './leaflet/photos'
 
 const refKey = (ref: PhotoRef) => (ref.kind === 'product' ? `p:${ref.productId}` : ref.kind === 'asset' ? `a:${ref.name}` : `u:${ref.id}`)
@@ -122,12 +123,15 @@ const PageMemo: Component = () => {
     <div class="w-64 shrink-0 border-r border-nacc-border bg-white flex flex-col overflow-hidden">
       <div class="flex items-center justify-between px-3 py-2 border-b border-nacc-border">
         <span class="text-sm font-semibold text-nacc-dark truncate">{listTitle()} <small class="text-[#999] font-normal">{visibleMemos().length}</small></span>
-        <button
-          class="text-xs px-2 py-1 rounded bg-nacc-gold text-white font-semibold hover:opacity-80"
-          onClick={addNewMemo}
-        >
-          + 新規
-        </button>
+        <span class="flex items-center gap-1.5 shrink-0">
+          <button
+            class="text-xs px-2 py-1 rounded bg-nacc-gold text-white font-semibold hover:opacity-80"
+            onClick={addNewMemo}
+          >
+            + 新規
+          </button>
+          <HelpButton title="メモ" items={HELP_MEMO} class="help-left" />
+        </span>
       </div>
       <Show
         when={visibleMemos().length > 0}

@@ -1,5 +1,6 @@
 import { type Component, createSignal, Show } from 'solid-js'
 import PhotoBrowser from '../components/PhotoBrowser'
+import HelpButton, { HELP_PHOTOS } from '../components/HelpButton'
 
 // 写真: 商品の写真と、端末から追加した写真をグループで並べる。メモの「写真を貼る」もここから選ぶ
 const PagePhotos: Component = () => {
@@ -9,7 +10,7 @@ const PagePhotos: Component = () => {
       <div class="photo-page">
         <header class="photo-page-head">
           <p>NACC · PHOTOS</p>
-          <h1>写真</h1>
+          <h1 class="flex items-center gap-2">写真 <HelpButton title="写真" items={HELP_PHOTOS} class="help-left" /></h1>
           <span>ここにある写真は、メモの「写真を貼る」から選べます。</span>
         </header>
         <PhotoBrowser onOpen={setOpen} />

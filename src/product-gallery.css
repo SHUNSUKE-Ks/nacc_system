@@ -94,7 +94,8 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .help-panel li b{color:#37352f;font-size:.72rem}
 .help-panel li span{color:#6b6157;font-size:.68rem;line-height:1.7}
 .help-panel-viewport{position:fixed;right:12px;top:72px;max-height:calc(100dvh - 96px)}
-@media (max-width:640px){.help-panel{position:fixed;left:12px;right:12px;top:auto;bottom:max(12px,env(safe-area-inset-bottom));width:auto}.help-panel-viewport{max-height:calc(100dvh - 96px - env(safe-area-inset-bottom))}}
+/* 携帯: header のすぐ下に出し、下に余白を残して切れないようにする */
+@media (max-width:640px){.help-panel,.help-panel-viewport{position:fixed;left:12px;right:12px;top:calc(3.5rem + env(safe-area-inset-top));bottom:auto;width:auto;max-height:calc(100dvh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))}}
 @media print{.help-button{display:none!important}}
 
 /* お気に入りはクリックで切り替え（長押しゲージは使わない） */
@@ -207,3 +208,5 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .memo-photo-sheet>header span{color:#8d7c68;font-size:.6rem}
 .memo-photo-sheet>header button{margin-left:auto;min-height:36px;padding:0 18px;border-radius:999px;background:#855626;color:#fff;font-size:.68rem;font-weight:700}
 .cloud-account-panel.is-inline{position:static;width:auto;box-shadow:none}
+/* 画面の左寄りに置いた？は、吹き出しを右へ開く */
+@media (min-width:641px){.help-left .help-panel{left:0;right:auto}}

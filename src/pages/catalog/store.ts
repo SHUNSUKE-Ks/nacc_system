@@ -173,6 +173,8 @@ async function syncWithCloud() {
     const remote = await fetchCatalogChecksFs()
     const merged = new Map(checks.map((c) => [c.productId, JSON.parse(JSON.stringify(c)) as ProductCheck]))
     for (const doc of remote) {
+      // アンケートの回答も同じ置き場所にある（__survey-…）。チェック表では使わない
+      if (doc.productId?.startsWith('__survey-')) continue
       if (doc.productId === META_ID) {
         try {
           const remoteMeta = JSON.parse(doc.json) as CatalogMeta

@@ -241,14 +241,20 @@ export async function saveCatalogCheckFs(data: CatalogCheckDoc): Promise<void> {
 }
 
 // ── Survey（病名・症状／美容の悩み アンケート）: 回答を1件の JSON 文字列で保存 ──
+// 今のFirestoreルール（ログインなし版）が許可している catalogChecks に、頭に「__survey-」を付けたIDで置く。
+// 専用の surveys を使うなら、ルールに surveys を足して反映してから SURVEY_COLLECTION を変える
+const SURVEY_COLLECTION = 'catalogChecks'
 export type SurveyDoc = { id: string; updatedAt: string; json: string }
 
 export async function fetchSurveyFs(id: string): Promise<SurveyDoc | null> {
-  const snap = await getDocs(collection(firestore, 'surveys'))
-  const found = snap.docs.find((d) => d.id === id)
-  return found ? (found.data() as SurveyDoc) : null
+  const snap = await getDocs(collection(firestore, SURVEY_COLLECTION))
+  const found = snap.docs.find((d) => d.id === `__survey-${id}`)
+  if (!found) return null
+  const data = found.data() as { updatedAt: string; json: string }
+  return { id, updatedAt: data.updatedAt, json: data.json }
 }
 
 export async function saveSurveyFs(data: SurveyDoc): Promise<void> {
-  await setDoc(doc(firestore, 'surveys', data.id), data)
+  // productId は catalogChecks の他の記録と形をそろえるため（チェック表の同期では読み飛ばす）
+  await setDoc(doc(firestore, SURVEY_COLLECTION, `__survey-${data.id}`), { productId: `__survey-${data.id}`, updatedAt: data.updatedAt, json: data.json })
 }

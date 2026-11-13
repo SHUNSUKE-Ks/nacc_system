@@ -387,3 +387,20 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
   .sby-today{border-left:0;border-top:1px solid #2a2a2a;padding:12px 0 0}
   .sby-nav{flex-direction:row;flex-wrap:wrap;align-items:center;border-left:0;border-top:1px solid #2a2a2a;padding:10px 0 0;width:auto}
 }
+/* 予定の時間割（選んだ日・スタッフごとの列） */
+.sch-dayview{scroll-margin-top:8px}
+.sch-dayview h2 span{margin-left:8px;font-size:.72rem;font-weight:400;color:#a08a6c}
+.sch-tt{display:grid;grid-template-columns:38px repeat(var(--cols),minmax(0,1fr));column-gap:3px}
+.sch-tt-corner{position:sticky;top:0}
+.sch-tt-head{--c:#999;position:sticky;top:0;z-index:2;background:#fff;text-align:center;font-size:.72rem;font-weight:700;color:var(--c);padding:4px 0;border-bottom:2px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sch-tt-label{font-size:.62rem;color:#a08a6c;padding-top:6px}
+.sch-tt-allday{display:flex;flex-direction:column;gap:2px;padding:4px 0;border-bottom:1px solid #eee;min-width:0}
+.sch-tt-chip{--c:#999;background:var(--c);color:#fff;font-size:.62rem;border-radius:4px;padding:2px 3px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sch-tt-hours{position:relative}
+.sch-tt-hours span{position:absolute;right:4px;transform:translateY(-50%);font-size:.6rem;color:#a08a6c;font-variant-numeric:tabular-nums}
+.sch-tt-hours span:first-child{transform:none}
+.sch-tt-col{position:relative;min-width:0;background:repeating-linear-gradient(to bottom,#ece6dc 0 1px,transparent 1px var(--row));background-color:#fcfbf9;border-radius:4px}
+.sch-tt-block{--c:#999;position:absolute;left:1px;right:1px;display:flex;flex-direction:column;align-items:flex-start;gap:0;overflow:hidden;text-align:left;background:color-mix(in srgb,var(--c) 18%,#fff);border-left:3px solid var(--c);border-radius:4px;padding:2px 3px;color:#37352f}
+.sch-tt-block small{font-size:.58rem;color:var(--c);font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.sch-tt-block span{font-size:.66rem;line-height:1.25;overflow-wrap:anywhere}
+.sch-tt-now{position:absolute;left:0;right:0;height:0;border-top:2px solid #e05252;z-index:1;pointer-events:none}

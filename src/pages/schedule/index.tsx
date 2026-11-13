@@ -47,6 +47,46 @@ const PageSchedule: Component = () => {
   const dayEvents = (date: string) =>
     visible().filter((e) => onDay(e, date)).sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''))
 
+  // ── 時間割：選んだ日を、スタッフごとの列 × 1時間ごとの行で見せる ──
+  const HOUR_PX = 48
+  const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
+  const columns = () => STAFF.filter((s) => !hidden()[s.id])
+  const timed = () => dayEvents(selected()).filter((e) => e.start)
+  const allDay = () => dayEvents(selected()).filter((e) => !e.start)
+  /** 表の時間の幅。ふだんは 8〜20時、はみ出す予定があれば広げる */
+  const hours = createMemo(() => {
+    let from = 8
+    let to = 20
+    for (const e of timed()) {
+      from = Math.min(from, Math.floor(toMin(e.start!) / 60))
+      to = Math.max(to, Math.ceil((e.end ? toMin(e.end) : toMin(e.start!) + 60) / 60))
+    }
+    return { from, to: Math.min(to, 24), list: Array.from({ length: Math.min(to, 24) - from }, (_, i) => from + i) }
+  })
+  const blockStyle = (e: ScheduleEvent) => {
+    const s = toMin(e.start!)
+    const end = e.end ? toMin(e.end) : s + 60
+    return {
+      '--c': staffOf(e.staffId).color,
+      top: `${((s - hours().from * 60) / 60) * HOUR_PX}px`,
+      height: `${Math.max(((end - s) / 60) * HOUR_PX - 2, 22)}px`,
+    }
+  }
+  /** いまの時刻の線（選んだ日が今日のときだけ） */
+  const nowLine = () => {
+    if (selected() !== ymd(new Date())) return null
+    const d = new Date()
+    const m = d.getHours() * 60 + d.getMinutes()
+    if (m < hours().from * 60 || m > hours().to * 60) return null
+    return `${((m - hours().from * 60) / 60) * HOUR_PX}px`
+  }
+  let tableEl: HTMLElement | undefined
+  const pickDay = (date: string) => {
+    setSelected(date)
+    // 押した日の時間割が見えるところまで下げる
+    requestAnimationFrame(() => tableEl?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+
   const moveMonth = (n: number) => {
     const m = month()
     const next = new Date(m.getFullYear(), m.getMonth() + n, 1)
@@ -121,7 +161,7 @@ const PageSchedule: Component = () => {
                   class="sch-cell"
                   classList={{ 'is-out': !c.inMonth, 'is-today': c.date === ymd(now), 'is-selected': c.date === selected(), 'is-sun': c.dow === 0, 'is-sat': c.dow === 6 }}
                   aria-label={`${c.date} 予定${list().length}件`}
-                  onClick={() => setSelected(c.date)}
+                  onClick={() => pickDay(c.date)}
                 >
                   <span class="sch-day">{c.day}</span>
                   <For each={list().slice(0, 3)}>
@@ -135,21 +175,49 @@ const PageSchedule: Component = () => {
         </div>
 
         {/* 選んだ日の予定 */}
-        <section class="sch-dayview" aria-label={`${selectedLabel()}の予定`}>
-          <h2>{selectedLabel()}</h2>
-          <ul>
-            <For each={dayEvents(selected())} fallback={<li class="sch-empty">予定はありません</li>}>
-              {(e) => (
-                <li>
-                  <button type="button" class="sch-item" style={{ '--c': staffOf(e.staffId).color }} onClick={() => setSheet(e)}>
-                    <span class="sch-time">{timeOf(e)}</span>
-                    <span class="sch-title">{e.title}</span>
-                    <span class="sch-who">{staffOf(e.staffId).name}</span>
-                  </button>
-                </li>
-              )}
-            </For>
-          </ul>
+        <section ref={tableEl} class="sch-dayview" aria-label={`${selectedLabel()}の時間割`}>
+          <h2>{selectedLabel()}<span>{dayEvents(selected()).length}件</span></h2>
+          <Show when={columns().length > 0} fallback={<p class="sch-empty">見る人がいません。上の名前を押してください。</p>}>
+            <div class="sch-tt" style={{ '--cols': columns().length }}>
+              {/* 見出し：スタッフの名前 */}
+              <div class="sch-tt-corner" />
+              <For each={columns()}>{(s) => <div class="sch-tt-head" style={{ '--c': s.color }}>{s.name}</div>}</For>
+
+              {/* 終日の予定 */}
+              <Show when={allDay().length > 0}>
+                <div class="sch-tt-label">終日</div>
+                <For each={columns()}>
+                  {(s) => (
+                    <div class="sch-tt-allday">
+                      <For each={allDay().filter((e) => e.staffId === s.id)}>
+                        {(e) => <button type="button" class="sch-tt-chip" style={{ '--c': s.color }} onClick={() => setSheet(e)}>{e.title}</button>}
+                      </For>
+                    </div>
+                  )}
+                </For>
+              </Show>
+
+              {/* 時間の目盛りと、スタッフごとの列 */}
+              <div class="sch-tt-hours" style={{ height: `${hours().list.length * HOUR_PX}px` }}>
+                <For each={hours().list}>{(h) => <span style={{ top: `${(h - hours().from) * HOUR_PX}px` }}>{h}:00</span>}</For>
+              </div>
+              <For each={columns()}>
+                {(s) => (
+                  <div class="sch-tt-col" style={{ height: `${hours().list.length * HOUR_PX}px`, '--row': `${HOUR_PX}px` }}>
+                    <For each={timed().filter((e) => e.staffId === s.id)}>
+                      {(e) => (
+                        <button type="button" class="sch-tt-block" style={blockStyle(e)} onClick={() => setSheet(e)} aria-label={`${timeOf(e)} ${e.title}（${s.name}）`}>
+                          <small>{e.start}</small>
+                          <span>{e.title}</span>
+                        </button>
+                      )}
+                    </For>
+                    <Show when={nowLine()}>{(top) => <i class="sch-tt-now" style={{ top: top() }} aria-hidden="true" />}</Show>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
         </section>
       </div>
 

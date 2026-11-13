@@ -16,6 +16,7 @@ import PageSurvey from './pages/survey'
 import PageFax from './pages/fax'
 import PageSchedule from './pages/schedule'
 import SettingsPanel from './components/SettingsPanel'
+import Standby from './components/Standby'
 import GalleryPanel from './components/GalleryPanel'
 import GalleryPage from './pages/gallery'
 import LeafletPage from './pages/leaflet'
@@ -99,6 +100,7 @@ const MainApp: Component = () => (
       <SettingsPanel />
       <GalleryPanel />
     </div>
+    <Standby />
   </div>
 )
 

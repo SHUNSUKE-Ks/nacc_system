@@ -2,6 +2,7 @@ import { type Component, Show, createSignal } from 'solid-js'
 import { state, setState } from '../store'
 import type { Page } from '../types'
 import { exportDetailViewPdf } from '../utils/exportDetailPdf'
+import { openStandby } from './Standby'
 
 const PAGE_LABELS: Record<Page, string> = {
   memo:     'メモ',
@@ -130,6 +131,17 @@ const Header: Component = () => {
 
       {/* 右: 設定（ログインもここ）・PDF（商品詳細のときだけ） */}
       <div class="ml-auto flex items-center gap-1.5">
+        <button
+          class="standby-open p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 active:scale-95 text-gray-500 transition-all"
+          onClick={openStandby}
+          title="待ち受け（時計と今日の予定）"
+          aria-label="待ち受けを出す"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2.5" y="5" width="19" height="14" rx="2" />
+            <path d="M8 9.5v3h2.5M14 10h4M14 13h3" />
+          </svg>
+        </button>
         <button
           class="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 active:scale-95 text-gray-500 transition-all"
           onClick={() => setState({ settingsPanelOpen: !state.settingsPanelOpen, galleryPanelOpen: false })}

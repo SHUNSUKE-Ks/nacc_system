@@ -17,6 +17,7 @@ const PAGE_LABELS: Record<Page, string> = {
   catalog:  'カタログ',
   photos:   '写真',
   survey:   'アンケート',
+  fax:      '本社へ FAX',
 }
 
 const Header: Component = () => {

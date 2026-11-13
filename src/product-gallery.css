@@ -260,3 +260,50 @@ html.dark .product-gallery-shell{background:linear-gradient(145deg,#171719,#2421
 .memo-top-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .memo-top-btn.is-trash{color:#c55}
 .memo-top-btn.is-trash:hover{background:#fbefef}
+
+/* ── 本社へ FAX（src/pages/fax） ── */
+.fax-page{max-width:760px;margin:0 auto;padding:20px clamp(16px,3vw,32px) 48px;display:flex;flex-direction:column;gap:12px}
+.fax-banner{border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6}
+.fax-banner ul{margin:4px 0 0 1.2em;list-style:disc}
+.fax-banner.is-test{background:#fff7e0;border:1px solid #f0d58a;color:#7a5a00;font-weight:600}
+.fax-banner.is-warn{background:#fdf3ec;border:1px solid #f0c9a8;color:#8a4b1c}
+.fax-banner.is-error{background:#fdeeee;border:1px solid #f1b8b8;color:#a33}
+.fax-card{background:#fff;border:1px solid #e9e4dc;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.fax-step{color:#b38247;font-size:.72rem;font-weight:800;letter-spacing:.08em}
+.fax-to{border-color:#b38247;background:#fbf7f1}
+.fax-to-main{display:flex;align-items:center;gap:8px;color:#37352f;flex-wrap:wrap}
+.fax-to-main strong{font-size:1.05rem}
+.fax-number{font-variant-numeric:tabular-nums;color:#8d7c68;font-size:.85rem}
+.fax-card small{color:#8d7c68;font-size:.72rem}
+.fax-pick{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fax-btn{border:1px solid #d9cbb6;background:#fff;border-radius:8px;padding:8px 14px;font-size:.85rem;color:#37352f}
+.fax-btn:hover{background:#f5f0e8}
+.fax-btn:disabled{opacity:.6}
+.fax-check-inline{font-size:.78rem;color:#555;display:flex;align-items:center;gap:6px}
+.fax-empty{color:#999;font-size:.8rem;margin:0}
+.fax-file{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:.85rem}
+.fax-file span{color:#8d7c68;font-size:.78rem}
+.fax-preview{width:100%;height:min(70vh,560px);border:1px solid #e9e4dc;border-radius:8px;background:#f7f6f3}
+.fax-link{color:#b38247;font-size:.78rem;text-decoration:underline;background:none;border:0;padding:0;align-self:flex-start}
+.fax-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:#37352f}
+.fax-check input,.fax-check-inline input{width:18px;height:18px;accent-color:#b38247}
+.fax-pass{display:flex;align-items:center;gap:8px;font-size:.82rem;color:#555}
+.fax-pass input{border:1px solid #d9cbb6;border-radius:6px;padding:6px 8px;font-size:.85rem;flex:1;max-width:240px}
+.fax-send{background:#b38247;color:#fff;border:0;border-radius:10px;padding:12px 16px;font-size:1rem;font-weight:700}
+.fax-send:disabled{background:#d8cbb9;cursor:not-allowed}
+.fax-ok{color:#2f7a3f;font-size:.85rem;margin:0}
+.fax-error{color:#b33;font-size:.85rem;margin:0}
+.fax-history{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.fax-history li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:.8rem;border-bottom:1px dashed #eee;padding-bottom:6px}
+.fax-h-name{color:#37352f;font-weight:600}
+.fax-h-meta,.fax-h-detail{color:#8d7c68;font-size:.72rem}
+.fax-h-detail{flex-basis:100%}
+.fax-badge{border-radius:999px;padding:1px 8px;font-size:.7rem;font-weight:700;background:#eee;color:#666}
+.fax-badge.is-ok{background:#e6f4e9;color:#2f7a3f}
+.fax-badge.is-pending,.fax-badge.is-sending{background:#eef3fb;color:#3a5f9a}
+.fax-badge.is-error,.fax-badge.is-rejected{background:#fdeeee;color:#b33}
+.fax-badge.is-testmark{background:#fff7e0;color:#7a5a00}
+.fax-pages{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.fax-pages figure{margin:0;flex:0 0 auto;width:min(46%,220px);display:flex;flex-direction:column;align-items:center;gap:2px}
+.fax-pages img{width:100%;border:1px solid #ddd;box-shadow:0 1px 3px rgba(0,0,0,.08);background:#fff}
+.fax-pages figcaption{font-size:.7rem;color:#8d7c68}

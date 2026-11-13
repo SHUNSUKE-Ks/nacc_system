@@ -19,6 +19,7 @@ const ICONS = {
   survey: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M8.5 12l1.5 1.5 3-3M8.5 17h7',
   leaflet: 'M4 5.5 9 4l6 2 5-1.5v14L15 20l-6-2-5 1.5zM9 4v14M15 6v14',
   docs: 'M6 2h8l4 4v16H6zM14 2v5h5M9 13h6M9 17h4',
+  fax: 'M7 9V3h10v6M6 18H4V9h16v9h-2M7 14h10v7H7zM16.5 12h.01',
   notebook: 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6zM6 3v18M9.5 8h6M9.5 12h6',
   allMemos: 'M5 4h10l4 4v12H5zM15 4v4h4M8.5 12.5h7M8.5 16h4.5',
   loose: 'M4 7h16M4 12h16M4 17h10',
@@ -37,6 +38,7 @@ const MAIN_NAV: NavItem[] = [
   { id: 'survey', label: 'アンケート', icon: ICONS.survey, active: () => state.page === 'survey', onClick: () => navigate('survey') },
   { id: 'leaflet', label: 'リーフレット', icon: ICONS.leaflet, active: () => state.page === 'leaflet', onClick: () => { setState({ sidebarOpen: false }); openLeafletGallery() } },
   { id: 'docs', label: '資料PDF', icon: ICONS.docs, active: () => state.galleryPanelOpen, onClick: () => setState({ galleryPanelOpen: !state.galleryPanelOpen, settingsPanelOpen: false, sidebarOpen: false }) },
+  { id: 'fax', label: '本社へ FAX', icon: ICONS.fax, active: () => state.page === 'fax', onClick: () => navigate('fax') },
 ]
 
 const NavBtn: Component<{ item: NavItem; count?: number; indent?: boolean }> = (props) => (

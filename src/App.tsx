@@ -13,6 +13,7 @@ import PageTrash from './pages/PageTrash'
 import PageNotebook from './pages/PageNotebook'
 import PagePhotos from './pages/PagePhotos'
 import PageSurvey from './pages/survey'
+import PageFax from './pages/fax'
 import SettingsPanel from './components/SettingsPanel'
 import GalleryPanel from './components/GalleryPanel'
 import GalleryPage from './pages/gallery'
@@ -86,6 +87,9 @@ const MainApp: Component = () => (
         </Show>
         <Show when={state.page === 'survey'}>
           <PageSurvey />
+        </Show>
+        <Show when={state.page === 'fax'}>
+          <PageFax />
         </Show>
       </main>
       <SettingsPanel />

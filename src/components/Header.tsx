@@ -18,6 +18,7 @@ const PAGE_LABELS: Record<Page, string> = {
   photos:   '写真',
   survey:   'アンケート',
   fax:      '本社へ FAX',
+  schedule: '予定',
 }
 
 const Header: Component = () => {

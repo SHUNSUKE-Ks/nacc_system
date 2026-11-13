@@ -19,6 +19,7 @@ const ICONS = {
   survey: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M8.5 12l1.5 1.5 3-3M8.5 17h7',
   leaflet: 'M4 5.5 9 4l6 2 5-1.5v14L15 20l-6-2-5 1.5zM9 4v14M15 6v14',
   docs: 'M6 2h8l4 4v16H6zM14 2v5h5M9 13h6M9 17h4',
+  schedule: 'M4 6h16v15H4zM4 10h16M8 3v5M16 3v5M8 14h3M13 14h3M8 17.5h3',
   fax: 'M7 9V3h10v6M6 18H4V9h16v9h-2M7 14h10v7H7zM16.5 12h.01',
   notebook: 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6zM6 3v18M9.5 8h6M9.5 12h6',
   allMemos: 'M5 4h10l4 4v12H5zM15 4v4h4M8.5 12.5h7M8.5 16h4.5',
@@ -33,6 +34,7 @@ type NavItem = { id: string; label: string; icon: string; active: () => boolean;
 // 上から: 商品・写真・カタログ・アンケート・リーフレット・資料PDF（DB02/03/10 は一時非表示）
 const MAIN_NAV: NavItem[] = [
   { id: 'db01', label: '商品一覧', icon: ICONS.products, active: () => state.page === 'db01', onClick: () => navigate('db01') },
+  { id: 'schedule', label: '予定', icon: ICONS.schedule, active: () => state.page === 'schedule', onClick: () => navigate('schedule') },
   { id: 'photos', label: '写真', icon: ICONS.photos, active: () => state.page === 'photos', onClick: () => navigate('photos') },
   { id: 'catalog', label: 'カタログ', icon: ICONS.catalog, active: () => state.page === 'catalog', onClick: () => navigate('catalog') },
   { id: 'survey', label: 'アンケート', icon: ICONS.survey, active: () => state.page === 'survey', onClick: () => navigate('survey') },

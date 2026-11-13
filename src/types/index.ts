@@ -96,7 +96,7 @@ export type NotebookPage = {
   order: number
 }
 
-export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery' | 'leaflet' | 'catalog' | 'photos' | 'survey' | 'fax'
+export type Page = 'memo' | 'db01' | 'db02' | 'db03' | 'db10' | 'blog' | 'notebook' | 'trash' | 'gallery' | 'leaflet' | 'catalog' | 'photos' | 'survey' | 'fax' | 'schedule'
 export type BlogMode = 'memo' | 'view'
 export type FontSize = 's' | 'm' | 'l' | 'xl'
 export type FontSizePx = { s: 13; m: 16; l: 19; xl: 22 }
